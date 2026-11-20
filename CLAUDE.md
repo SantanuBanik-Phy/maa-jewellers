@@ -6,6 +6,9 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 ## Two sides
 - **Customer site** — `index` `shop` `calculator` (price estimator) `cart` `checkout` `invoice` `track` `about` `contact` (.html).
   Customers can NOT edit rates or making charge; cart lines are read-only (remove only).
+  Custom orders: calculator.html takes carat + weight + jewellery name (required) + type + description → cart line `{custom, name, desc}`.
+  Invoice is locked (blurred, print/share blocked, prints a notice) until the shop marks it Verified/Delivered;
+  for Firestore orders only the live `orderStatus` unlocks it (localStorage edits don't). Admin-opened invoices set `adminView`.
 - **Admin console** — `admin.html` + `assets/admin.js` + `assets/admin.css` (own look, noindex).
   Firebase Auth email/password; only `santanubanik2k@gmail.com` with a verified email. Tabs: Dashboard,
   Orders (verify/reject/deliver, price-integrity check, chime on new orders), BAJUS rates (publish + history),

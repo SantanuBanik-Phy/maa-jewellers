@@ -227,7 +227,7 @@ function orderCard(o) {
     <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) + ' · ' + ftime(o.createdAt) : ''} · ${o.source === 'shop' ? a('shop') : a('web')}</small></div>${stBadge(o.status)}</header>
     <div class="ord-b">
       <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span><small>${esc(c.addr || '')}</small></div>
-      <ul class="its">${(o.items || []).map(l => `<li><span>${esc(title(l))} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b></li>`).join('')}</ul>
+      <ul class="its">${(o.items || []).map(l => `<li><span>${l.custom ? '<em class="cust">✎</em> ' : ''}${esc(title(l))} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b>${l.desc ? `<p class="idesc">${esc(l.desc)}</p>` : ''}</li>`).join('')}</ul>
       <div class="payx">
         <div><small>${MJ.t('grand')}</small><b>${money(o.grand)}</b></div>
         <div><small>${a('paid')}${P.method ? ' · ' + MJ.t('m_' + P.method) : ''}</small><b>${money(P.amount || 0)}</b></div>

@@ -209,6 +209,9 @@ bn: {
   st_pending: 'যাচাইয়ের অপেক্ষায়', st_verified: 'যাচাইকৃত ✓', st_mismatch: 'পরিমাণ মেলেনি', st_dup: 'TrxID আগে ব্যবহৃত', st_cash: 'দোকানে নগদ', st_notpaid: 'পেমেন্ট ছাড়া', st_rejected: 'বাতিল', st_delivered: 'হস্তান্তরিত',
   ver_note: 'বিকাশ / নগদ / ব্যাংকের SMS মিলে গেলে স্বয়ংক্রিয়ভাবে যাচাই হয় — দোকান থেকেও যাচাই করা হয়। পাতাটি খোলা থাকলে নিজে থেকেই হালনাগাদ হবে।',
   t_dup: 'এই TrxID আগেই অন্য অর্ডারে ব্যবহার হয়েছে — সঠিক TrxID দিন', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'সর্বশেষ যাচাই {t}',
+  inv_lock_h: 'চালান লক করা আছে', inv_lock_p: 'দোকান আপনার পেমেন্ট যাচাই করলেই চালান খুলে যাবে — তখন প্রিন্ট ও PDF করতে পারবেন। এই পাতা খোলা রাখুন, যাচাই হলে নিজে থেকেই খুলবে।',
+  inv_lock_cash: 'দোকানে টাকা পরিশোধের পর দোকান যাচাই করলে চালান খুলবে।', inv_lock_t: 'যাচাইয়ের আগে প্রিন্ট বা শেয়ার করা যাবে না', inv_lock_print: 'এই চালান এখনো দোকান যাচাই করেনি — প্রিন্ট করা যাবে না।', inv_unlocked: 'পেমেন্ট যাচাই হয়েছে — চালান খুলে গেছে ✓',
+  est_design_h: 'আপনার পছন্দের ডিজাইন', est_name: 'গহনার নাম', est_name_ph: 'যেমন: ময়ূর নকশার নেকলেস', est_desc: 'বিবরণ / ডিজাইনের তথ্য', est_desc_ph: 'নকশা, মাপ, পাথর, রং, ছবি থাকলে হোয়াটসঅ্যাপে পাঠান…', est_cat: 'গহনার ধরন', est_need_name: 'গহনার নাম লিখুন',
   nav_cart: 'কার্ট', nav_cart_en: 'Cart', nav_track: 'অর্ডার ট্র্যাক', nav_track_en: 'Track order', step_cart: 'কার্ট',
   crt_title: 'আপনার কার্ট', crt_sub: 'গহনা, ওজন ও দাম — আজকের বাজুস দরে। পরের ধাপে পেমেন্ট।', crt_empty2: 'শপ থেকে পছন্দের গহনা যোগ করুন।',
   checkout_btn: 'চেকআউট — পেমেন্ট করুন', need_contact: 'নাম ও মোবাইল নম্বর দিন', ro_note: 'দাম বাজুস দর ও দোকানের মজুরি অনুযায়ী স্বয়ংক্রিয় — গ্রাহক পরিবর্তন করতে পারেন না।',
@@ -356,6 +359,9 @@ en: {
   st_pending: 'Waiting for verification', st_verified: 'Verified ✓', st_mismatch: 'Amount does not match', st_dup: 'TrxID already used', st_cash: 'Cash at shop', st_notpaid: 'No payment', st_rejected: 'Rejected', st_delivered: 'Delivered',
   ver_note: 'Verified automatically when the bKash / Nagad / bank SMS matches — the shop can also verify it. This page updates itself while open.',
   t_dup: 'This TrxID was already used on another order — enter the correct TrxID', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'Last checked {t}',
+  inv_lock_h: 'Invoice locked', inv_lock_p: 'Your invoice opens as soon as the shop verifies your payment — then you can print or save it as PDF. Keep this page open; it unlocks by itself.',
+  inv_lock_cash: 'Pay at the shop — the invoice unlocks once the shop verifies the payment.', inv_lock_t: 'Printing and sharing are available after verification', inv_lock_print: 'This invoice has not been verified by the shop yet — it cannot be printed.', inv_unlocked: 'Payment verified — your invoice is unlocked ✓',
+  est_design_h: 'Your own design', est_name: 'Jewellery name', est_name_ph: 'e.g. Peacock-design necklace', est_desc: 'Description / design details', est_desc_ph: 'Design, size, stones, colour… send photos on WhatsApp if you have them', est_cat: 'Type', est_need_name: 'Please enter the jewellery name',
   nav_cart: 'Cart', nav_cart_en: 'কার্ট', nav_track: 'Track order', nav_track_en: 'অর্ডার ট্র্যাক', step_cart: 'Cart',
   crt_title: 'Your cart', crt_sub: "Jewellery, weight and price at today's BAJUS rate. Payment is the next step.", crt_empty2: 'Add your favourite pieces from the shop.',
   checkout_btn: 'Checkout — pay now', need_contact: 'Please enter your name and mobile number', ro_note: 'Prices follow the BAJUS rate and the shop’s making charge — they cannot be changed by customers.',
@@ -1076,7 +1082,7 @@ function lineRO(l) {
   return `<div class="line ro glass ${c.tb ? '' : 'warn'}" data-id="${l.id}">
     <div class="line-h">
       ${lineThumb(l)}
-      <div class="ro-name"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${l.pid ? t('cat_' + l.cat) : t('custom_order')}</small></div>
+      <div class="ro-name"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${l.pid ? t('cat_' + l.cat) : t('custom_order') + (l.cat && l.cat !== 'custom' ? ' · ' + t('cat_' + l.cat) : '')}</small>${l.desc ? `<p class="ro-desc">${esc(l.desc)}</p>` : ''}</div>
       <button class="x" type="button" data-del aria-label="${t('remove')}">${ICON.trash}</button>
     </div>
     <div class="line-f"><div class="parts">
@@ -1181,7 +1187,7 @@ function buildInvoice(pay, status) {
   return {
     no: invoiceNo(now), ts: now.getTime(), rateDate: official.date,
     buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), addr: buyer.addr.trim() },
-    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
+    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), desc: (l.desc || '').trim(), custom: !!l.custom, carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
     totals: { gold: T.gold, making: T.making, sub: T.sub, d: T.d, discAmt: T.discAmt, v: T.v, vatAmt: T.vatAmt, adv: T.adv, grand: T.grand },
     pay: pay ? Object.assign({}, pay, { due: Math.max(Math.round(T.grand) - pay.amount, 0) }) : null,
     status: status || (!pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : 'Pending'),
@@ -1195,7 +1201,7 @@ function orderDoc(I, source) {
   return JSON.parse(JSON.stringify({
     id: I.no, lang, rateDate: I.rateDate, rates, making: CONFIG.making,
     customer: I.buyer,
-    items: I.lines.map(l => ({ pid: l.pid || '', cat: l.cat || 'custom', gem: l.gem || '', name: l.name || '', title_bn: nameIn(l, 'bn'), title_en: nameIn(l, 'en'), carat: l.carat, mcu: l.mcu, mc: String(l.mc), tb: Math.round(l.tb * 10000) / 10000, rate: l.rate, gold: r2(l.gold), making: r2(l.making), total: r2(l.total) })),
+    items: I.lines.map(l => ({ pid: l.pid || '', cat: l.cat || 'custom', gem: l.gem || '', name: l.name || '', desc: l.desc || '', custom: !!l.custom, title_bn: nameIn(l, 'bn'), title_en: nameIn(l, 'en'), carat: l.carat, mcu: l.mcu, mc: String(l.mc), tb: Math.round(l.tb * 10000) / 10000, rate: l.rate, gold: r2(l.gold), making: r2(l.making), total: r2(l.total) })),
     totals: Object.fromEntries(Object.entries(I.totals).map(([k, v]) => [k, r2(v)])),
     grand: Math.round(I.totals.grand),
     pay: I.pay ? { method: I.pay.method, amount: I.pay.amount, trx: I.pay.trx || '', sender: I.pay.sender || '', due: I.pay.due } : null,
@@ -1227,6 +1233,17 @@ function makeInvoice(e, pay) {
 /* =====================================================================
    INVOICE
    ===================================================================== */
+const OPEN_ST = ['Verified', 'Delivered'];
+function invLocked(I) {
+  if (!I) return true;
+  if (I.adminView) return false;
+  if (I.cloud) return !(liveStatus && OPEN_ST.includes(liveStatus.status));   // only the shop's live status unlocks
+  return !OPEN_ST.includes(I.status);
+}
+function lockUI() {
+  const L = invLocked(invoice);
+  ['printBtn', 'shareWa'].forEach(id => { const b = $('#' + id); if (b) { b.classList.toggle('is-locked', L); b.setAttribute('aria-disabled', L); b.title = L ? t('inv_lock_t') : ''; } });
+}
 function renderInvoice() {
   const host = $('#paperHost'); if (!host) return;
   const acts = $('#invActs');
@@ -1249,7 +1266,15 @@ function renderInvoice() {
         </div>
         ${P.due > 0 ? `<div class="pqr"><img src="${CONFIG.qrPlain}" alt="Bangla QR — ${CONFIG.qrMerchant}"><b>BANGLA QR</b><small>${CONFIG.qrMerchant} · ${t('scan_due')}</small></div>` : ''}
       </div>` : '';
-  host.innerHTML = `<article class="paper" id="paper">
+  const locked = invLocked(I);
+  host.classList.toggle('locked', locked);
+  lockUI();
+  const lockCard = locked ? `<div class="inv-lock glass"><span class="ic">${ICON.lock}</span><h3>${t('inv_lock_h')}</h3>
+      <p>${I.pay && I.pay.method !== 'cash' ? t('inv_lock_p') : t('inv_lock_cash')}</p>
+      <span class="vstat ${ST_CLS[I.status] || 'wait'}">${t(ST_KEY[I.status] || 'st_pending')}</span>
+      <a class="btn btn-glass btn-sm" href="track.html?id=${encodeURIComponent(I.no)}">${ICON.shield}<span>${t('nav_track')}</span></a></div>
+    <div class="lock-print">${t('inv_lock_print')} · ${I.no}</div>` : '';
+  host.innerHTML = lockCard + `<article class="paper" id="paper" ${locked ? 'aria-hidden="true" inert' : ''}>
     <div class="goldbar top"></div><div class="goldbar bottom"></div>
     <div class="wm">${emblem({ mono: true })}</div>
     <div class="wm-text"><span>MAA JEWELLERS</span><span>মা জুয়েলার্স</span></div>
@@ -1271,7 +1296,7 @@ function renderInvoice() {
     </div>
     <div class="ptw"><table class="pt">
       <thead><tr><th>${t('th_sl')}</th><th>${t('th_item')}</th><th>${t('th_kt')}</th><th>${t('th_w')}</th><th>${t('th_rate')}</th><th>${t('th_mc')}</th><th>${t('th_amt')}</th></tr></thead>
-      <tbody>${I.lines.map((l, i) => `<tr><td>${dg(i + 1)}</td><td><b>${esc(nm(l))}</b></td><td>${t(l.carat)}</td>
+      <tbody>${I.lines.map((l, i) => `<tr><td>${dg(i + 1)}</td><td><b>${esc(nm(l))}</b>${l.desc ? `<br><small class="idesc">${esc(l.desc)}</small>` : ''}</td><td>${t(l.carat)}</td>
         <td>${weightText(l.tb)}<br><small>${num(l.tb * GRAM, 3)} ${t('gram')}</small></td><td>${money(l.rate)}</td>
         <td>${money(l.making)}<br><small>${l.mcu === 'tk' ? money(toNum(l.mc)) + ' / ' + t('bhori') : pct(toNum(l.mc))}</small></td><td>${money(l.total)}</td></tr>`).join('')}</tbody>
     </table></div>
@@ -1304,8 +1329,9 @@ function renderInvoice() {
 }
 function bindInvoice() {
   if (!$('#paperHost')) return;
-  $('#printBtn').addEventListener('click', () => window.print());
-  $('#shareWa').addEventListener('click', () => { if (invoice) openWA(invoiceMsg()); });
+  $('#printBtn').addEventListener('click', () => { if (invLocked(invoice)) { toast(t('inv_lock_t'), true); return; } window.print(); });
+  $('#shareWa').addEventListener('click', () => { if (!invoice) return; if (invLocked(invoice)) { toast(t('inv_lock_t'), true); return; } openWA(invoiceMsg()); });
+  addEventListener('beforeprint', () => { if (invLocked(invoice)) toast(t('inv_lock_print'), true); });
   $('#newSale').addEventListener('click', () => {
     if (!confirm(t('confirm_new'))) return;
     cart = []; invoice = null; buyer = { name: buyer.name, phone: buyer.phone, addr: buyer.addr, disc: '', vat: '', adv: '' };
@@ -1471,7 +1497,7 @@ function payValid(T) {
 }
 function payMsg() {
   const T = totals(), amt = payAmount(T), due = Math.max(Math.round(T.grand) - amt, 0);
-  const lines = cart.map((l, i) => `${dg(i + 1)}. ${lineName(l)} — ${t(l.carat)}, ${weightText(T.lines[i].tb)} → ${money(T.lines[i].total)}`).join('\n');
+  const lines = cart.map((l, i) => `${dg(i + 1)}. ${lineName(l)} — ${t(l.carat)}, ${weightText(T.lines[i].tb)} → ${money(T.lines[i].total)}${l.desc ? '\n   ' + l.desc : ''}`).join('\n');
   const who = [buyer.name, buyer.phone, buyer.addr].filter(Boolean).join(', ');
   return `*${t('brand')} — ${t('wa_pay')}*\n\n${t('pay_method')}: ${t('m_' + payState.method)}\n${t('amount')}: ${money(amt)}${payState.method !== 'cash' && payState.trx ? `\nTrxID: ${String(payState.trx).trim().toUpperCase()}` : ''}${payState.method !== 'cash' && payState.sender ? `\n${t('pay_from')}: ${payState.sender}` : ''}\n${t('grand')}: ${money(T.grand)}\n${t('due')}: ${money(due)}\n\n${lines}${who ? `\n\n${t('bill_to')}: ${who}` : ''}\n\n— ${t('wa_from')}`;
 }
@@ -1606,7 +1632,7 @@ async function checkStatus(manual) {
     if (r && r.ok && r.status) {
       const changed = invoice.status !== r.status;
       invoice.status = r.status; invoice.sync = 'saved'; invoice.checkedAt = Date.now(); LS.set('mj_invoice', invoice);
-      renderVerify(); if (changed) { renderInvoice(); if (r.status === 'Verified') { burst($('#verifyBox')); toast(t('st_verified')); } }
+      renderVerify(); if (changed) { renderInvoice(); if (OPEN_ST.includes(r.status)) { burst($('#paperHost')); toast(t('inv_unlocked')); } }
     }
   } catch (e) { /* offline */ }
   finally { const b = $('#verNow'); if (b) { b.disabled = false; $('span', b).textContent = t('ver_check'); } }
@@ -1816,7 +1842,7 @@ function initGems() {
 /* =====================================================================
    PRICE ESTIMATOR (calculator.html) — public, rates & making fixed
    ===================================================================== */
-const estState = Object.assign({ kt: 'k22', mode: 'bhori', b: '1', a: '', r: '', p: '', g: '' }, LS.get('mj_est', {}));
+const estState = Object.assign({ kt: 'k22', mode: 'bhori', b: '1', a: '', r: '', p: '', g: '', name: '', desc: '', cat: 'necklace' }, LS.get('mj_est', {}));
 function estCalc() { return calc(Object.assign({ carat: estState.kt, mcu: 'pct', mc: CONFIG.making }, estState)); }
 function renderEstimator() {
   const host = $('#estimator'); if (!host) return;
@@ -1831,6 +1857,14 @@ function renderEstimator() {
         ? `<div class="in pad-u"><input type="text" inputmode="decimal" data-e="g" value="${esc(estState.g)}" placeholder="0" aria-label="${t('gram')}"><span class="u">${t('gram')}</span></div>`
         : `<div class="wgrid">${['b', 'a', 'r', 'p'].map((f, i) => `<div class="in"><input type="text" inputmode="numeric" data-e="${f}" value="${esc(estState[f])}" placeholder="0" aria-label="${t(W[i])}"><small>${t(W[i])}</small></div>`).join('')}</div>`}
       <div class="conv-note" style="margin-top:14px">${t('conv_note')}</div>
+      <div class="est-design">
+        <h3>${ICON.edit}<span>${t('est_design_h')}</span></h3>
+        <div class="fgrid">
+          <div><label class="lbl" for="eName">${t('est_name')} *</label><div class="in"><input id="eName" data-e="name" type="text" maxlength="60" value="${esc(estState.name)}" placeholder="${esc(t('est_name_ph'))}"></div></div>
+          <div><label class="lbl" for="eCat">${t('est_cat')}</label><div class="in"><select id="eCat" data-e="cat">${CATS.map(c => `<option value="${c}" ${estState.cat === c ? 'selected' : ''}>${t('cat_' + c)}</option>`).join('')}</select></div></div>
+          <div class="full"><label class="lbl" for="eDesc">${t('est_desc')}</label><div class="in"><textarea id="eDesc" data-e="desc" rows="3" maxlength="300" placeholder="${esc(t('est_desc_ph'))}">${esc(estState.desc)}</textarea></div></div>
+        </div>
+      </div>
     </div>
     <aside class="est-out glass" id="estOut"></aside>
   </div>`;
@@ -1857,7 +1891,8 @@ function renderEstOut() {
 function bindEstimator() {
   const host = $('#estimator'); if (!host) return;
   const save = () => LS.set('mj_est', estState);
-  host.addEventListener('input', e => { const f = e.target.dataset.e; if (!f) return; estState[f] = e.target.value; save(); renderEstOut(); });
+  host.addEventListener('input', e => { const f = e.target.dataset.e; if (!f) return; estState[f] = e.target.value; save(); if (!['name', 'desc'].includes(f)) renderEstOut(); });
+  host.addEventListener('change', e => { if (e.target.dataset.e === 'cat') { estState.cat = e.target.value; save(); } });
   host.addEventListener('click', e => {
     const k = e.target.closest('[data-ekt]'); if (k) { estState.kt = k.dataset.ekt; save(); $$('[data-ekt]').forEach(b => b.setAttribute('aria-pressed', b === k)); renderEstOut(); return; }
     const m = e.target.closest('[data-emode]');
@@ -1868,14 +1903,17 @@ function bindEstimator() {
     }
     if (e.target.closest('#estAdd')) {
       const c = estCalc(); if (!c.tb) return;
-      cart.push(Object.assign({ id: uid(), pid: null, cat: 'custom', gem: 'diamond', carat: estState.kt, mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: '' }, bhoriParts(c.tb)));
+      const nm = String(estState.name || '').trim().slice(0, 60);
+      if (!nm) { toast(t('est_need_name'), true); const f = $('#eName'); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus({ preventScroll: true }); } return; }
+      cart.push(Object.assign({ id: uid(), pid: null, cat: CATS.includes(estState.cat) ? estState.cat : 'custom', gem: 'diamond', carat: estState.kt, mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: nm, desc: String(estState.desc || '').trim().slice(0, 300), custom: true }, bhoriParts(c.tb)));
+      estState.name = ''; estState.desc = ''; save();
       saveCart(); if (invoice) { invoice = null; LS.set('mj_invoice', null); }
       updateCartBadges(); fly(e.target.closest('button')); toast(t('added'));
       setTimeout(() => go('cart.html'), 700); return;
     }
     if (e.target.closest('#estWa')) {
       const c = estCalc(); if (!c.tb) return;
-      openWA(`${t('wa_hi')}\n\n*${t('custom_order')}*\n${t('carat')}: ${t(estState.kt)}\n${t('weight')}: ${weightText(c.tb)}\n${t('wa_est')}: ${money(c.total)}\n\n— ${t('wa_from')}`);
+      openWA(`${t('wa_hi')}\n\n*${t('custom_order')}${estState.name ? ': ' + estState.name : ''}*${estState.desc ? '\n' + estState.desc : ''}\n${t('carat')}: ${t(estState.kt)}\n${t('weight')}: ${weightText(c.tb)}\n${t('wa_est')}: ${money(c.total)}\n\n— ${t('wa_from')}`);
     }
   });
 }
@@ -1905,11 +1943,12 @@ function watchStatus(no, cb) {
 function watchInvoice() {
   if (PAGE !== 'invoice' || !invoice || !invoice.cloud || !fbMod) return;
   watchStatus(invoice.no, st => {
+    const wasLocked = invLocked(invoice);
     liveStatus = st;
-    if (st && st.status && st.status !== invoice.status) {
-      const was = invoice.status; invoice.status = st.status; LS.set('mj_invoice', invoice); renderInvoice();
-      if (st.status === 'Verified' && was !== 'Verified') { toast('✓ ' + t('st_verified')); burst($('#verifyBox')); }
-    }
+    if (st && st.status) { invoice.status = st.status; LS.set('mj_invoice', invoice); }
+    const nowLocked = invLocked(invoice);
+    if (wasLocked !== nowLocked || !nowLocked) renderInvoice();
+    if (wasLocked && !nowLocked) { toast(t('inv_unlocked')); burst($('#paperHost')); }
     renderVerify();
   });
 }
@@ -2060,7 +2099,7 @@ if (PAGE === 'admin') {
     renderPOS() { $$('[data-b]').forEach(i => { i.value = buyer[i.dataset.b] || ''; }); renderRateChips(); renderCart(); },
     addProduct, totals, calc, buildInvoice, orderDoc, commitInvoice,
     clearPOS() { cart = []; buyer = { name: '', phone: '', addr: '', disc: '', vat: '', adv: '' }; saveCart(); saveBuyer(); renderCart(); $$('[data-b]').forEach(i => { i.value = ''; }); },
-    openInvoice(inv) { LS.set('mj_invoice', inv); window.open('invoice.html', '_blank', 'noopener'); }
+    openInvoice(inv) { LS.set('mj_invoice', Object.assign({}, inv, { adminView: true })); window.open('invoice.html', '_blank', 'noopener'); }
   };
   document.dispatchEvent(new CustomEvent('mj:ready'));
   return;
