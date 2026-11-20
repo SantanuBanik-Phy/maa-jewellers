@@ -25,7 +25,7 @@ const CONFIG = {
   qrPoster: 'assets/img/bangla-qr-poster.jpg',
   /* Google Sheet backend — paste your Apps Script Web App URL (ends with /exec).
      Leave '' to switch it off. Setup: SETUP-GOOGLE-SHEET.md */
-  sheetUrl: '',
+  sheetUrl: 'https://script.google.com/macros/s/AKfycbx57QPz_0xrFiQNwMC4FF7WiljoTLHs-5Yz63TXuqIsN-C5WB1jj1YMlReDC2vroNjeRg/exec',
   making: 6,                          // default making charge, % (admin can change in the panel)
   lockMinutes: 15,                    // checkout price lock
   liveEverySec: 60,                   // international price refresh
