@@ -3,19 +3,32 @@
 Static site (no build step) for মা জুয়েলার্স / Maa Jewellers, Parashuram Bazar, Feni.
 Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 
+## Two sides
+- **Customer site** — `index` `shop` `calculator` (price estimator) `cart` `checkout` `invoice` `track` `about` `contact` (.html).
+  Customers can NOT edit rates or making charge; cart lines are read-only (remove only).
+- **Admin console** — `admin.html` + `assets/admin.js` + `assets/admin.css` (own look, noindex).
+  Firebase Auth email/password; only `santanubanik2k@gmail.com` with a verified email. Tabs: Dashboard,
+  Orders (verify/reject/deliver, price-integrity check, chime on new orders), BAJUS rates (publish + history),
+  Products (CRUD, photo upload → resized JPEG data URL), In-store sale (POS with discount/VAT/advance), Settings.
+
 ## Files
-- `index.html` `shop.html` `calculator.html` `checkout.html` `invoice.html` `about.html` `contact.html`
-- `assets/app.js` — all logic and all Bangla/English text (I18N dict). Top of file:
-  - `CONFIG` — phone, WhatsApp, bKash, Nagad, Bangla QR, making %, `sheetUrl` (Google Apps Script /exec URL)
-  - `BUILTIN` — fallback BAJUS rates per bhori (`rates.json` overrides when hosted)
-  - `PRODUCTS` — catalogue (name bn/en, cat, carat, weight in bhori, gem, badge)
-- `assets/style.css` — design (glass, dark/light), print invoice (white · black · gold only)
-- `rates.json` — today's BAJUS rates: `{date, k22, k21, k18, trad}` (taka per bhori, VAT incl.)
-- `assets/img/` — Bangla QR (colour for site, `-plain` B/W for invoice, poster for download). Verified scannable.
-- `google-apps-script/Code.gs` — Google Sheet backend (orders, TrxID duplicate check, SMS auto-verify). Never put the real SECRET here (repo is public).
+- `assets/app.js` — all customer logic and all Bangla/English text (I18N). `PAGE === 'admin'` skips the
+  public chrome and exposes `window.MJ` helpers for admin.js. Top of file:
+  - `CONFIG` — phone, WhatsApp, bKash, Nagad, Bangla QR, making %, lockMinutes, `sheetUrl`
+  - `BUILTIN` — fallback BAJUS rates per bhori; `PRODUCTS` — default catalogue (`img` = Unsplash id or URL, `credit`)
+- `assets/fb.js` — Firebase layer (SDK 12.11.0 from gstatic, loaded on demand). Safe no-op while not configured.
+- `assets/firebase-config.js` — web config + ADMIN_EMAIL (public values; security = `firestore.rules`).
+- `firestore.rules` — paste into Firebase console. Collections: `public/rates`, `public/settings`, `products`,
+  `rateHistory`, `orders` (admin-read only, PII), `orderStatus` (public get, no PII), `trx/{TRXID}` (create-only → no duplicate TrxID).
+- Order id format `MJ-YYMMDD-HHMMSS-XXXX` (rules + Code.gs regex depend on it).
+- Rate priority: Firestore `public/rates` (admin) > `rates.json` > `BUILTIN`. Checkout locks prices for `lockMinutes`.
+- `assets/style.css` — customer design (glass, dark/light, floating cut-diamond canvas `#gems`), print invoice (white · black · gold only)
+- `google-apps-script/Code.gs` — optional Google Sheet backup. Never put the real SECRET here (repo is public).
+- `FIREBASE-SETUP.md` — owner's setup steps (BN + EN).
 
 ## Common updates
-- New BAJUS rate: edit `rates.json` (and `BUILTIN` in app.js). Source: BAJUS announcements in BD news.
-- Every new UI string needs both `bn` and `en` keys in I18N.
+- New BAJUS rate: owner publishes it in admin.html (no push). Fallback: edit `rates.json` and `BUILTIN`.
+- Every new UI string needs both `bn` and `en` keys (I18N in app.js; admin strings in `A` in admin.js).
 - Keep the invoice print palette white/black/gold; check it still fits one A4 page.
-- Test pages headless (Playwright) at 1440 and 390 widths before pushing; `node --check assets/app.js`.
+- Test headless (Playwright) at 1440 and 390 widths before pushing; `node --check assets/app.js`.
+  For admin/order flows, copy the site and replace `assets/fb.js` with an in-memory mock exporting the same API.

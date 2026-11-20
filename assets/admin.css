@@ -1,0 +1,183 @@
+/* =====================================================================
+   MAA JEWELLERS — Admin console look (separate from the customer site)
+   Espresso sidebar · ivory workspace · gold accents
+   ===================================================================== */
+body.admin{
+  --a-bg:#f5f0e6; --a-card:#fffdf8; --a-ink:#1f170c; --a-mut:#7a6b52; --a-line:#e7dcc6; --a-side:#15100a; --a-gold:#c9a227; --a-gold2:#f3d77a;
+  --a-ok:#1e7d33; --a-bad:#b3263c; --a-warn:#a86a00;
+  background:var(--a-bg) radial-gradient(circle at 85% -10%,rgba(201,162,39,.16),transparent 45%) fixed;
+  color:var(--a-ink); font-family:'Hind Siliguri','Jost',system-ui,sans-serif; min-height:100vh;
+}
+body.admin [hidden]{display:none!important}
+.admin .muted{color:var(--a-mut)} .admin .small{font-size:12.5px}
+.admin .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.02em}
+.admin .grow{flex:1}
+
+/* buttons */
+.a-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:12px;border:1px solid var(--a-line);background:#fff;color:var(--a-ink);font:500 14.5px/1 'Hind Siliguri','Jost',sans-serif;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,border-color .2s}
+.a-btn:hover{border-color:var(--a-gold);box-shadow:0 8px 20px -14px rgba(120,90,20,.6);transform:translateY(-1px)}
+.a-btn.gold{background:linear-gradient(135deg,#fff1b8,#e7c34c 45%,#c9a227);border-color:transparent;color:#1b1406;font-weight:600}
+.a-btn.danger{color:var(--a-bad);border-color:rgba(179,38,60,.35)}
+.a-btn.wa{color:#0e7a3a;border-color:rgba(14,122,58,.35)}
+.a-btn.small{min-height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.a-btn.wide{width:100%}
+.a-btn[disabled]{opacity:.5;pointer-events:none}
+.link-btn{border:0;background:none;color:#8a6510;cursor:pointer;font:500 13.5px 'Hind Siliguri',sans-serif;padding:4px 0}
+.pill-btn{border:1px solid var(--a-line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;font:500 13px 'Hind Siliguri','Jost',sans-serif;color:var(--a-ink)}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--a-line);background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--a-ink)}
+.icon-btn svg{width:20px;height:20px}
+
+/* fields */
+.admin .f{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+.admin .f > span{font-size:13px;color:var(--a-mut);font-weight:500}
+.admin .f input,.admin .f select{height:44px;border-radius:12px;border:1px solid var(--a-line);background:#fff;padding:0 14px;font:500 15px 'Jost','Hind Siliguri',sans-serif;color:var(--a-ink);outline:none;transition:border-color .2s,box-shadow .2s}
+.admin .f input:focus,.admin .f select:focus{border-color:var(--a-gold);box-shadow:0 0 0 4px rgba(201,162,39,.16)}
+.admin .tk{display:flex;align-items:center;gap:8px;border:1px solid var(--a-line);background:#fff;border-radius:12px;padding:0 0 0 14px}
+.admin .tk b{color:#8a6510}.admin .tk input{border:0;flex:1;box-shadow:none!important;font-size:20px;font-weight:600}
+.fgrid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+.sw{display:flex;align-items:center;gap:10px;margin:6px 0 12px;cursor:pointer;font-size:14px}
+.sw input{width:20px;height:20px;accent-color:#c9a227}
+.sws{display:flex;flex-wrap:wrap;gap:4px 18px}
+
+/* gate */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 0%,#3a2a12,#120d07 60%);position:relative}
+.gate-card{width:min(420px,100%);background:rgba(255,253,248,.98);border-radius:26px;padding:34px 30px;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);text-align:center;border:1px solid rgba(243,215,122,.5)}
+.gate-logo{width:84px;height:84px;margin:0 auto 8px}.gate-logo svg{width:100%;height:100%}
+.gate-card h1{font:600 30px 'Cormorant Garamond','Hind Siliguri',serif;margin:6px 0 4px}
+.gate-card h1 span{display:block;font:500 12px 'Jost',sans-serif;letter-spacing:.4em;color:#8a6510;text-transform:uppercase}
+.login{text-align:left;margin-top:18px}
+.login .err{color:var(--a-bad);font-size:13.5px;margin:-4px 0 12px}
+.gate .pill-btn{margin-top:16px}
+.gate-back{position:absolute;left:20px;bottom:18px;color:#d9c48a;font-size:13px;text-decoration:none}
+
+/* shell */
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.side{background:var(--a-side);color:#efe3c4;display:flex;flex-direction:column;padding:22px 14px;position:sticky;top:0;height:100vh}
+.side-brand{display:flex;align-items:center;gap:12px;padding:0 8px 22px;border-bottom:1px solid rgba(243,215,122,.15)}
+.side-brand > span{width:44px;height:44px;flex:none}.side-brand svg{width:100%;height:100%}
+.side-brand b{display:block;font:600 19px 'Hind Siliguri',sans-serif;color:#fff3c4}.side-brand small{font:500 10px 'Jost',sans-serif;letter-spacing:.3em;color:#bfa765}
+.side-nav{display:flex;flex-direction:column;gap:4px;margin-top:18px;flex:1}
+.side-nav button{display:flex;align-items:center;gap:12px;border:0;background:none;color:#d8c9a4;padding:11px 12px;border-radius:12px;cursor:pointer;font:500 15px 'Hind Siliguri','Jost',sans-serif;text-align:left;transition:background .2s,color .2s}
+.side-nav button i{font-style:normal;width:22px;text-align:center;color:#c9a227}
+.side-nav button:hover{background:rgba(243,215,122,.08);color:#fff3c4}
+.side-nav button.on{background:linear-gradient(135deg,rgba(243,215,122,.22),rgba(201,162,39,.08));color:#fff3c4;box-shadow:inset 2px 0 0 #e7c34c}
+.side-nav em{margin-left:auto;font-style:normal;background:#b3263c;color:#fff;border-radius:999px;font-size:11.5px;padding:1px 8px}
+.side-nav em:empty{display:none}
+.side-foot{display:flex;flex-direction:column;gap:8px;border-top:1px solid rgba(243,215,122,.15);padding-top:14px}
+.side-foot a,.side-foot button{color:#d8c9a4;background:none;border:1px solid rgba(243,215,122,.18);border-radius:10px;padding:9px 12px;font:500 13.5px 'Hind Siliguri',sans-serif;text-decoration:none;cursor:pointer;text-align:left}
+.side-foot a:hover,.side-foot button:hover{color:#fff3c4;border-color:rgba(243,215,122,.4)}
+.main-col{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:14px 28px;background:rgba(245,240,230,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--a-line)}
+.topbar h2{margin:0;font:600 26px 'Cormorant Garamond','Hind Siliguri',serif}
+.topbar .menu{display:none}
+.live-dot{width:9px;height:9px;border-radius:50%;background:var(--a-ok);box-shadow:0 0 0 0 rgba(30,125,51,.5);animation:aPulse 1.8s infinite}
+@keyframes aPulse{to{box-shadow:0 0 0 10px rgba(30,125,51,0)}}
+.top-tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.who{font-size:13px;color:var(--a-mut)}
+.verify-banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 28px 0;padding:12px 16px;border-radius:14px;background:#fff4d6;border:1px solid #efd58a;color:#6b4b00;font-size:14px}
+.verify-banner span{flex:1;min-width:240px}
+.views{padding:24px 28px 60px}
+.card{background:var(--a-card);border:1px solid var(--a-line);border-radius:20px;padding:22px;box-shadow:0 20px 40px -34px rgba(80,55,10,.45)}
+.card.narrow{max-width:640px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.card-h h3{margin:0;font:600 19px 'Hind Siliguri','Jost',sans-serif}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:start}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.kpi{position:relative;background:var(--a-card);border:1px solid var(--a-line);border-radius:18px;padding:18px 18px 16px;overflow:hidden}
+.kpi i{position:absolute;right:14px;top:10px;font-style:normal;font-size:30px;color:rgba(201,162,39,.35)}
+.kpi small{display:block;color:var(--a-mut);font-size:13px}
+.kpi b{display:block;font:600 30px 'Jost','Hind Siliguri',sans-serif;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi.hot{border-color:#e7b54c;background:linear-gradient(135deg,#fff8e1,#fffdf8)}
+.kpi.hot b{color:#8a5a00}
+.rate-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rate-mini > div{padding:12px 14px;border-radius:14px;background:#fbf6ea;border:1px solid var(--a-line)}
+.rate-mini small{display:block;color:var(--a-mut);font-size:12.5px}.rate-mini b{font:600 20px 'Jost','Hind Siliguri',sans-serif}
+.mini-order{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;width:100%;padding:10px 4px;border:0;border-bottom:1px dashed var(--a-line);background:none;cursor:pointer;text-align:left;font:500 13.5px 'Hind Siliguri',sans-serif;color:var(--a-ink)}
+.mini-order .mono{font-size:12px;color:var(--a-mut)}
+
+/* status chips */
+.st{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:600;border:1px solid var(--a-line);white-space:nowrap;background:#fff}
+.st.ok{background:linear-gradient(135deg,#fff1b8,#e7c34c);border-color:transparent;color:#1b1406}
+.st.bad{color:var(--a-bad);border-color:rgba(179,38,60,.4)}
+.st.wait{color:var(--a-warn);border-color:rgba(168,106,0,.4)}
+.st.wait::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+
+/* rates */
+.rate-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+.tbl-wrap{overflow:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;color:var(--a-mut);font-weight:500;padding:8px;border-bottom:1px solid var(--a-line);white-space:nowrap}
+.tbl td{padding:9px 8px;border-bottom:1px dashed var(--a-line);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* orders */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.chip{border:1px solid var(--a-line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;font:500 13.5px 'Hind Siliguri',sans-serif;color:var(--a-ink)}
+.chip em{font-style:normal;color:var(--a-mut);margin-left:4px}
+.chip.on{background:var(--a-side);color:#fff3c4;border-color:var(--a-side)}.chip.on em{color:#d9c48a}
+.search{height:42px;min-width:260px;border-radius:12px;border:1px solid var(--a-line);padding:0 14px;font:500 14px 'Hind Siliguri','Jost',sans-serif;background:#fff}
+.orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+.ord{background:var(--a-card);border:1px solid var(--a-line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.ord.pending{border-color:#e7b54c;box-shadow:0 0 0 3px rgba(231,181,76,.18)}
+.ord header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--a-line);background:#fbf6ea}
+.ord header .mono{font-weight:600;font-size:14px}.ord header small{display:block;color:var(--a-mut);font-size:12px}
+.ord-b{padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.who2 b{display:block;font-size:16px}.who2 span{font-size:14px}.who2 small{display:block;color:var(--a-mut)}
+.its{list-style:none;margin:0;padding:0;font-size:13.5px}
+.its li{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:5px 0;border-bottom:1px dashed var(--a-line)}
+.its li span:nth-child(2){color:var(--a-mut)}
+.payx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.payx > div{background:#fbf6ea;border-radius:12px;padding:8px 10px}
+.payx .trx{grid-column:1/-1;background:#fff8e1;border:1px dashed #e7b54c}
+.payx small{display:block;color:var(--a-mut);font-size:11.5px}.payx b{font-size:15px;font-variant-numeric:tabular-nums}
+.pchk{font-size:13px;font-weight:600;padding:8px 12px;border-radius:10px}
+.pchk.ok{color:var(--a-ok);background:rgba(30,125,51,.07)}.pchk.bad{color:var(--a-bad);background:rgba(179,38,60,.08)}
+.ord footer{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid var(--a-line)}
+.empty-a{padding:30px;text-align:center}
+
+/* products */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+.pc{border:1px solid var(--a-line);background:var(--a-card);border-radius:16px;padding:10px;text-align:left;cursor:pointer;font-family:'Hind Siliguri',sans-serif;color:var(--a-ink);transition:transform .2s,box-shadow .2s}
+.pc:hover{transform:translateY(-2px);box-shadow:0 16px 30px -22px rgba(80,55,10,.6)}
+.pc.off{opacity:.5}
+.pc-img,.pe-prev{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 55%,#3a2c18,#15110c 72%);display:grid;place-items:center;margin-bottom:8px}
+.pc-img > svg,.pe-prev > svg{width:78%;height:auto}
+.pc-img img,.pe-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pc b{display:block;font-size:15px}.pc small{color:var(--a-mut);font-size:12px}
+.tagx{position:absolute;left:8px;top:8px;background:#b3263c;color:#fff;font-size:11px;padding:2px 8px;border-radius:999px;z-index:2}
+.star{position:absolute;right:8px;top:6px;color:#f3d77a;font-size:18px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.a-dlg{border:0;border-radius:22px;padding:22px;width:min(860px,94vw);background:var(--a-card);color:var(--a-ink);box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+.a-dlg::backdrop{background:rgba(20,15,8,.55);backdrop-filter:blur(4px)}
+.pe{display:grid;grid-template-columns:240px minmax(0,1fr);gap:22px}
+.pe-photo{display:flex;flex-direction:column;gap:10px}
+.dlg-foot{display:flex;gap:10px;align-items:center;margin-top:8px}
+
+/* POS: reuse site calculator styles in a light frame */
+.admin .ratechips{background:var(--a-card);border:1px solid var(--a-line)}
+.admin .ratechips::before,.admin .ratechips::after{display:none}
+.pos-pick{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px;padding:14px}
+.pos-pick select{flex:1;min-width:240px;height:42px;border-radius:12px;border:1px solid var(--a-line);padding:0 12px;font:500 14px 'Hind Siliguri',sans-serif;background:#fff}
+.admin .summary{position:sticky;top:90px}
+.admin .summary h3{margin:4px 0 0;font:600 17px 'Hind Siliguri',sans-serif}
+.admin .line.glass{background:var(--a-card);border:1px solid var(--a-line);box-shadow:none}
+.admin .line.glass::before,.admin .line.glass::after{display:none}
+.admin #posTrxWrap[hidden]{display:none}
+.admin .toast{z-index:100}
+
+@media (max-width:1100px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.orders{grid-template-columns:1fr}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:270px;z-index:50;transform:translateX(-105%);visibility:hidden;transition:transform .35s cubic-bezier(.2,.7,.2,1),visibility .35s}
+  .side.open{transform:none;visibility:visible;box-shadow:20px 0 60px rgba(0,0,0,.4)}
+  .topbar{padding:12px 16px}.topbar .menu{display:grid}.topbar h2{font-size:22px}.who{display:none}
+  .views{padding:16px 14px 60px}.verify-banner{margin:12px 14px 0}
+  .pe{grid-template-columns:1fr}.search{min-width:0;width:100%}
+  .payx{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin .summary{position:static}
+}
+@media (max-width:520px){.kpis{grid-template-columns:1fr 1fr}.kpi b{font-size:22px}.rate-inputs,.fgrid2{grid-template-columns:1fr}.orders{grid-template-columns:1fr}}
+.admin section.view{padding:0;animation:aIn .35s ease both}
+@keyframes aIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.admin main{animation:none;min-height:0}

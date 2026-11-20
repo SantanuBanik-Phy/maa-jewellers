@@ -1,0 +1,69 @@
+rules_version = '2';
+
+// Maa Jewellers — Firestore security rules
+// Paste into Firebase console → Firestore Database → Rules → Publish.
+// Only the admin (verified email below) can change prices, products, settings and order status.
+// Customers can only create a new order and read the status of an order whose ID they know.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'santanubanik2k@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+    function customerStatus() {
+      return ['Pending', 'Cash at shop', 'Not paid'];
+    }
+
+    // BAJUS rates + shop settings: everyone reads, only admin writes
+    match /public/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /rateHistory/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Catalogue: everyone reads, only admin writes
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Full orders (customer name, phone, address): only admin can read
+    match /orders/{id} {
+      allow create: if isAdmin() || (
+        id.matches('^MJ-[0-9]{6}-[0-9]{6}-[A-Z0-9]{4}$')
+        && request.resource.data.id == id
+        && request.resource.data.status in customerStatus()
+        && request.resource.data.source == 'web'
+        && request.resource.data.grand is number && request.resource.data.grand > 0
+        && request.resource.data.items is list && request.resource.data.items.size() <= 30
+        && request.resource.data.keys().hasOnly(['id', 'createdAt', 'lang', 'rateDate', 'rates', 'making',
+             'customer', 'items', 'totals', 'grand', 'pay', 'status', 'lockUntil', 'source'])
+      );
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Public order status (no personal data) — for live tracking
+    match /orderStatus/{id} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.status in customerStatus()
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'method', 'paid', 'due', 'grand'])
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // One document per used TrxID — create-only, so the same TrxID can never be used twice
+    match /trx/{trxId} {
+      allow get: if true;
+      allow create: if trxId.matches('^[A-Z0-9]{6,20}$')
+        && request.resource.data.keys().hasOnly(['order', 'at']);
+      allow delete: if isAdmin();
+    }
+  }
+}

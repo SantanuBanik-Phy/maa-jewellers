@@ -172,7 +172,7 @@ function saveOrder_(o) {
   lock.waitLock(20000);
   try {
     const id = text_(o.id, 40);
-    if (!/^MJ-[0-9-]{6,30}$/.test(id)) return { ok: false, error: 'bad order id' };
+    if (!/^MJ-[0-9A-Z-]{6,40}$/.test(id)) return { ok: false, error: 'bad order id' };
     const existing = findOrder_(id);
     if (existing) return { ok: true, status: existing.status, already: true };
 

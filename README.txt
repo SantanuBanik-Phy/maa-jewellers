@@ -4,9 +4,13 @@ MAA JEWELLERS — WEBSITE
 PAGES
   index.html        Home (live rate, featured jewellery, why us)
   shop.html         Shop — all jewellery, search, filter, quick view
-  calculator.html   Cart + price calculation
-  checkout.html     Payment — bKash, Nagad, Bangla QR, cash at shop
-  invoice.html      Invoice — print / PDF / send on WhatsApp
+  calculator.html   Price estimator (any weight / carat at today's rate)
+  cart.html         Cart (prices fixed by the shop — customers can't edit)
+  checkout.html     Payment — bKash, Nagad, Bangla QR, cash · 15-min price lock
+  invoice.html      Invoice — print / PDF / WhatsApp + live order status
+  track.html        Track an order live by invoice number
+  admin.html        ADMIN ONLY — rates, orders, products, in-store sale, settings
+                    (setup: FIREBASE-SETUP.md)
   about.html        About the shop + logo story
   contact.html      Call, WhatsApp, map, message form, FAQ
 
@@ -25,7 +29,8 @@ HOW TO RUN
 
 
 UPDATE THE GOLD RATE (when BAJUS announces a new price)
-  Open rates.json and change the date and the four numbers (taka per bhori):
+  Easiest: open /admin.html → BAJUS rates → Publish. Every page updates at once.
+  Without Firebase: open rates.json and change the date and the four numbers (taka per bhori):
 
     {
       "date": "2026-11-20",

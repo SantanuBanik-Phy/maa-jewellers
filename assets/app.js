@@ -8,6 +8,7 @@
    ===================================================================== */
 (() => {
 'use strict';
+const SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
 
 const CONFIG = {
   whatsapp: '8801817533313',          // international format, no +
@@ -25,7 +26,8 @@ const CONFIG = {
   /* Google Sheet backend — paste your Apps Script Web App URL (ends with /exec).
      Leave '' to switch it off. Setup: SETUP-GOOGLE-SHEET.md */
   sheetUrl: '',
-  making: 6,                          // default making charge, %
+  making: 6,                          // default making charge, % (admin can change in the panel)
+  lockMinutes: 15,                    // checkout price lock
   liveEverySec: 60,                   // international price refresh
   fxEveryMin: 30
 };
@@ -34,29 +36,32 @@ const CONFIG = {
 const BUILTIN = { date: '2026-11-20', k22: 201146, k21: 192106, k18: 164987, trad: 135886 };
 
 /* Catalogue — w = weight in bhori (1 bhori = 16 ana). gem: ruby | emerald | sapphire | diamond */
+/* img = Unsplash photo id (free Unsplash License) — replace with your own photos from the admin panel. */
 const PRODUCTS = [
-  { id: 'p01', cat: 'necklace', kt: 'k22', w: 4,      gem: 'ruby',     badge: 'bridal', name: { bn: 'রাজকীয় রানী হার', en: 'Royal Rani Haar' } },
+  { id: 'p01', cat: 'necklace', kt: 'k22', w: 4,      gem: 'ruby',     badge: 'bridal', img: '1709295208567-ce817387e977', credit: 'Aslı Yaren Peker Kaya', name: { bn: 'ব্রাইডাল গোল্ড কালেকশন', en: 'Bridal Gold Collection' } },
   { id: 'p02', cat: 'necklace', kt: 'k22', w: 2.5,    gem: 'emerald',  badge: 'best',   name: { bn: 'পদ্ম চোকার', en: 'Lotus Choker' } },
-  { id: 'p03', cat: 'earrings', kt: 'k22', w: 0.5,    gem: 'ruby',     badge: 'best',   name: { bn: 'ঐতিহ্যবাহী ঝুমকা', en: 'Classic Jhumka' } },
-  { id: 'p04', cat: 'earrings', kt: 'k21', w: 0.625,  gem: 'emerald',  badge: '',       name: { bn: 'চাঁদবালি দুল', en: 'Chandbali Drops' } },
-  { id: 'p05', cat: 'bangles',  kt: 'k22', w: 2,      gem: 'ruby',     badge: 'bridal', name: { bn: 'নকশি বালা (জোড়া)', en: 'Nakshi Bala (pair)' } },
-  { id: 'p06', cat: 'bangles',  kt: 'k21', w: 3,      gem: 'sapphire', badge: '',       name: { bn: 'চিকন চুড়ি (৪টি)', en: 'Slim Churi (set of 4)' } },
-  { id: 'p07', cat: 'ring',     kt: 'k21', w: 0.25,   gem: 'ruby',     badge: 'new',    name: { bn: 'রুবি আংটি', en: 'Ruby Signet Ring' } },
-  { id: 'p08', cat: 'ring',     kt: 'k22', w: 0.1875, gem: 'diamond',  badge: '',       name: { bn: 'বিয়ের আংটি', en: 'Wedding Band' } },
-  { id: 'p09', cat: 'chain',    kt: 'k21', w: 0.5,    gem: 'diamond',  badge: '',       name: { bn: 'বক্স চেইন', en: 'Box Chain' } },
-  { id: 'p10', cat: 'chain',    kt: 'k22', w: 1,      gem: 'diamond',  badge: 'best',   name: { bn: 'রোপ চেইন', en: 'Rope Chain' } },
-  { id: 'p11', cat: 'pendant',  kt: 'k21', w: 0.1875, gem: 'diamond',  badge: 'new',    name: { bn: 'হার্ট লকেট', en: 'Heart Locket' } },
-  { id: 'p12', cat: 'pendant',  kt: 'k21', w: 0.3125, gem: 'emerald',  badge: '',       name: { bn: 'ময়ূর লকেট', en: 'Peacock Pendant' } },
+  { id: 'p03', cat: 'earrings', kt: 'k21', w: 0.25,   gem: 'diamond',  badge: 'new',    img: '1704445010872-2faefdd733aa', credit: 'Anastasia Anastasia', name: { bn: 'লাভ-নট টপ', en: 'Love-Knot Studs' } },
+  { id: 'p04', cat: 'earrings', kt: 'k22', w: 0.625,  gem: 'ruby',     badge: 'best',   name: { bn: 'ঐতিহ্যবাহী ঝুমকা', en: 'Classic Jhumka' } },
+  { id: 'p05', cat: 'bangles',  kt: 'k22', w: 3,      gem: 'ruby',     badge: 'bridal', img: '1611107683227-e9060eccd846', credit: 'Syed F Hashemi', name: { bn: 'নকশি চুড়ি সেট', en: 'Nakshi Bangle Set' } },
+  { id: 'p06', cat: 'bangles',  kt: 'k21', w: 1.5,    gem: 'diamond',  badge: '',       img: '1586878340506-af074f2ee999', credit: 'LUM3N', name: { bn: 'কাফ বালা', en: 'Cuff Bangle' } },
+  { id: 'p07', cat: 'ring',     kt: 'k21', w: 0.25,   gem: 'ruby',     badge: 'new',    img: '1608042314453-ae338d80c427', credit: 'Luisana Galicia', name: { bn: 'পাথরের আংটি', en: 'Gemstone Ring' } },
+  { id: 'p08', cat: 'ring',     kt: 'k22', w: 0.375,  gem: 'diamond',  badge: '',       img: '1644872276691-6f7288c6061a', credit: 'Oscar Ivan Esquivel Arteaga', name: { bn: 'বিয়ের আংটি (জোড়া)', en: 'Wedding Bands (pair)' } },
+  { id: 'p09', cat: 'chain',    kt: 'k21', w: 0.75,   gem: 'diamond',  badge: '',       img: '1640183297213-863406155597', credit: 'Shruti Singh', name: { bn: 'গলার চেইন', en: 'Neck Chain' } },
+  { id: 'p10', cat: 'chain',    kt: 'k22', w: 1,      gem: 'diamond',  badge: 'best',   img: '1602527418456-8b5cd2c7a4c2', credit: 'Paolo Cifuentes', name: { bn: 'রোপ চেইন', en: 'Rope Chain' } },
+  { id: 'p11', cat: 'pendant',  kt: 'k21', w: 0.25,   gem: 'diamond',  badge: 'new',    img: '1761211115639-54394f139142', credit: 'John Marfe Bitoon', name: { bn: 'হার্ট লকেট', en: 'Heart Locket' } },
+  { id: 'p12', cat: 'pendant',  kt: 'k21', w: 0.3125, gem: 'emerald',  badge: '',       img: '1761211106346-939cb32005d7', credit: 'John Marfe Bitoon', name: { bn: 'হার্ট চার্ম নেকলেস', en: 'Heart Charm Necklace' } },
   { id: 'p13', cat: 'nosepin',  kt: 'k18', w: 0.0625, gem: 'diamond',  badge: '',       name: { bn: 'ফুল নাকফুল', en: 'Flower Nose Pin' } },
   { id: 'p14', cat: 'nosepin',  kt: 'k21', w: 0.25,   gem: 'ruby',     badge: 'bridal', name: { bn: 'বিয়ের নথ', en: 'Bridal Nath' } },
   { id: 'p15', cat: 'bracelet', kt: 'k18', w: 0.375,  gem: 'sapphire', badge: 'new',    name: { bn: 'চার্ম ব্রেসলেট', en: 'Charm Bracelet' } },
-  { id: 'p16', cat: 'bracelet', kt: 'k22', w: 1,      gem: 'ruby',     badge: '',       name: { bn: 'কাঁকন ব্রেসলেট', en: 'Kankan Bracelet' } }
+  { id: 'p16', cat: 'bracelet', kt: 'k22', w: 1,      gem: 'ruby',     badge: '',       name: { bn: 'কাঁকন ব্রেসলেট', en: 'Kankan Bracelet' } },
+  { id: 'p17', cat: 'ring',     kt: 'k18', w: 0.3125, gem: 'diamond',  badge: 'new',    img: '1611955167811-4711904bb9f8', credit: 'Gary Yost', name: { bn: 'টোপাজ আংটি', en: 'Topaz Cocktail Ring' } },
+  { id: 'p18', cat: 'ring',     kt: 'k18', w: 0.1875, gem: 'diamond',  badge: '',       img: '1634390756696-505390283f61', credit: 'Sama Hosseini', name: { bn: 'সলিটেয়ার আংটি', en: 'Solitaire Ring' } }
 ];
-const FEATURED = ['p01', 'p03', 'p05', 'p07'];
+const FEATURED = ['p01', 'p05', 'p11', 'p17'];
 const CATS = ['necklace', 'earrings', 'bangles', 'ring', 'chain', 'pendant', 'nosepin', 'bracelet'];
 const CARATS = ['k22', 'k21', 'k18', 'trad'];
 const GRAM = 11.664, OZ = 31.1035;
-const NAV = [['home', 'index.html'], ['shop', 'shop.html'], ['calc', 'calculator.html'], ['pay', 'checkout.html'], ['invoice', 'invoice.html'], ['about', 'about.html'], ['contact', 'contact.html']];
+const NAV = [['home', 'index.html'], ['shop', 'shop.html'], ['calc', 'calculator.html'], ['track', 'track.html'], ['about', 'about.html'], ['contact', 'contact.html']];
 
 /* =====================================================================
    TRANSLATIONS
@@ -113,9 +118,9 @@ bn: {
   cat_necklace: 'নেকলেস', cat_earrings: 'কানের দুল', cat_bangles: 'চুড়ি ও বালা', cat_ring: 'আংটি', cat_chain: 'চেইন', cat_pendant: 'লকেট', cat_nosepin: 'নাকফুল', cat_bracelet: 'ব্রেসলেট', cat_custom: 'অন্যান্য গহনা',
   qv_weight: 'ওজন', qv_kt: 'ক্যারেট বেছে নিন', qv_gold: 'স্বর্ণের মূল্য', qv_mk: 'মজুরি ({m}%)', qv_total: 'আনুমানিক মূল্য',
   /* calculator */
-  calc_title: 'দাম হিসাব', calc_sub: 'কার্টের প্রতিটি গহনার ক্যারেট, ওজন ও মজুরি দিন — আজকের দরে সাথে সাথে হিসাব।',
+  calc_title: 'দাম হিসাব', calc_sub: 'যেকোনো ওজন ও ক্যারেটে আজকের বাজুস দরে আনুমানিক দাম জানুন।',
   step1: 'বাছাই', step2: 'হিসাব', step3: 'চালান', today_rate: 'আজকের দর',
-  cart_empty: 'কার্ট খালি', cart_empty2: 'শপ থেকে গহনা যোগ করুন অথবা নিজস্ব গহনা যোগ করুন',
+  cart_empty: 'কার্ট খালি', cart_empty2: 'শপ থেকে গহনা যোগ করুন, অথবা দাম হিসাব পাতা থেকে নিজস্ব ওজনে অর্ডার দিন',
   go_shop: 'শপে যান', add_custom: 'নিজস্ব গহনা যোগ করুন', item_name: 'গহনার নাম', carat: 'ক্যারেট', weight: 'ওজন',
   by_bhori: 'ভরি', by_gram: 'গ্রাম', bhori: 'ভরি', ana: 'আনা', rati: 'রতি', point: 'পয়েন্ট', gram: 'গ্রাম',
   making: 'মজুরি', mc_pct: '% হারে', mc_tk: '৳ / ভরি', gold_value: 'স্বর্ণ', remove: 'মুছুন', need_w: 'ওজন দিন', removed: 'গহনাটি সরানো হয়েছে',
@@ -129,7 +134,7 @@ bn: {
   t_noweight: 'সব গহনার ওজন দিন', t_empty: 'কার্ট খালি — আগে গহনা যোগ করুন', t_inv: '✦ চালান তৈরি হয়েছে',
   /* invoice */
   inv_title: 'চালান', inv_sub: 'সোনালি ফ্রেম ও ওয়াটারমার্কসহ চালান — প্রিন্ট, PDF বা হোয়াটসঅ্যাপে পাঠান।',
-  inv_none: 'এখনো কোনো চালান নেই', inv_none2: 'হিসাব পাতায় কার্টের গহনার ওজন দিয়ে “চালান তৈরি করুন” চাপুন।', go_calc: 'হিসাব পাতায় যান',
+  inv_none: 'এখনো কোনো চালান নেই', inv_none2: 'কার্ট থেকে অর্ডার দিন — পেমেন্টের পরই চালান এখানে দেখাবে।', go_calc: 'হিসাব পাতায় যান',
   print: 'প্রিন্ট / PDF', share_wa: 'হোয়াটসঅ্যাপে পাঠান', edit_cart: 'হিসাব সম্পাদনা', new_sale: 'নতুন বিক্রয়',
   inv_word: 'চালান', inv_no: 'চালান নং', inv_date: 'তারিখ', inv_time: 'সময়', bill_to: 'ক্রেতা', mobile: 'মোবাইল', rate_date: 'দরের তারিখ',
   th_sl: 'ক্রম', th_item: 'গহনা', th_kt: 'ক্যারেট', th_w: 'ওজন', th_rate: 'দর / ভরি', th_mc: 'মজুরি', th_amt: 'মূল্য',
@@ -189,7 +194,7 @@ bn: {
   confirm_pay: 'পেমেন্ট নিশ্চিত করে চালান তৈরি', send_proof: 'হোয়াটসঅ্যাপে পেমেন্ট প্রমাণ পাঠান',
   verify_note: 'আপনার TrxID দোকান থেকে যাচাই করার পর অর্ডার চূড়ান্ত হবে। প্রমাণ হোয়াটসঅ্যাপে পাঠালে দ্রুত যাচাই হয়।',
   order_sum: 'অর্ডারের সারাংশ', pay_now: 'এখন পরিশোধ', due: 'বাকি', paid: 'পরিশোধিত',
-  pay_empty: 'পেমেন্টের জন্য কার্টে গহনা নেই', pay_empty2: 'শপ থেকে গহনা যোগ করুন, হিসাব পাতায় ওজন দিন, তারপর পেমেন্ট করুন।',
+  pay_empty: 'পেমেন্টের জন্য কার্টে গহনা নেই', pay_empty2: 'শপ থেকে গহনা কার্টে যোগ করুন, তারপর পেমেন্ট করুন।',
   pay_noweight: 'হিসাব পাতায় সব গহনার ওজন দিন', go_pay: 'পেমেন্ট করুন', inv_nopay: 'পেমেন্ট ছাড়া চালান',
   t_trx: 'সঠিক TrxID লিখুন (অন্তত ৬ অক্ষর)', t_amt: 'পরিশোধের সঠিক পরিমাণ লিখুন', secure: 'নিরাপদ পেমেন্ট',
   st_paid: 'PAID · পরিশোধিত', st_part: 'PARTIAL · আংশিক', pay_method: 'পেমেন্ট মাধ্যম', pay_ref: 'রেফারেন্স', pay_from: 'প্রেরক',
@@ -204,6 +209,18 @@ bn: {
   st_pending: 'যাচাইয়ের অপেক্ষায়', st_verified: 'যাচাইকৃত ✓', st_mismatch: 'পরিমাণ মেলেনি', st_dup: 'TrxID আগে ব্যবহৃত', st_cash: 'দোকানে নগদ', st_notpaid: 'পেমেন্ট ছাড়া', st_rejected: 'বাতিল', st_delivered: 'হস্তান্তরিত',
   ver_note: 'বিকাশ / নগদ / ব্যাংকের SMS মিলে গেলে স্বয়ংক্রিয়ভাবে যাচাই হয় — দোকান থেকেও যাচাই করা হয়। পাতাটি খোলা থাকলে নিজে থেকেই হালনাগাদ হবে।',
   t_dup: 'এই TrxID আগেই অন্য অর্ডারে ব্যবহার হয়েছে — সঠিক TrxID দিন', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'সর্বশেষ যাচাই {t}',
+  nav_cart: 'কার্ট', nav_cart_en: 'Cart', nav_track: 'অর্ডার ট্র্যাক', nav_track_en: 'Track order', step_cart: 'কার্ট',
+  crt_title: 'আপনার কার্ট', crt_sub: 'গহনা, ওজন ও দাম — আজকের বাজুস দরে। পরের ধাপে পেমেন্ট।', crt_empty2: 'শপ থেকে পছন্দের গহনা যোগ করুন।',
+  checkout_btn: 'চেকআউট — পেমেন্ট করুন', need_contact: 'নাম ও মোবাইল নম্বর দিন', ro_note: 'দাম বাজুস দর ও দোকানের মজুরি অনুযায়ী স্বয়ংক্রিয় — গ্রাহক পরিবর্তন করতে পারেন না।',
+  est_title: 'দাম হিসাব', est_sub: 'যেকোনো ওজন ও ক্যারেটে আজকের বাজুস দরে আনুমানিক দাম জানুন।', est_result: 'আনুমানিক দাম', est_add: 'এই ওজনে অর্ডার করুন', est_wa: 'হোয়াটসঅ্যাপে জিজ্ঞাসা',
+  est_making: 'মজুরি (দোকান নির্ধারিত)', est_note: 'দর ও মজুরি দোকান নির্ধারিত — শুধু অ্যাডমিন পরিবর্তন করতে পারেন।', custom_order: 'নিজস্ব অর্ডার', est_need: 'ওজন দিন', est_h1: 'ক্যারেট বেছে নিন', est_h2: 'ওজন',
+  lock_h: 'দাম লক করা হয়েছে', lock_d: '{m} মিনিট এই দাম নিশ্চিত — দর বদলালেও আপনার দাম বদলাবে না।', lock_left: 'বাকি', lock_exp: 'লকের সময় শেষ — আজকের দরে আবার লক করা হয়েছে',
+  tr_h: 'অর্ডার ট্র্যাকিং', tr_s1: 'অর্ডার গৃহীত', tr_s2: 'পেমেন্ট যাচাই', tr_s3: 'পেমেন্ট নিশ্চিত', tr_s4: 'হস্তান্তর', tr_live: 'লাইভ — দোকান যাচাই করলেই সাথে সাথে এখানে দেখাবে', tr_problem: 'সমস্যা হয়েছে — দোকানে যোগাযোগ করুন',
+  track_title: 'অর্ডার ট্র্যাক করুন', track_sub: 'চালান নম্বর দিয়ে অর্ডার ও পেমেন্টের অবস্থা লাইভ দেখুন।', track_ph: 'যেমন: MJ-261121-104512-K7Q4', track_btn: 'ট্র্যাক করুন',
+  my_orders: 'এই ডিভাইসের অর্ডার', no_orders: 'এই ডিভাইসে এখনো কোনো অর্ডার নেই', not_found: 'এই নম্বরে কোনো অর্ডার পাওয়া যায়নি', track_off: 'অনলাইন ট্র্যাকিং এখনো চালু হয়নি — হোয়াটসঅ্যাপে যোগাযোগ করুন।', searching: 'খোঁজা হচ্ছে…',
+  order_placed: '✦ অর্ডার সম্পন্ন — চালান তৈরি হয়েছে', order_saved_local: 'ইন্টারনেট সমস্যা — অর্ডার ডিভাইসে সংরক্ষিত, সংযোগ পেলে পাঠানো হবে', placing: 'অর্ডার পাঠানো হচ্ছে…',
+  sold_out: 'স্টক শেষ', photo_note: 'ছবি প্রতীকী — আসল গহনা দোকানে বা হোয়াটসঅ্যাপে দেখে নিন।', photo_by: 'ছবি',
+  rate_meta_live: 'বাজুস দর · দোকান থেকে লাইভ হালনাগাদ · কার্যকর: {d}', order_id: 'অর্ডার নং', view: 'দেখুন', cloud_ok: 'দোকানের সিস্টেমে জমা হয়েছে ✓',
   wa_hi: 'আসসালামু আলাইকুম / নমস্কার, মা জুয়েলার্স। আমি গহনা সম্পর্কে জানতে চাই।',
   wa_enq: 'এই গহনাটি সম্পর্কে জানতে চাই', wa_order: 'নতুন অর্ডার', wa_inv: 'চালান', wa_from: 'ওয়েবসাইট থেকে পাঠানো', wa_est: 'আনুমানিক মূল্য'
 },
@@ -253,9 +270,9 @@ en: {
   b_bridal: 'Bridal', b_best: 'Popular', b_new: 'New',
   cat_necklace: 'Necklace', cat_earrings: 'Earrings', cat_bangles: 'Bangles', cat_ring: 'Ring', cat_chain: 'Chain', cat_pendant: 'Pendant', cat_nosepin: 'Nose pin', cat_bracelet: 'Bracelet', cat_custom: 'Other jewellery',
   qv_weight: 'Weight', qv_kt: 'Choose carat', qv_gold: 'Gold value', qv_mk: 'Making ({m}%)', qv_total: 'Estimated price',
-  calc_title: 'Price calculator', calc_sub: "Set carat, weight and making for each piece in your cart — priced instantly at today's rate.",
+  calc_title: 'Price calculator', calc_sub: "Estimate the price of any weight and carat at today's BAJUS rate.",
   step1: 'Choose', step2: 'Calculate', step3: 'Invoice', today_rate: "Today's rate",
-  cart_empty: 'Your cart is empty', cart_empty2: 'Add jewellery from the shop or add your own item',
+  cart_empty: 'Your cart is empty', cart_empty2: 'Add jewellery from the shop, or order a custom weight from the price calculator',
   go_shop: 'Go to shop', add_custom: 'Add your own item', item_name: 'Item name', carat: 'Carat', weight: 'Weight',
   by_bhori: 'Bhori', by_gram: 'Gram', bhori: 'bhori', ana: 'ana', rati: 'rati', point: 'point', gram: 'g',
   making: 'Making charge', mc_pct: '% rate', mc_tk: '৳ / bhori', gold_value: 'Gold', remove: 'Remove', need_w: 'Enter weight', removed: 'Item removed',
@@ -268,7 +285,7 @@ en: {
   make_inv: 'Create invoice', order_wa: 'Send order on WhatsApp', more_items: 'Add more jewellery',
   t_noweight: 'Enter the weight for every item', t_empty: 'The cart is empty — add jewellery first', t_inv: '✦ Invoice created',
   inv_title: 'Invoice', inv_sub: 'A gold-framed invoice with watermark — print, save as PDF or send on WhatsApp.',
-  inv_none: 'No invoice yet', inv_none2: 'On the calculator page, enter the weights and press “Create invoice”.', go_calc: 'Go to calculator',
+  inv_none: 'No invoice yet', inv_none2: 'Place an order from your cart — the invoice appears here right after payment.', go_calc: 'Go to calculator',
   print: 'Print / PDF', share_wa: 'Send on WhatsApp', edit_cart: 'Edit calculation', new_sale: 'New sale',
   inv_word: 'Invoice', inv_no: 'Invoice no.', inv_date: 'Date', inv_time: 'Time', bill_to: 'Bill to', mobile: 'Mobile', rate_date: 'Rate date',
   th_sl: '#', th_item: 'Item', th_kt: 'Carat', th_w: 'Weight', th_rate: 'Rate / bhori', th_mc: 'Making', th_amt: 'Amount',
@@ -324,7 +341,7 @@ en: {
   confirm_pay: 'Confirm payment & create invoice', send_proof: 'Send payment proof on WhatsApp',
   verify_note: 'Your order is final once the shop verifies the TrxID. Sending the proof on WhatsApp speeds this up.',
   order_sum: 'Order summary', pay_now: 'Paying now', due: 'Due', paid: 'Paid',
-  pay_empty: 'Nothing in the cart to pay for', pay_empty2: 'Add jewellery from the shop, enter weights on the calculator, then pay.',
+  pay_empty: 'Nothing in the cart to pay for', pay_empty2: 'Add jewellery to your cart from the shop, then pay.',
   pay_noweight: 'Enter every item’s weight on the calculator page', go_pay: 'Proceed to payment', inv_nopay: 'Invoice without payment',
   t_trx: 'Enter a valid TrxID (at least 6 characters)', t_amt: 'Enter a valid amount', secure: 'Secure payment',
   st_paid: 'PAID', st_part: 'PARTIALLY PAID', pay_method: 'Payment method', pay_ref: 'Reference', pay_from: 'Paid from',
@@ -339,6 +356,18 @@ en: {
   st_pending: 'Waiting for verification', st_verified: 'Verified ✓', st_mismatch: 'Amount does not match', st_dup: 'TrxID already used', st_cash: 'Cash at shop', st_notpaid: 'No payment', st_rejected: 'Rejected', st_delivered: 'Delivered',
   ver_note: 'Verified automatically when the bKash / Nagad / bank SMS matches — the shop can also verify it. This page updates itself while open.',
   t_dup: 'This TrxID was already used on another order — enter the correct TrxID', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'Last checked {t}',
+  nav_cart: 'Cart', nav_cart_en: 'কার্ট', nav_track: 'Track order', nav_track_en: 'অর্ডার ট্র্যাক', step_cart: 'Cart',
+  crt_title: 'Your cart', crt_sub: "Jewellery, weight and price at today's BAJUS rate. Payment is the next step.", crt_empty2: 'Add your favourite pieces from the shop.',
+  checkout_btn: 'Checkout — pay now', need_contact: 'Please enter your name and mobile number', ro_note: 'Prices follow the BAJUS rate and the shop’s making charge — they cannot be changed by customers.',
+  est_title: 'Price calculator', est_sub: "Estimate the price of any weight and carat at today's BAJUS rate.", est_result: 'Estimated price', est_add: 'Order this weight', est_wa: 'Ask on WhatsApp',
+  est_making: 'Making charge (set by shop)', est_note: 'Rates and making charge are set by the shop — only the admin can change them.', custom_order: 'Custom order', est_need: 'Enter a weight', est_h1: 'Choose carat', est_h2: 'Weight',
+  lock_h: 'Price locked', lock_d: 'This price is guaranteed for {m} minutes — even if the rate changes.', lock_left: 'left', lock_exp: "Lock expired — re-locked at today's rate",
+  tr_h: 'Order tracking', tr_s1: 'Order placed', tr_s2: 'Payment check', tr_s3: 'Payment confirmed', tr_s4: 'Handed over', tr_live: 'Live — updates here the moment the shop verifies', tr_problem: 'There is a problem — please contact the shop',
+  track_title: 'Track your order', track_sub: 'Enter your invoice number to see your order and payment status live.', track_ph: 'e.g. MJ-261121-104512-K7Q4', track_btn: 'Track',
+  my_orders: 'Orders on this device', no_orders: 'No orders on this device yet', not_found: 'No order found with this number', track_off: 'Online tracking is not switched on yet — please contact us on WhatsApp.', searching: 'Searching…',
+  order_placed: '✦ Order placed — invoice created', order_saved_local: 'Connection problem — order saved on this device and will be sent when online', placing: 'Placing order…',
+  sold_out: 'Sold out', photo_note: 'Photos are for illustration — see the actual piece in store or on WhatsApp.', photo_by: 'Photo',
+  rate_meta_live: 'BAJUS rate · updated live by the shop · effective {d}', order_id: 'Order no.', view: 'View', cloud_ok: 'Received by the shop system ✓',
   wa_hi: 'Hello Maa Jewellers, I would like to know about your jewellery.',
   wa_enq: 'I would like to know about this piece', wa_order: 'New order', wa_inv: 'Invoice', wa_from: 'Sent from the website', wa_est: 'Estimated price'
 }};
@@ -396,8 +425,11 @@ function weightText(tb) {
   return out.length ? out.join(' ') : '—';
 }
 const ktLabel = (k) => k === 'trad' ? t('kt_short_trad') : ({ k22: '22K', k21: '21K', k18: '18K' })[k];
-const prod = (id) => PRODUCTS.find(p => p.id === id);
-const pName = (p) => (p ? (p.name[lang] || p.name.en) : '');
+const prod = (id) => catalog.find(p => p.id === id) || PRODUCTS.find(p => p.id === id);
+const pName = (p) => (p ? ((p.name && (p.name[lang] || p.name.en)) || '') : '');
+const imgSrc = (p, w = 600) => !p || !p.img ? '' : /^(https?:|data:)/.test(p.img) ? p.img : `https://images.unsplash.com/photo-${p.img}?w=${w}&h=${w}&fit=crop&q=72&auto=format`;
+const photo = (p, w, cls = 'ph') => p && p.img ? `<img class="${cls}" src="${imgSrc(p, w)}" alt="${esc(pName(p))}" loading="lazy" decoding="async" onerror="this.remove()">` : '';
+const lineThumb = (l) => { const p = l.pid ? prod(l.pid) : null; return `<div class="thumb">${art(l.cat || 'custom', l.gem)}${photo(p, 160)}</div>`; };
 const waLink = (text) => 'https://wa.me/' + CONFIG.whatsapp + (text ? '?text=' + encodeURIComponent(text) : '');
 const openWA = (text) => { window.open(waLink(text), '_blank', 'noopener'); };
 
@@ -431,9 +463,30 @@ function words(n) {
    ===================================================================== */
 const PAGE = document.body.dataset.page || 'home';
 let official = Object.assign({ from: 'builtin' }, BUILTIN);
-let override = LS.get('mj_override', null);
-let cart = LS.get('mj_cart', []); if (!Array.isArray(cart)) cart = [];
-let buyer = Object.assign({ name: '', phone: '', addr: '', disc: '', vat: '', adv: '' }, LS.get('mj_buyer', {}));
+let override = null;                       // prices are set only by the admin (Firebase)
+const CART_KEY = PAGE === 'admin' ? 'mj_pos_cart' : 'mj_cart', BUYER_KEY = PAGE === 'admin' ? 'mj_pos_buyer' : 'mj_buyer';
+let cart = LS.get(CART_KEY, []); if (!Array.isArray(cart)) cart = [];
+let buyer = Object.assign({ name: '', phone: '', addr: '', disc: '', vat: '', adv: '' }, LS.get(BUYER_KEY, {}));
+if (PAGE !== 'admin') { buyer.disc = ''; buyer.vat = ''; buyer.adv = ''; }
+let catalog = PRODUCTS.slice();
+let fbMod = null;                           // Firebase layer (assets/fb.js), loaded when configured
+let lockState = LS.get('mj_lock', null);
+const lockValid = () => !!(lockState && lockState.rates && Date.now() < lockState.until);
+const cachedRates = LS.get('mj_rates_cache', null);
+if (cachedRates && cachedRates.date >= official.date) official = Object.assign({ from: 'firebase' }, cachedRates);
+const cachedSettings = LS.get('mj_settings_cache', null);
+if (cachedSettings) applySettings(cachedSettings, true);
+const cachedCatalog = LS.get('mj_catalog_cache', null);
+if (Array.isArray(cachedCatalog) && cachedCatalog.length) catalog = cachedCatalog;
+function applySettings(st, quiet) {
+  if (!st) return;
+  if (toNum(st.making) || st.making === 0) CONFIG.making = Number(st.making);
+  if (toNum(st.lockMinutes)) CONFIG.lockMinutes = Number(st.lockMinutes);
+  if (/^01[3-9]\d{8}$/.test(st.bkash || '')) CONFIG.bkash = st.bkash;
+  if (/^01[3-9]\d{8}$/.test(st.nagad || '')) CONFIG.nagad = st.nagad;
+  CONFIG.notice = st.noticeOn ? { bn: st.notice_bn || '', en: st.notice_en || '' } : null;
+  if (!quiet) LS.set('mj_settings_cache', st);
+}
 let invoice = LS.get('mj_invoice', null);
 let live = { state: 'wait', spot: 0, prev: 0, at: 0 };
 let fx = LS.get('mj_fx', { v: 0, at: 0 });
@@ -441,13 +494,18 @@ let hist = LS.get('mj_hist', []); if (!Array.isArray(hist)) hist = [];
 const lastSpot = hist.length ? hist[hist.length - 1] : null;
 if (lastSpot) live = { state: 'stale', spot: lastSpot[1], prev: lastSpot[1], at: lastSpot[0] };
 
-const saveCart = () => LS.set('mj_cart', cart);
-const saveBuyer = () => LS.set('mj_buyer', buyer);
+const saveCart = () => LS.set(CART_KEY, cart);
+const saveBuyer = () => LS.set(BUYER_KEY, buyer);
 function rateOf(k) {
-  if (override && override.base === official.date && toNum(override[k])) return toNum(override[k]);
+  if (PAGE === 'pay' && lockValid() && lockState.rates[k]) return lockState.rates[k];
   return official[k] || 0;
 }
-const isCustom = (k) => !!(override && override.base === official.date && toNum(override[k]));
+function ensureLock(force) {
+  if (!force && lockValid()) return false;
+  lockState = { at: Date.now(), until: Date.now() + CONFIG.lockMinutes * 60000, date: official.date, rates: { k22: official.k22, k21: official.k21, k18: official.k18, trad: official.trad } };
+  LS.set('mj_lock', lockState);
+  return true;
+}
 const estimate = (p, kt) => { const g = p.w * rateOf(kt || p.kt); return { gold: g, making: g * CONFIG.making / 100, total: g * (1 + CONFIG.making / 100) }; };
 function intlBhori(k = 24) { return live.spot && fx.v ? live.spot / OZ * GRAM * fx.v * k / 24 : 0; }
 function dayChange() {
@@ -458,8 +516,9 @@ function dayChange() {
 
 function calc(l) {
   const tb = l.mode === 'gram' ? toNum(l.g) / GRAM : toNum(l.b) + toNum(l.a) / 16 + toNum(l.r) / 96 + toNum(l.p) / 960;
-  const rate = rateOf(l.carat), gold = tb * rate, mc = toNum(l.mc);
-  const making = l.mcu === 'tk' ? tb * mc : gold * mc / 100;
+  const rate = rateOf(l.carat), gold = tb * rate;
+  const mc = PAGE === 'admin' ? toNum(l.mc) : CONFIG.making, mcu = PAGE === 'admin' ? l.mcu : 'pct';
+  const making = mcu === 'tk' ? tb * mc : gold * mc / 100;
   return { tb, rate, gold, making, total: gold + making };
 }
 function totals() {
@@ -566,8 +625,8 @@ function corner() {
 /* =====================================================================
    CHROME — sprite, background, masthead, footer, floating, dialogs
    ===================================================================== */
-function injectChrome() {
-  const sprite = `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+function spriteHTML() {
+  return `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".25" stop-color="#e7c34c"/><stop offset=".5" stop-color="#9c6e1e"/><stop offset=".72" stop-color="#f3d98c"/><stop offset="1" stop-color="#7e5a1e"/></linearGradient>
     <radialGradient id="enamel" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#2a1f12"/><stop offset="1" stop-color="#0d0905"/></radialGradient>
     <linearGradient id="gem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e9eef3"/><stop offset="1" stop-color="#b9c4d1"/></linearGradient>
@@ -578,8 +637,11 @@ function injectChrome() {
     <linearGradient id="sparkfill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2a400"/><stop offset="1" stop-color="#e2a400"/></linearGradient>
     <symbol id="spark" viewBox="-12 -12 24 24"><path d="M0 -12 L2.2 -2.2 L12 0 L2.2 2.2 L0 12 L-2.2 2.2 L-12 0 L-2.2 -2.2 Z" fill="#fff3c4"/></symbol>
   </defs></svg>`;
+}
+function injectChrome() {
+  const sprite = spriteHTML();
   const bg = `<div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-    <div class="grain" aria-hidden="true"></div><canvas id="dust" aria-hidden="true"></canvas><div class="spotlight" id="spot" aria-hidden="true"></div>`;
+    <div class="grain" aria-hidden="true"></div><canvas id="gems" aria-hidden="true"></canvas><div class="spotlight" id="spot" aria-hidden="true"></div>`;
   const head = `<header class="masthead" id="masthead">
     <div class="progress" id="progress"></div>
     <div class="ticker" role="region" id="ticker">
@@ -593,10 +655,11 @@ function injectChrome() {
       <div class="tools">
         <button class="tbtn" type="button" data-lang-toggle>${ICON.globe}<span class="lbl-txt" id="langLbl"></span></button>
         <button class="tbtn" type="button" data-theme-toggle>${ICON.moon}${ICON.sun}</button>
-        <a class="tbtn" href="calculator.html" id="cartBtn">${ICON.cart}<span class="cnt" id="cartCnt"></span></a>
+        <a class="tbtn" href="cart.html" id="cartBtn">${ICON.cart}<span class="cnt" id="cartCnt"></span></a>
         <button class="tbtn menu-btn" type="button" data-menu>${ICON.menu}</button>
       </div>
     </div></div>
+    <div class="notice" id="notice" hidden></div>
   </header>
   <div class="drawer" id="drawer"><div class="scrim" data-close-menu></div>
     <div class="panel glass" role="dialog" aria-modal="true">
@@ -623,13 +686,8 @@ function injectChrome() {
     <div class="foot-bottom"><span>© <span id="year"></span> <span data-i18n="brand"></span> · <span data-i18n="rights"></span></span><span>MAA JEWELLERS · PARASHURAM · FENI</span></div>
   </div></footer>
   <a class="wa-fab" href="${waLink()}" target="_blank" rel="noopener" data-wa id="waFab"><span class="c">${ICON.wa}</span><span class="tip glass" data-i18n="wa_tip"></span></a>
-  <a class="fab glass ${PAGE === 'calc' || PAGE === 'invoice' || PAGE === 'pay' ? 'hide' : ''}" href="calculator.html" id="fab"><span class="bag">${ICON.cart}<span class="badge2" id="fabCount">0</span></span><span><small data-i18n="cart"></small><b id="fabTotal">৳ 0</b></span></a>
+  <a class="fab glass ${['cart', 'invoice', 'pay', 'track'].includes(PAGE) ? 'hide' : ''}" href="cart.html" id="fab"><span class="bag">${ICON.cart}<span class="badge2" id="fabCount">0</span></span><span><small data-i18n="cart"></small><b id="fabTotal">৳ 0</b></span></a>
   <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
-  <dialog class="dlg" id="rateDlg"><form method="dialog" class="dlg-in glass" id="rateForm">
-    <h3 data-i18n="dlg_title"></h3><p data-i18n="dlg_sub"></p><div class="fgrid" id="dlgFields"></div>
-    <div class="dlg-actions"><button class="btn btn-ghost btn-sm" type="button" id="dlgReset" data-i18n="use_bajus"></button>
-      <div style="display:flex;gap:10px"><button class="btn btn-glass btn-sm" type="button" data-close-dlg data-i18n="cancel"></button><button class="btn btn-gold btn-sm" type="submit" data-i18n="save"></button></div></div>
-  </form></dialog>
   <dialog class="dlg wide" id="qvDlg"><div class="dlg-in glass" id="qvBody"></div></dialog>
   <div class="cursor" id="cursor"></div><div class="cursor-dot" id="cursorDot"></div>`;
   document.body.insertAdjacentHTML('beforeend', foot);
@@ -653,6 +711,8 @@ function renderChrome() {
   $('#lockup').setAttribute('aria-label', t('brand'));
   $('#year').textContent = dg(new Date().getFullYear());
   $('#footAccept').innerHTML = payBadges();
+  const nt = $('#notice');
+  if (nt) { const msg = CONFIG.notice && (CONFIG.notice[lang] || CONFIG.notice.bn || CONFIG.notice.en); nt.hidden = !msg; nt.innerHTML = msg ? `<span>✦</span><b>${esc(msg)}</b><span>✦</span>` : ''; }
   $$('[data-wa]').forEach(a => { if (a.tagName === 'A') a.href = waLink(t('wa_hi')); });
   updateCartBadges();
 }
@@ -788,6 +848,7 @@ async function loadRatesFile() {
   if (!/^https?:/.test(location.protocol)) return;
   try {
     const j = await getJSON('rates.json?v=' + Date.now(), 6000);
+    if (fbMod || (official.from === 'firebase' && j && j.date <= official.date)) return;
     if (j && /^\d{4}-\d{2}-\d{2}$/.test(j.date) && CARATS.every(k => toNum(j[k])) && j.date >= official.date) {
       official = { from: 'file', date: j.date }; CARATS.forEach(k => { official[k] = toNum(j[k]); });
       rerenderRates();
@@ -798,7 +859,8 @@ function rerenderRates() {
   renderChrome(); renderTicker(); renderIntlPanel();
   if (PAGE === 'home') { renderRateBoard(); renderHeroLive(); renderFeatured(); }
   if (PAGE === 'shop') renderShop();
-  if (PAGE === 'calc') { renderRateChips(); renderCart(); }
+  if (PAGE === 'calc') { renderRateChips(); renderEstimator(); }
+  if (PAGE === 'cart' || PAGE === 'admin') { renderRateChips(); renderCart(); }
   if (PAGE === 'pay') renderCheckout();
 }
 
@@ -808,17 +870,16 @@ function rerenderRates() {
 let countedOnce = false;
 function renderRateBoard() {
   const el = $('#rateBoard'); if (!el) return;
-  let meta = t(official.from === 'file' ? 'rate_meta_file' : 'rate_meta', { d: fdate(official.date) });
-  if (CARATS.some(isCustom)) meta += t('rate_meta_custom');
+  const meta = t(official.from === 'firebase' ? 'rate_meta_live' : official.from === 'file' ? 'rate_meta_file' : 'rate_meta', { d: fdate(official.date) });
   el.innerHTML = `<div class="rate-grid">${CARATS.map((k, i) => `
       <article class="rate glass tilt reveal in" style="animation-delay:${i * .08}s">
-        <div class="rate-top"><span class="kt">${ktLabel(k)}</span><span class="tag ${isCustom(k) ? 'custom' : ''}">${isCustom(k) ? t('custom') : t('official')}</span></div>
+        <div class="rate-top"><span class="kt">${ktLabel(k)}</span><span class="tag">${t('official')}</span></div>
         <h3>${t(k)} · ${t(k + '_s')}</h3>
         <div class="big" data-count="${Math.round(rateOf(k))}">${money(rateOf(k))}</div>
         <div class="per">${t('per_bhori')} · ${money(rateOf(k) / GRAM)} ${t('per_gram')}</div>
       </article>`).join('')}</div>
     <div class="rate-foot glass"><div class="meta"><span class="ic">${ICON.cal}</span><span>${meta}</span></div>
-      <button class="btn btn-glass btn-sm" type="button" data-edit-rates>${ICON.edit}<span>${t('edit_rates')}</span></button></div>
+      <span class="lockpill">${ICON.lock}<span>${t('est_note')}</span></span></div>
     <div class="intl-panel glass" id="intlPanel" aria-live="polite"></div>`;
   renderIntlPanel();
   bindTilt(el);
@@ -841,26 +902,6 @@ function countUp(root) {
     io.observe(el);
   });
 }
-function openRates() {
-  const dlg = $('#rateDlg');
-  $('#dlgFields').innerHTML = CARATS.map(k => `<div><label class="lbl" for="dr_${k}">${t(k)} <span>${t('per_bhori')}</span></label>
-    <div class="in pad-u"><input id="dr_${k}" data-k="${k}" type="text" inputmode="decimal" value="${Math.round(rateOf(k))}"><span class="u">৳</span></div></div>`).join('');
-  dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
-}
-function bindRateDialog() {
-  const dlg = $('#rateDlg');
-  $('#rateForm').addEventListener('submit', () => {
-    const o = { base: official.date };
-    $$('#dlgFields input').forEach(i => { const v = toNum(i.value); if (v && Math.round(v) !== Math.round(official[i.dataset.k])) o[i.dataset.k] = String(v); });
-    override = Object.keys(o).length > 1 ? o : null; LS.set('mj_override', override);
-    rerenderRates(); toast(t('t_rates'));
-  });
-  $('#dlgReset').addEventListener('click', () => {
-    override = null; LS.set('mj_override', null);
-    dlg.close ? dlg.close() : dlg.removeAttribute('open'); rerenderRates(); toast(t('t_bajus'));
-  });
-}
-
 /* =====================================================================
    HOME
    ===================================================================== */
@@ -888,21 +929,27 @@ function productCard(p, i = 0) {
   return `<article class="prod glass tilt" style="animation-delay:${Math.min(i, 12) * .05}s">
     <div class="art" data-qv="${p.id}" role="button" tabindex="0" aria-label="${esc(t('quick'))}: ${esc(pName(p))}">
       ${p.badge ? `<span class="badge">${t('b_' + p.badge)}</span>` : ''}<span class="ktag">${t(p.kt)}</span>
-      ${art(p.cat, p.gem)}
+      ${art(p.cat, p.gem)}${photo(p, 600)}
+      ${p.img && p.credit ? `<span class="credit">${t('photo_by')}: ${esc(p.credit)}</span>` : ''}
+      ${p.soldOut ? `<span class="soldout">${t('sold_out')}</span>` : ''}
       <button class="qv" type="button" data-qv="${p.id}" aria-label="${esc(t('quick'))}">${ICON.eye}</button>
     </div>
     <h3>${esc(pName(p))}</h3>
     <div class="meta">${t('cat_' + p.cat)} · ${weightText(p.w)}</div>
     <div class="price"><small>${t('est')}</small><b>${money(e.total)}</b></div>
     <div class="acts">
-      <button class="btn btn-gold btn-sm" type="button" data-add="${p.id}">${ICON.cartAdd}<span>${t('add_cart')}</span></button>
+      <button class="btn btn-gold btn-sm" type="button" data-add="${p.id}" ${p.soldOut ? 'disabled' : ''}>${ICON.cartAdd}<span>${t('add_cart')}</span></button>
       <a class="btn btn-wa btn-sm btn-icon" href="${waLink(productMsg(p))}" target="_blank" rel="noopener" aria-label="${esc(t('enquire'))}">${ICON.wa}</a>
     </div>
   </article>`;
 }
 function renderFeatured() {
   const el = $('#featured'); if (!el) return;
-  el.innerHTML = FEATURED.map(prod).filter(Boolean).map(productCard).join('');
+  const vis = catalog.filter(p => !p.hidden);
+  let list = vis.filter(p => p.featured);
+  if (!list.length) list = FEATURED.map(id => vis.find(p => p.id === id)).filter(Boolean);
+  if (!list.length) list = vis.slice(0, 4);
+  el.innerHTML = list.slice(0, 4).map(productCard).join('');
   bindTilt(el);
 }
 
@@ -912,19 +959,20 @@ function renderFeatured() {
 const shopState = { cat: 'all', q: '', sort: 'feat' };
 function renderShop() {
   const grid = $('#shopGrid'); if (!grid) return;
-  const counts = { all: PRODUCTS.length }; CATS.forEach(c => { counts[c] = PRODUCTS.filter(p => p.cat === c).length; });
+  const vis = catalog.filter(p => !p.hidden);
+  const counts = { all: vis.length }; CATS.forEach(c => { counts[c] = vis.filter(p => p.cat === c).length; });
   $('#cats').innerHTML = ['all', ...CATS].map(c => `<button class="cat" type="button" data-cat="${c}" aria-pressed="${shopState.cat === c}">${c === 'all' ? t('all') : t('cat_' + c)} <span class="n">${dg(counts[c])}</span></button>`).join('');
   const sortSel = $('#sort');
   sortSel.innerHTML = ['feat', 'low', 'high', 'light'].map(s => `<option value="${s}" ${shopState.sort === s ? 'selected' : ''}>${t('sort_' + s)}</option>`).join('');
   const q = shopState.q.trim().toLowerCase();
-  let list = PRODUCTS.filter(p => (shopState.cat === 'all' || p.cat === shopState.cat) &&
-    (!q || [p.name.bn, p.name.en, I18N.bn['cat_' + p.cat], I18N.en['cat_' + p.cat]].some(s => s.toLowerCase().includes(q))));
+  let list = vis.filter(p => (shopState.cat === 'all' || p.cat === shopState.cat) &&
+    (!q || [p.name.bn, p.name.en, I18N.bn['cat_' + p.cat], I18N.en['cat_' + p.cat]].some(s => String(s || '').toLowerCase().includes(q))));
   if (shopState.sort === 'low') list.sort((a, b) => estimate(a).total - estimate(b).total);
   if (shopState.sort === 'high') list.sort((a, b) => estimate(b).total - estimate(a).total);
   if (shopState.sort === 'light') list.sort((a, b) => a.w - b.w);
   grid.innerHTML = list.length ? list.map(productCard).join('')
     : `<div class="empty glass" style="grid-column:1/-1">${ICON.gem.replace('<svg', '<svg style="width:70px;height:70px;margin:0 auto 12px"')}<h3>${t('no_results')}</h3></div>`;
-  $('#priceNote').textContent = t('price_note', { m: dg(CONFIG.making) });
+  $('#priceNote').textContent = t('price_note', { m: dg(CONFIG.making) }) + ' ' + t('photo_note');
   bindTilt(grid);
 }
 function bindShop() {
@@ -949,7 +997,7 @@ function renderQV() {
   const e = estimate(p, qvState.kt);
   $('#qvBody').innerHTML = `<button class="tbtn dlg-x" type="button" data-close-dlg aria-label="${t('close')}">${ICON.x}</button>
     <div class="qv-grid">
-      <div class="qv-art">${art(p.cat, p.gem)}</div>
+      <div class="qv-art">${art(p.cat, p.gem)}${photo(p, 900)}${p.img && p.credit ? `<span class="credit">${t('photo_by')}: ${esc(p.credit)}</span>` : ''}</div>
       <div>
         ${p.badge ? `<span class="tag custom">${t('b_' + p.badge)}</span>` : ''}
         <h3 style="margin-top:10px">${esc(pName(p))}</h3>
@@ -964,7 +1012,7 @@ function renderQV() {
         </div>
         <div class="qv-total"><span>${t('qv_total')}</span><b>${money(e.total)}</b></div>
         <div class="stack">
-          <button class="btn btn-gold" type="button" data-add="${p.id}" data-kt="${qvState.kt}">${ICON.cartAdd}<span>${t('add_cart')}</span></button>
+          <button class="btn btn-gold" type="button" data-add="${p.id}" data-kt="${qvState.kt}" ${p.soldOut ? 'disabled' : ''}>${ICON.cartAdd}<span>${t('add_cart')}</span></button>
           <a class="btn btn-wa" href="${waLink(productMsg(p, qvState.kt))}" target="_blank" rel="noopener">${ICON.wa}<span>${t('enquire')}</span></a>
         </div>
       </div>
@@ -984,7 +1032,7 @@ function addProduct(pid, kt, fromEl) {
   updateCartBadges();
   fly(fromEl);
   toast(t('added'));
-  if (PAGE === 'calc') renderCart();
+  if (PAGE === 'cart' || PAGE === 'admin') renderCart();
 }
 
 /* =====================================================================
@@ -994,9 +1042,10 @@ function renderRateChips() {
   const el = $('#rateChips'); if (!el) return;
   el.innerHTML = `<span class="lbl" style="margin:0">${t('today_rate')}</span>` +
     CARATS.map(k => `<span class="rc"><span class="kt">${ktLabel(k)}</span><b>${money(rateOf(k))}</b></span>`).join('') +
-    `<span class="grow"></span><button class="btn btn-glass btn-sm" type="button" data-edit-rates>${ICON.edit}<span>${t('edit_rates')}</span></button>`;
+    `<span class="grow"></span><span class="lockpill">${ICON.lock}<span>${t(PAGE === 'admin' ? 'official' : 'est_note')}</span></span>`;
 }
 function lineHTML(l) {
+  if (PAGE !== 'admin') return lineRO(l);
   const c = calc(l);
   const kopts = CARATS.map(k => `<option value="${k}" ${l.carat === k ? 'selected' : ''}>${t(k)}</option>`).join('');
   const W = ['bhori', 'ana', 'rati', 'point'];
@@ -1005,7 +1054,7 @@ function lineHTML(l) {
     : `<div class="wgrid">${['b', 'a', 'r', 'p'].map((f, i) => `<div class="in"><input type="text" inputmode="numeric" data-f="${f}" value="${esc(l[f])}" placeholder="0" aria-label="${t(W[i])}"><small>${t(W[i])}</small></div>`).join('')}</div>`;
   return `<div class="line glass ${c.tb ? '' : 'warn'}" data-id="${l.id}">
     <div class="line-h">
-      <div class="thumb">${art(l.cat || 'custom', l.gem)}</div>
+      ${lineThumb(l)}
       <div class="in"><input type="text" data-f="name" value="${esc(l.name)}" placeholder="${esc(lineName(Object.assign({}, l, { name: '' })))}" aria-label="${t('item_name')}"></div>
       <div class="in carat"><select data-f="carat" aria-label="${t('carat')}">${kopts}</select></div>
       <button class="x" type="button" data-del aria-label="${t('remove')}">${ICON.trash}</button>
@@ -1022,6 +1071,19 @@ function lineHTML(l) {
       <span class="tot" data-o="tot">${money(c.total)}</span></div>
   </div>`;
 }
+function lineRO(l) {
+  const c = calc(l);
+  return `<div class="line ro glass ${c.tb ? '' : 'warn'}" data-id="${l.id}">
+    <div class="line-h">
+      ${lineThumb(l)}
+      <div class="ro-name"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${l.pid ? t('cat_' + l.cat) : t('custom_order')}</small></div>
+      <button class="x" type="button" data-del aria-label="${t('remove')}">${ICON.trash}</button>
+    </div>
+    <div class="line-f"><div class="parts">
+      <span>${t('weight')}: <b data-o="w">${wOut(c)}</b></span><span>${t('today_rate')}: <b>${money(c.rate)}</b></span><span>${t('gold_value')}: <b data-o="gold">${money(c.gold)}</b></span><span>${t('making')} (${pct(CONFIG.making)}): <b data-o="mk">${money(c.making)}</b></span></div>
+      <span class="tot" data-o="tot">${money(c.total)}</span></div>
+  </div>`;
+}
 const wOut = (c) => c.tb ? weightText(c.tb) + ' · ' + num(c.tb * GRAM, 3) + ' ' + t('gram') : `<span class="need">${t('need_w')}</span>`;
 function renderCart() {
   const box = $('#cartList'); if (!box) return;
@@ -1029,6 +1091,7 @@ function renderCart() {
     `<div class="empty glass">${ICON.cart.replace('<svg', '<svg style="width:76px;height:76px;margin:0 auto 12px"')}<h3 style="margin:0">${t('cart_empty')}</h3><p style="margin:6px 0 18px">${t('cart_empty2')}</p>
       <a class="btn btn-gold btn-sm" href="shop.html">${t('go_shop')}</a></div>`;
   renderSummary();
+  if (PAGE === 'admin') document.dispatchEvent(new CustomEvent('mj:cart'));
 }
 function updateLine(id) {
   const l = cart.find(x => x.id === id), el = $(`.line[data-id="${id}"]`); if (!l || !el) return;
@@ -1052,9 +1115,10 @@ function renderSummary() {
   const g = money(T.grand), gv = $('#grandVal'); gv.textContent = g;
   if (g !== lastGrand) { gv.classList.remove('bump'); void gv.offsetWidth; gv.classList.add('bump'); lastGrand = g; }
   const s = invoice ? 4 : cart.length ? 2 : 1;
+  const ro = $('#roNote'); if (ro) ro.textContent = t('ro_note');
   $$('#steps li').forEach(li => { const n = +li.dataset.s; li.classList.toggle('done', n < s); li.classList.toggle('active', n === s); });
 }
-function bindCalc() {
+function bindCart() {
   const box = $('#cartList'); if (!box) return;
   $$('[data-b]').forEach(i => { i.value = buyer[i.dataset.b] || ''; i.addEventListener('input', () => { buyer[i.dataset.b] = i.value; saveBuyer(); renderSummary(); }); });
   box.addEventListener('input', e => {
@@ -1085,48 +1149,79 @@ function bindCalc() {
       }
     }
   });
-  $('#addCustom').addEventListener('click', e => addProduct(null, null, e.currentTarget));
-  $('#makeInv').addEventListener('click', e => makeInvoice(e));
-  $('#goPay').addEventListener('click', () => {
+  const on = (id, fn) => { const el = $('#' + id); if (el) el.addEventListener('click', fn); };
+  on('addCustom', e => addProduct(null, null, e.currentTarget));
+  on('makeInv', e => makeInvoice(e));
+  on('goPay', () => {
     if (!cart.length) { toast(t('t_empty'), true); return; }
     const T = totals(), bad = T.lines.findIndex(x => !x.tb);
     if (bad >= 0) { toast(t('t_noweight'), true); const el = $$('.line')[bad]; if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     go('checkout.html');
   });
-  $('#orderWa').addEventListener('click', () => {
+  on('orderWa', () => {
     if (!cart.length) { toast(t('t_empty'), true); return; }
     openWA(orderMsg());
   });
 }
 function invoiceNo(d) {
   const p = (n) => String(n).padStart(2, '0');
-  return 'MJ-' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', rnd = new Uint8Array(4); (window.crypto || window.msCrypto).getRandomValues(rnd);
+  return 'MJ-' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + '-' + Array.from(rnd, x => A[x % A.length]).join('');
 }
-function makeInvoice(e, pay) {
-  if (!cart.length) { toast(t('t_empty'), true); return; }
+function buildInvoice(pay, status) {
+  if (!cart.length) { toast(t('t_empty'), true); return null; }
   const T = totals();
   const bad = cart.findIndex((l, i) => !T.lines[i].tb);
   if (bad >= 0) {
     toast(t('t_noweight'), true);
     const el = $$('.line')[bad]; if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const inp = $('input[data-f="b"],input[data-f="g"]', el); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 500); }
-    return;
+    return null;
   }
   const now = new Date();
-  invoice = {
+  return {
     no: invoiceNo(now), ts: now.getTime(), rateDate: official.date,
     buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), addr: buyer.addr.trim() },
-    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), carat: l.carat, mcu: l.mcu, mc: l.mc }, T.lines[i])),
+    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
     totals: { gold: T.gold, making: T.making, sub: T.sub, d: T.d, discAmt: T.discAmt, v: T.v, vatAmt: T.vatAmt, adv: T.adv, grand: T.grand },
     pay: pay ? Object.assign({}, pay, { due: Math.max(Math.round(T.grand) - pay.amount, 0) }) : null,
-    status: !pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : 'Pending',
+    status: status || (!pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : 'Pending'),
     sync: sheetOn() ? 'pending' : 'off'
   };
+}
+function nameIn(l, lg) { const keep = lang; lang = lg; const n = lineName(l); lang = keep; return n; }
+const r2 = (v) => Math.round(v * 100) / 100;
+function orderDoc(I, source) {
+  const rates = {}; CARATS.forEach(k => { rates[k] = rateOf(k); });
+  return JSON.parse(JSON.stringify({
+    id: I.no, lang, rateDate: I.rateDate, rates, making: CONFIG.making,
+    customer: I.buyer,
+    items: I.lines.map(l => ({ pid: l.pid || '', cat: l.cat || 'custom', gem: l.gem || '', name: l.name || '', title_bn: nameIn(l, 'bn'), title_en: nameIn(l, 'en'), carat: l.carat, mcu: l.mcu, mc: String(l.mc), tb: Math.round(l.tb * 10000) / 10000, rate: l.rate, gold: r2(l.gold), making: r2(l.making), total: r2(l.total) })),
+    totals: Object.fromEntries(Object.entries(I.totals).map(([k, v]) => [k, r2(v)])),
+    grand: Math.round(I.totals.grand),
+    pay: I.pay ? { method: I.pay.method, amount: I.pay.amount, trx: I.pay.trx || '', sender: I.pay.sender || '', due: I.pay.due } : null,
+    status: I.status, lockUntil: lockValid() ? lockState.until : 0, source: source || 'web'
+  }));
+}
+function rememberOrder(I) {
+  const mine = LS.get('mj_my_orders', []).filter(x => x.no !== I.no);
+  mine.unshift({ no: I.no, ts: I.ts, grand: Math.round(I.totals.grand), method: I.pay ? I.pay.method : '' });
+  LS.set('mj_my_orders', mine.slice(0, 20));
+}
+function commitInvoice(inv, e) {
+  invoice = inv;
   LS.set('mj_invoice', invoice);
+  if (PAGE !== 'admin') rememberOrder(inv);
   if (sheetOn()) { outbox.push(orderPayload(invoice)); LS.set('mj_outbox', outbox); flushOutbox(true); }
-  if (pay) { payState.trx = ''; payState.sender = ''; payState.amount = ''; savePay(); }
-  renderSummary(); toast(t('t_inv'));
+  if (inv.pay) { payState.trx = ''; payState.sender = ''; payState.amount = ''; savePay(); }
+  if (PAGE === 'pay') { lockState = null; LS.set('mj_lock', null); }
+  renderSummary(); toast(inv.cloud ? t('order_placed') : t('t_inv'));
   burst(e && e.currentTarget);
+  if (PAGE === 'admin') return;
   setTimeout(() => go('invoice.html'), 750);
+}
+function makeInvoice(e, pay) {
+  const inv = buildInvoice(pay); if (!inv) return;
+  commitInvoice(inv, e);
 }
 
 /* =====================================================================
@@ -1138,7 +1233,7 @@ function renderInvoice() {
   if (!invoice) {
     if (acts) acts.style.display = 'none';
     host.innerHTML = `<div class="empty glass" style="max-width:640px;margin:0 auto">${ICON.doc.replace('<svg', '<svg style="width:76px;height:76px;margin:0 auto 12px"')}
-      <h3 style="margin:0">${t('inv_none')}</h3><p style="margin:6px 0 18px">${t('inv_none2')}</p><a class="btn btn-gold btn-sm" href="calculator.html">${t('go_calc')}</a></div>`;
+      <h3 style="margin:0">${t('inv_none')}</h3><p style="margin:6px 0 18px">${t('inv_none2')}</p><a class="btn btn-gold btn-sm" href="shop.html">${t('go_shop')}</a></div>`;
     return;
   }
   if (acts) acts.style.display = '';
@@ -1213,7 +1308,7 @@ function bindInvoice() {
   $('#shareWa').addEventListener('click', () => { if (invoice) openWA(invoiceMsg()); });
   $('#newSale').addEventListener('click', () => {
     if (!confirm(t('confirm_new'))) return;
-    cart = []; invoice = null; buyer = { name: '', phone: '', addr: '', disc: '', vat: '', adv: '' };
+    cart = []; invoice = null; buyer = { name: buyer.name, phone: buyer.phone, addr: buyer.addr, disc: '', vat: '', adv: '' };
     saveCart(); saveBuyer(); LS.set('mj_invoice', null); toast(t('t_new'));
     setTimeout(() => go('shop.html'), 500);
   });
@@ -1319,7 +1414,7 @@ function coSummaryHTML(T) {
   if (T.v) rows.push([t('plus_vat', { p: pct(T.v) }), '+ ' + money(T.vatAmt)]);
   if (T.adv) rows.push([t('less_adv'), '− ' + money(T.adv)]);
   return `<h3>${t('order_sum')}</h3>
-    <div class="co-items">${cart.map((l, i) => `<div class="co-it"><div class="thumb">${art(l.cat || 'custom', l.gem)}</div><div class="meta"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${weightText(T.lines[i].tb)}</small></div><span>${money(T.lines[i].total)}</span></div>`).join('')}</div>
+    <div class="co-items">${cart.map((l, i) => `<div class="co-it">${lineThumb(l)}<div class="meta"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${weightText(T.lines[i].tb)}</small></div><span>${money(T.lines[i].total)}</span></div>`).join('')}</div>
     <div class="sumrows">${rows.map(r => `<div class="r"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>
     <div class="grand"><span>${t('grand')}</span><span>${money(T.grand)}</span></div>
     <div><div class="lbl">${t('amt_h')}</div>
@@ -1330,7 +1425,7 @@ function coSummaryHTML(T) {
     <div class="stack">
       <button class="btn btn-gold" type="button" id="confirmPay">${ICON.check}<span>${t('confirm_pay')}</span></button>
       <button class="btn btn-wa" type="button" id="sendProof">${ICON.wa}<span>${t('send_proof')}</span></button>
-      <a class="btn btn-glass" href="calculator.html">${ICON.edit}<span>${t('edit_cart')}</span></a>
+      <a class="btn btn-glass" href="cart.html">${ICON.edit}<span>${t('edit_cart')}</span></a>
     </div>`;
 }
 function renderCheckout() {
@@ -1340,18 +1435,26 @@ function renderCheckout() {
     const empty = !cart.length;
     host.innerHTML = `<div class="empty glass" style="max-width:640px;margin:0 auto">${ICON.lock.replace('<svg', '<svg style="width:70px;height:70px;margin:0 auto 12px"')}
       <h3 style="margin:0">${empty ? t('pay_empty') : t('pay_noweight')}</h3><p style="margin:6px 0 18px">${t('pay_empty2')}</p>
-      <a class="btn btn-gold btn-sm" href="${empty ? 'shop.html' : 'calculator.html'}">${empty ? t('go_shop') : t('go_calc')}</a></div>`;
+      <a class="btn btn-gold btn-sm" href="${empty ? 'shop.html' : 'cart.html'}">${empty ? t('go_shop') : t('nav_cart')}</a></div>`;
     return;
   }
-  host.innerHTML = `<div class="co-grid">
+  ensureLock();
+  host.innerHTML = `<div class="lockbar glass" id="lockBar"><span class="ic">${ICON.lock}</span><div><b>${t('lock_h')}</b><small>${t('lock_d', { m: dg(CONFIG.lockMinutes) })}</small></div>
+      <div class="lock-r"><span class="lock-t" id="lockT">--:--</span><small>${t('lock_left')}</small></div><div class="lock-prog"><i id="lockP"></i></div></div>
+    <div class="co-grid">
     <div class="stack" style="gap:20px">
+      <div class="co-card glass"><h3>${t('buyer_h')}</h3><div class="fgrid">
+        <div class="full"><label class="lbl" for="cName">${t('buyer_name')} *</label><div class="in"><input id="cName" data-b="name" type="text" autocomplete="name" value="${esc(buyer.name)}"></div></div>
+        <div><label class="lbl" for="cPhone">${t('buyer_phone')} *</label><div class="in"><input id="cPhone" data-b="phone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(buyer.phone)}"></div></div>
+        <div><label class="lbl" for="cAddr">${t('buyer_addr')}</label><div class="in"><input id="cAddr" data-b="addr" type="text" autocomplete="street-address" value="${esc(buyer.addr)}"></div></div>
+      </div></div>
       <div class="co-card glass"><h3>${t('m_h')}</h3>
         <div class="methods" role="radiogroup" aria-label="${t('m_h')}">${METHODS.map(m => `<div class="method"><input type="radio" name="pm" id="pm_${m}" value="${m}" ${payState.method === m ? 'checked' : ''}><label for="pm_${m}">${mlogo(m)}<b>${t('m_' + m)}</b><small>${t('m_' + m + '_d')}</small></label></div>`).join('')}</div>
       </div>
       <div class="co-card glass" id="coPanel">${panelHTML(T)}</div>
     </div>
     <aside class="summary glass" id="coSum">${coSummaryHTML(T)}</aside>
-  </div>`;
+  </div>`;  tickLock();
 }
 function updatePayAmounts() {
   const T = totals(), amt = payAmount(T), due = Math.max(Math.round(T.grand) - amt, 0);
@@ -1360,6 +1463,8 @@ function updatePayAmounts() {
   const du = $('[data-o="due"]'); if (du) du.textContent = money(due);
 }
 function payValid(T) {
+  const ph = String(buyer.phone || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g, '');
+  if (!buyer.name.trim() || ph.length < 10) { toast(t('need_contact'), true); const f = $(!buyer.name.trim() ? '#cName' : '#cPhone'); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus({ preventScroll: true }); } return false; }
   if (!(payAmount(T) > 0)) { toast(t('t_amt'), true); const a = $('#payAmt'); if (a) a.focus(); return false; }
   if (payState.method !== 'cash' && !/^[A-Za-z0-9]{6,20}$/.test(String(payState.trx).trim())) { toast(t('t_trx'), true); const x = $('#payTrx'); if (x) { x.scrollIntoView({ behavior: 'smooth', block: 'center' }); x.focus({ preventScroll: true }); } return false; }
   return true;
@@ -1376,6 +1481,7 @@ function bindCheckout() {
     if (e.target.name === 'pm') { payState.method = e.target.value; savePay(); $('#coPanel').innerHTML = panelHTML(totals()); }
   });
   host.addEventListener('input', e => {
+    if (e.target.dataset.b) { buyer[e.target.dataset.b] = e.target.value; saveBuyer(); return; }
     const f = e.target.dataset.p; if (!f) return;
     payState[f] = e.target.value; savePay();
     if (f === 'amount') updatePayAmounts();
@@ -1388,7 +1494,20 @@ function bindCheckout() {
       const T = totals(); if (!payValid(T)) return;
       const cash = payState.method === 'cash';
       const trx = cash ? '' : String(payState.trx || '').trim().toUpperCase();
-      const go2 = () => makeInvoice({ currentTarget: cb }, { method: payState.method, methodLabel: I18N.en['m_' + payState.method], amount: payAmount(T), trx, sender: cash ? '' : String(payState.sender || '').trim() });
+      const pay = { method: payState.method, methodLabel: I18N.en['m_' + payState.method], amount: payAmount(T), trx, sender: cash ? '' : String(payState.sender || '').trim() };
+      const go2 = () => makeInvoice({ currentTarget: cb }, pay);
+      if (fbMod) {
+        const inv = buildInvoice(pay); if (!inv) return;
+        cb.disabled = true; const lbl = $('span', cb), old = lbl.textContent; lbl.textContent = t('placing');
+        fbMod.placeOrder(orderDoc(inv)).then(r => {
+          cb.disabled = false; lbl.textContent = old;
+          if (r && r.dup) { toast(t('t_dup'), true); const x = $('#payTrx'); if (x) x.focus(); return; }
+          if (r && r.ok) inv.cloud = true;
+          else { const q = LS.get('mj_fb_outbox', []); q.push(orderDoc(inv)); LS.set('mj_fb_outbox', q); toast(t('order_saved_local'), true); }
+          commitInvoice(inv, { currentTarget: cb });
+        });
+        return;
+      }
       if (!sheetOn() || payState.method === 'cash') { go2(); return; }
       cb.disabled = true; const lbl = $('span', cb), old = lbl.textContent; lbl.textContent = t('checking');
       sheetGet({ action: 'checkTrx', trx }).then(r => {
@@ -1399,6 +1518,16 @@ function bindCheckout() {
     }
     if (e.target.closest('#sendProof')) { const T = totals(); if (!payValid(T)) return; openWA(payMsg()); }
   });
+  setInterval(tickLock, 1000); tickLock();
+}
+function tickLock() {
+  const el = $('#lockT'); if (!el || !lockState) return;
+  const left = lockState.until - Date.now();
+  if (left <= 0) { ensureLock(true); toast(t('lock_exp')); renderCheckout(); return; }
+  const m = Math.floor(left / 60000), sec = Math.floor(left % 60000 / 1000);
+  el.textContent = dg(String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0'));
+  const pr = $('#lockP'); if (pr) pr.style.width = (left / (lockState.until - lockState.at) * 100).toFixed(2) + '%';
+  $('#lockBar').classList.toggle('low', left < 120000);
 }
 function renderPayCards() {
   const el = $('#payCards'); if (!el) return;
@@ -1488,6 +1617,7 @@ function renderVerify() {
   const el = $('#verifyBox'); if (!el) return;
   if (!invoice) { el.style.display = 'none'; return; }
   el.style.display = '';
+  if (invoice.cloud) { el.classList.add('trk-host'); el.innerHTML = trackerHTML(invoice.no, liveStatus || { status: invoice.status }); return; }
   const st = invoice.status || (invoice.pay ? 'Pending' : 'Not paid');
   const sync = sheetOn() ? (outbox.some(x => x.id === invoice.no) ? (invoice.sync === 'failed' ? 'failed' : 'pending') : 'saved') : 'off';
   const canCheck = sheetOn() && invoice.pay && invoice.pay.method !== 'cash' && sync === 'saved';
@@ -1562,6 +1692,7 @@ function bindMagnetic() {
   });
 }
 function fly(from) {
+  if (!$('#fab')) { burst(from, 10); return; }
   const target = (!$('#fab').classList.contains('hide') && $('#fab .bag')) || $('#cartBtn');
   const bump = () => { const f = $('#fab'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop'); };
   if (reduce || !from || !from.getBoundingClientRect || !document.body.animate || !target) return bump();
@@ -1620,26 +1751,235 @@ function initProgress() {
   const upd = () => { const h = document.documentElement.scrollHeight - innerHeight; p.style.setProperty('--p', h > 0 ? (scrollY / h).toFixed(4) : 0); };
   addEventListener('scroll', upd, { passive: true }); upd();
 }
-function initDust() {
-  const cv = $('#dust'), ctx = cv.getContext && cv.getContext('2d'); if (!ctx || reduce) return;
-  let w, h, parts = [], run = true; const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const mk = (any) => ({ x: Math.random() * w, y: any ? Math.random() * h : h + 10, r: (Math.random() * 1.6 + .4) * dpr, vy: -(Math.random() * .35 + .08) * dpr, vx: (Math.random() - .5) * .15 * dpr, a: Math.random() * 6.28, s: Math.random() * .02 + .008 });
-  const size = () => { w = cv.width = innerWidth * dpr; h = cv.height = innerHeight * dpr; cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px'; parts = Array.from({ length: Math.round(Math.min(80, innerWidth / 18)) }, () => mk(true)); };
-  let col = '255,236,170', colAt = 0;
+function initGems() {
+  const cv = $('#gems'), ctx = cv && cv.getContext && cv.getContext('2d'); if (!ctx || reduce) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w, h, gems = [], run = true, mx = 0, my = 0, col = '226,190,110', colAt = 0;
+  const mk = (any) => {
+    const s = (Math.random() * 26 + 12) * dpr;
+    return { x: Math.random() * w, y: any ? Math.random() * h : h + s * 2, s, z: s / (38 * dpr),
+      vy: -(Math.random() * .22 + .06) * dpr, sway: Math.random() * 6.28, spin: Math.random() * 6.28, vs: (Math.random() * .006 + .002) * (Math.random() < .5 ? -1 : 1),
+      tilt: (Math.random() - .5) * .5, glint: 0, gx: 0 };
+  };
+  const size = () => {
+    w = cv.width = innerWidth * dpr; h = cv.height = innerHeight * dpr; cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    gems = Array.from({ length: Math.round(Math.min(18, Math.max(8, innerWidth / 90))) }, () => mk(true));
+  };
+  // brilliant-cut diamond in side view: table, crown facets, girdle, pavilion to culet
+  const drawGem = (g, a) => {
+    const s = g.s, cx = Math.cos(g.spin), sx = Math.max(.3, Math.abs(cx));
+    ctx.save(); ctx.translate(g.x + mx * g.z * 18, g.y + my * g.z * 12); ctx.rotate(g.tilt + Math.sin(g.sway) * .08); ctx.scale(sx, 1);
+    const T = s * .26, G = s * .5, C = -s * .27, P = s * .62;
+    const grad = ctx.createLinearGradient(-G, C, G, P);
+    grad.addColorStop(0, `rgba(${col},${.10 * a})`); grad.addColorStop(.5, `rgba(255,255,255,${.04 * a})`); grad.addColorStop(1, `rgba(${col},${.02 * a})`);
+    ctx.beginPath(); ctx.moveTo(-T, C); ctx.lineTo(T, C); ctx.lineTo(G, 0); ctx.lineTo(0, P); ctx.lineTo(-G, 0); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.lineWidth = 1.1 * dpr / sx * .7; ctx.strokeStyle = `rgba(${col},${.55 * a})`; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-G, 0); ctx.lineTo(G, 0);                         // girdle
+    const off = Math.sin(g.spin) * T * .5;                                        // facets slide as it turns
+    ctx.moveTo(-T, C); ctx.lineTo(-G * .5 + off, 0); ctx.lineTo(0 + off * .5, C);
+    ctx.lineTo(G * .5 + off, 0); ctx.lineTo(T, C);
+    ctx.moveTo(-G * .5 + off, 0); ctx.lineTo(0, P); ctx.lineTo(G * .5 + off, 0);
+    ctx.moveTo(-G, 0); ctx.lineTo(-G * .22 + off * .4, P * .55); ctx.moveTo(G, 0); ctx.lineTo(G * .22 + off * .4, P * .55);
+    ctx.lineWidth = .7 * dpr / sx * .7; ctx.strokeStyle = `rgba(${col},${.3 * a})`; ctx.stroke();
+    ctx.restore();
+    if (g.glint > 0) {                                                            // a star of light catches a facet
+      const k = Math.sin(g.glint * Math.PI), r = s * .55 * k, x = g.x + mx * g.z * 18 + g.gx * sx, y = g.y + my * g.z * 12 + C * .9;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(g.glint * .8);
+      const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * .6); rg.addColorStop(0, `rgba(255,250,230,${.9 * k})`); rg.addColorStop(1, 'rgba(255,250,230,0)');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(0, 0, r * .6, 0, 6.283); ctx.fill();
+      ctx.fillStyle = `rgba(255,248,220,${.95 * k})`; ctx.beginPath();
+      for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .09 : r, an = i * Math.PI / 4; ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+  };
+  addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
   const tick = (now) => {
     if (!run) return;
-    if (now - colAt > 1000) { col = getComputedStyle(document.documentElement).getPropertyValue('--dust').trim() || col; colAt = now; }
+    if (now - colAt > 1000) { col = getComputedStyle(document.documentElement).getPropertyValue('--gem-line').trim() || col; colAt = now; }
     ctx.clearRect(0, 0, w, h);
-    for (const p of parts) {
-      p.x += p.vx; p.y += p.vy; p.a += p.s; if (p.y < -10) Object.assign(p, mk(false));
-      const al = .2 + Math.abs(Math.sin(p.a)) * .6, g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-      g.addColorStop(0, `rgba(${col},${al})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, 6.283); ctx.fill();
+    for (const g of gems) {
+      g.y += g.vy; g.sway += .01; g.x += Math.sin(g.sway) * .12 * dpr; g.spin += g.vs;
+      if (g.y < -g.s * 2) Object.assign(g, mk(false));
+      if (g.glint > 0) { g.glint += .022; if (g.glint >= 1) g.glint = 0; }
+      else if (Math.random() < .0016) { g.glint = .001; g.gx = (Math.random() - .5) * g.s * .4; }
+      const edge = Math.min(1, (h - g.y) / (h * .15), (g.y + g.s) / (h * .2));
+      drawGem(g, Math.max(0, edge) * (.45 + g.z * .55));
     }
     requestAnimationFrame(tick);
   };
   size(); addEventListener('resize', size);
   document.addEventListener('visibilitychange', () => { run = !document.hidden; if (run) requestAnimationFrame(tick); });
   requestAnimationFrame(tick);
+}
+
+/* =====================================================================
+   PRICE ESTIMATOR (calculator.html) — public, rates & making fixed
+   ===================================================================== */
+const estState = Object.assign({ kt: 'k22', mode: 'bhori', b: '1', a: '', r: '', p: '', g: '' }, LS.get('mj_est', {}));
+function estCalc() { return calc(Object.assign({ carat: estState.kt, mcu: 'pct', mc: CONFIG.making }, estState)); }
+function renderEstimator() {
+  const host = $('#estimator'); if (!host) return;
+  const W = ['bhori', 'ana', 'rati', 'point'];
+  host.innerHTML = `<div class="est-grid">
+    <div class="est-card glass">
+      <div class="lbl">${t('est_h1')}</div>
+      <div class="est-kts">${CARATS.map(k => `<button class="est-kt" type="button" data-ekt="${k}" aria-pressed="${estState.kt === k}"><b>${ktLabel(k)}</b><small>${money(rateOf(k))}</small></button>`).join('')}</div>
+      <div class="lbl" style="margin-top:22px"><span>${t('est_h2')}</span><span class="seg" role="group" aria-label="${t('weight')}">
+        <button type="button" data-emode="bhori" aria-pressed="${estState.mode !== 'gram'}">${t('by_bhori')}</button><button type="button" data-emode="gram" aria-pressed="${estState.mode === 'gram'}">${t('by_gram')}</button></span></div>
+      ${estState.mode === 'gram'
+        ? `<div class="in pad-u"><input type="text" inputmode="decimal" data-e="g" value="${esc(estState.g)}" placeholder="0" aria-label="${t('gram')}"><span class="u">${t('gram')}</span></div>`
+        : `<div class="wgrid">${['b', 'a', 'r', 'p'].map((f, i) => `<div class="in"><input type="text" inputmode="numeric" data-e="${f}" value="${esc(estState[f])}" placeholder="0" aria-label="${t(W[i])}"><small>${t(W[i])}</small></div>`).join('')}</div>`}
+      <div class="conv-note" style="margin-top:14px">${t('conv_note')}</div>
+    </div>
+    <aside class="est-out glass" id="estOut"></aside>
+  </div>`;
+  renderEstOut();
+}
+function renderEstOut() {
+  const el = $('#estOut'); if (!el) return;
+  const c = estCalc();
+  el.innerHTML = `<div class="est-ring">${emblem({ sparkle: true })}</div>
+    <small class="lbl" style="justify-content:center">${t('est_result')}</small>
+    <div class="est-total">${c.tb ? money(c.total) : '—'}</div>
+    <div class="sumrows">
+      <div class="r"><span>${t('weight')}</span><span>${c.tb ? weightText(c.tb) + ' · ' + num(c.tb * GRAM, 3) + ' ' + t('gram') : t('est_need')}</span></div>
+      <div class="r"><span>${t(estState.kt)} · ${t('today_rate')}</span><span>${money(c.rate)} / ${t('bhori')}</span></div>
+      <div class="r"><span>${t('gold_value')}</span><span>${money(c.gold)}</span></div>
+      <div class="r"><span>${t('est_making')} · ${pct(CONFIG.making)}</span><span>${money(c.making)}</span></div>
+    </div>
+    <div class="stack">
+      <button class="btn btn-gold" type="button" id="estAdd" ${c.tb ? '' : 'disabled'}>${ICON.cartAdd}<span>${t('est_add')}</span></button>
+      <button class="btn btn-wa" type="button" id="estWa" ${c.tb ? '' : 'disabled'}>${ICON.wa}<span>${t('est_wa')}</span></button>
+    </div>
+    <p class="hint" style="text-align:center">${ICON.lock.replace('<svg', '<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"')}${t('est_note')}</p>`;
+}
+function bindEstimator() {
+  const host = $('#estimator'); if (!host) return;
+  const save = () => LS.set('mj_est', estState);
+  host.addEventListener('input', e => { const f = e.target.dataset.e; if (!f) return; estState[f] = e.target.value; save(); renderEstOut(); });
+  host.addEventListener('click', e => {
+    const k = e.target.closest('[data-ekt]'); if (k) { estState.kt = k.dataset.ekt; save(); $$('[data-ekt]').forEach(b => b.setAttribute('aria-pressed', b === k)); renderEstOut(); return; }
+    const m = e.target.closest('[data-emode]');
+    if (m && m.dataset.emode !== estState.mode) {
+      const tb = estCalc().tb; estState.mode = m.dataset.emode;
+      if (tb) { if (estState.mode === 'gram') estState.g = String(+(tb * GRAM).toFixed(3)); else Object.assign(estState, bhoriParts(tb)); }
+      save(); renderEstimator(); return;
+    }
+    if (e.target.closest('#estAdd')) {
+      const c = estCalc(); if (!c.tb) return;
+      cart.push(Object.assign({ id: uid(), pid: null, cat: 'custom', gem: 'diamond', carat: estState.kt, mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: '' }, bhoriParts(c.tb)));
+      saveCart(); if (invoice) { invoice = null; LS.set('mj_invoice', null); }
+      updateCartBadges(); fly(e.target.closest('button')); toast(t('added'));
+      setTimeout(() => go('cart.html'), 700); return;
+    }
+    if (e.target.closest('#estWa')) {
+      const c = estCalc(); if (!c.tb) return;
+      openWA(`${t('wa_hi')}\n\n*${t('custom_order')}*\n${t('carat')}: ${t(estState.kt)}\n${t('weight')}: ${weightText(c.tb)}\n${t('wa_est')}: ${money(c.total)}\n\n— ${t('wa_from')}`);
+    }
+  });
+}
+
+/* =====================================================================
+   LIVE ORDER TRACKING (track.html + invoice page)
+   ===================================================================== */
+let liveStatus = null, statusUnsub = null;
+function trackerHTML(no, st) {
+  const s = (st && st.status) || 'Pending';
+  const lvl = s === 'Delivered' ? 4 : s === 'Verified' ? 3 : 1;
+  const bad = ['Rejected', 'Duplicate TrxID', 'Amount mismatch'].includes(s);
+  const label = (k, i) => i === 1 && (s === 'Cash at shop' || s === 'Not paid') ? t(ST_KEY[s]) : t(k);
+  const money2 = st && st.grand ? `<div class="trk-amt"><div><small>${t('grand')}</small><b>${money(st.grand)}</b></div>${st.method ? `<div><small>${t('paid')} · ${t('m_' + st.method)}</small><b>${money(st.paid || 0)}</b></div>` : ''}<div><small>${t('due')}</small><b>${money(st.due || 0)}</b></div></div>` : '';
+  return `<div class="trk glass ${bad ? 'bad' : ''}">
+    <div class="trk-h"><span class="ic">${ICON.shield}</span><div><b>${t('tr_h')}</b><small>${t('order_id')}: <span class="mono">${esc(no)}</span></small></div><span class="vstat ${ST_CLS[s] || ''}">${t(ST_KEY[s] || 'st_pending')}</span></div>
+    <ol class="trk-steps">${['tr_s1', 'tr_s2', 'tr_s3', 'tr_s4'].map((k, i) => `<li class="${i < lvl ? 'done' : i === lvl ? (bad ? 'bad' : 'active') : ''}"><i>${i < lvl ? '✓' : dg(i + 1)}</i><span>${label(k, i)}</span></li>`).join('')}</ol>
+    ${money2}
+    <p class="trk-live">${bad ? t('tr_problem') : `<span class="pulse"></span>${t('tr_live')}`}</p>
+  </div>`;
+}
+function watchStatus(no, cb) {
+  if (statusUnsub) { try { statusUnsub(); } catch (e) { /* */ } statusUnsub = null; }
+  if (!fbMod || !no) return;
+  fbMod.onOrderStatus(no, st => cb(st)).then(u => { statusUnsub = u; });
+}
+function watchInvoice() {
+  if (PAGE !== 'invoice' || !invoice || !invoice.cloud || !fbMod) return;
+  watchStatus(invoice.no, st => {
+    liveStatus = st;
+    if (st && st.status && st.status !== invoice.status) {
+      const was = invoice.status; invoice.status = st.status; LS.set('mj_invoice', invoice); renderInvoice();
+      if (st.status === 'Verified' && was !== 'Verified') { toast('✓ ' + t('st_verified')); burst($('#verifyBox')); }
+    }
+    renderVerify();
+  });
+}
+const trackState = { no: (new URLSearchParams(location.search).get('id') || '').toUpperCase(), st: undefined };
+function renderTrack() {
+  const host = $('#trackBox'); if (!host) return;
+  const mine = LS.get('mj_my_orders', []);
+  let res = '';
+  if (fbReadyDone && !fbMod) res = `<div class="trk-off glass"><p>${t('track_off')}</p><a class="btn btn-wa btn-sm" href="${waLink(t('wa_hi') + (trackState.no ? '\n' + t('order_id') + ': ' + trackState.no : ''))}" target="_blank" rel="noopener">${ICON.wa}<span>${t('whatsapp')}</span></a></div>`;
+  else if (trackState.no) res = trackState.st === undefined ? `<p class="trk-wait">${t('searching')}</p>` : trackState.st === null ? `<div class="trk-off glass"><p>${t('not_found')}</p></div>` : trackerHTML(trackState.no, trackState.st);
+  host.innerHTML = `<form class="trk-form glass" id="trackForm" autocomplete="off">
+      <div class="in"><input id="trackNo" type="text" value="${esc(trackState.no)}" placeholder="${t('track_ph')}" aria-label="${t('order_id')}" spellcheck="false"></div>
+      <button class="btn btn-gold" type="submit">${ICON.shield}<span>${t('track_btn')}</span></button></form>
+    <div id="trackRes" aria-live="polite">${res}</div>
+    <div class="my-orders glass"><h3>${t('my_orders')}</h3>${mine.length ? mine.map(o => `<button class="mo" type="button" data-track="${esc(o.no)}"><span class="mono">${esc(o.no)}</span><small>${fdate(o.ts)} · ${o.method ? t('m_' + o.method) : ''}</small><b>${money(o.grand)}</b></button>`).join('') : `<p class="hint">${t('no_orders')}</p>`}</div>`;
+}
+function startTrack(no) {
+  trackState.no = String(no || '').trim().toUpperCase(); trackState.st = undefined;
+  history.replaceState(null, '', trackState.no ? '?id=' + encodeURIComponent(trackState.no) : location.pathname);
+  renderTrack();
+  if (!trackState.no || !fbMod) return;
+  watchStatus(trackState.no, st => { trackState.st = st; const r = $('#trackRes'); if (r) r.innerHTML = st ? trackerHTML(trackState.no, st) : `<div class="trk-off glass"><p>${t('not_found')}</p></div>`; });
+}
+function bindTrack() {
+  const host = $('#trackBox'); if (!host) return;
+  host.addEventListener('submit', e => { e.preventDefault(); startTrack($('#trackNo').value); });
+  host.addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (b) startTrack(b.dataset.track); });
+}
+
+/* =====================================================================
+   FIREBASE — live rates, settings, catalogue (admin-controlled)
+   ===================================================================== */
+let fbReadyDone = false;
+function normProduct(p) {
+  const o = Object.assign({}, p);
+  o.w = toNum(o.w) || 0; o.kt = CARATS.includes(o.kt) ? o.kt : 'k22'; o.cat = CATS.includes(o.cat) ? o.cat : 'necklace';
+  o.name = { bn: (o.name && o.name.bn) || o.name_bn || '', en: (o.name && o.name.en) || o.name_en || '' };
+  if (!o.name.bn) o.name.bn = o.name.en; if (!o.name.en) o.name.en = o.name.bn;
+  return o;
+}
+function loadFirebase() {
+  return import(new URL('fb.js', SCRIPT_URL).href).then(m => {
+    if (!m.enabled) return null;
+    fbMod = m;
+    m.onRates(r => {
+      if (!r || !CARATS.every(k => toNum(r[k]))) return;
+      const before = official;
+      official = { from: 'firebase', date: r.date || todayKey() }; CARATS.forEach(k => { official[k] = toNum(r[k]); });
+      LS.set('mj_rates_cache', Object.assign({ date: official.date }, ...CARATS.map(k => ({ [k]: official[k] }))));
+      if (PAGE === 'pay' && lockState && Date.now() - lockState.at < 20000 && CARATS.some(k => before[k] !== official[k])) ensureLock(true);
+      rerenderRates();
+    });
+    m.onSettings(st => { if (!st) return; applySettings(st); rerenderRates(); renderChrome(); renderPayCards(); });
+    m.onProducts(list => {
+      if (!list || !list.length) return;
+      catalog = list.map(normProduct);
+      LS.set('mj_catalog_cache', catalog.map(p => Object.assign({}, p, { img: /^data:/.test(p.img || '') ? '' : p.img })));
+      if (PAGE === 'home') renderFeatured();
+      if (PAGE === 'shop') renderShop();
+      if (PAGE === 'cart') renderCart();
+    });
+    const q = LS.get('mj_fb_outbox', []);
+    if (q.length) Promise.all(q.map(o => m.placeOrder(o).then(r => ({ o, r })))).then(rs => {
+      const left = rs.filter(x => !(x.r && (x.r.ok || x.r.dup))).map(x => x.o);
+      LS.set('mj_fb_outbox', left);
+      rs.forEach(x => { if (x.r && x.r.ok && invoice && invoice.no === x.o.id) { invoice.cloud = true; LS.set('mj_invoice', invoice); if (PAGE === 'invoice') { renderVerify(); watchInvoice(); } } });
+    });
+    return m;
+  }).catch(err => { console.warn('fb.js not loaded', err); return null; })
+    .then(m => { fbReadyDone = true; if (PAGE === 'track') startTrack(trackState.no); watchInvoice(); return m; });
 }
 
 /* =====================================================================
@@ -1652,7 +1992,6 @@ function bindGlobal() {
     const add = T.closest('[data-add]'); if (add) { e.preventDefault(); addProduct(add.dataset.add, add.dataset.kt, add); return; }
     const qv = T.closest('[data-qv]'); if (qv) { e.preventDefault(); openQV(qv.dataset.qv); return; }
     const qkt = T.closest('[data-qkt]'); if (qkt) { qvState.kt = qkt.dataset.qkt; renderQV(); return; }
-    if (T.closest('[data-edit-rates]')) { openRates(); return; }
     const cp = T.closest('[data-copy],[data-copy-amt]');
     if (cp) {
       const v = cp.hasAttribute('data-copy-amt') ? String(payAmount(totals())) : cp.dataset.copy;
@@ -1682,7 +2021,7 @@ function bindGlobal() {
   $$('dialog.dlg').forEach(d => d.addEventListener('click', e => { if (e.target === d) closeDialogs(); }));
   addEventListener('pageshow', e => { if (e.persisted) document.body.classList.remove('leaving'); });
   addEventListener('storage', e => {     // keep tabs in sync
-    if (e.key === 'mj_cart') { cart = LS.get('mj_cart', []); updateCartBadges(); if (PAGE === 'calc') renderCart(); }
+    if (e.key === CART_KEY) { cart = LS.get(CART_KEY, []); updateCartBadges(); if (PAGE === 'cart' || PAGE === 'admin') renderCart(); }
   });
 }
 
@@ -1695,19 +2034,44 @@ function renderAll() {
   renderPayCards();
   if (PAGE === 'pay') renderCheckout();
   if (PAGE === 'shop') renderShop();
-  if (PAGE === 'calc') { renderRateChips(); renderCart(); $$('[data-b]').forEach(i => { i.value = buyer[i.dataset.b] || ''; }); }
+  if (PAGE === 'calc') { renderRateChips(); renderEstimator(); }
+  if (PAGE === 'cart') { renderRateChips(); renderCart(); $$('[data-b]').forEach(i => { i.value = buyer[i.dataset.b] || ''; }); }
+  if (PAGE === 'track') renderTrack();
   if (PAGE === 'invoice') { renderInvoice(); renderVerify(); }
   if (PAGE === 'contact') renderContactOptions();
   if ($('#qvDlg') && $('#qvDlg').open) renderQV();
   renderIntlPanel();
 }
 
+if (PAGE === 'admin') {
+  document.body.insertAdjacentHTML('afterbegin', spriteHTML());
+  document.body.insertAdjacentHTML('beforeend', '<div class="toast glass" id="toast" role="status" aria-live="polite"></div>');
+  bindCart();
+  window.MJ = {
+    CONFIG, BUILTIN, PRODUCTS, CATS, CARATS, I18N, GRAM, ICON,
+    t, dg, num, money, pct, esc, fdate, ftime, weightText, words, toNum, art, emblem, imgSrc, photo, toast, LS, ST_KEY, ST_CLS,
+    get lang() { return lang; }, set lang(v) { lang = v === 'en' ? 'en' : 'bn'; LS.set('mj_lang', lang); },
+    get official() { return official; },
+    setRates(r) { official = Object.assign({ from: 'firebase' }, r); renderRateChips(); renderCart(); },
+    setSettings(st) { applySettings(st, true); renderCart(); },
+    setCatalog(list) { catalog = list.map(normProduct); },
+    get catalog() { return catalog; }, prod, pName,
+    get cart() { return cart; }, get buyer() { return buyer; },
+    renderPOS() { $$('[data-b]').forEach(i => { i.value = buyer[i.dataset.b] || ''; }); renderRateChips(); renderCart(); },
+    addProduct, totals, calc, buildInvoice, orderDoc, commitInvoice,
+    clearPOS() { cart = []; buyer = { name: '', phone: '', addr: '', disc: '', vat: '', adv: '' }; saveCart(); saveBuyer(); renderCart(); $$('[data-b]').forEach(i => { i.value = ''; }); },
+    openInvoice(inv) { LS.set('mj_invoice', inv); window.open('invoice.html', '_blank', 'noopener'); }
+  };
+  document.dispatchEvent(new CustomEvent('mj:ready'));
+  return;
+}
 injectChrome();
 $$('[data-emblem]').forEach(el => { el.innerHTML = emblem({ sparkle: true, spin: el.dataset.emblem === 'spin', label: 'Maa Jewellers logo' }); });
 bindGlobal();
-bindRateDialog();
 bindShop();
-bindCalc();
+bindCart();
+bindEstimator();
+bindTrack();
 bindInvoice();
 bindContact();
 bindCheckout();
@@ -1719,8 +2083,9 @@ bindMagnetic();
 initSheen();
 initCursor();
 initProgress();
-initDust();
+initGems();
 loadRatesFile();
+loadFirebase();
 liveTick();
 setInterval(liveTick, CONFIG.liveEverySec * 1000);
 setInterval(updateAgo, 1000);

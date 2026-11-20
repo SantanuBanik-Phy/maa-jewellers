@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#14100a">
+<title>Admin · মা জুয়েলার্স</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hind+Siliguri:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body class="admin" data-page="admin">
+
+<!-- ============ GATE: loading / setup / login ============ -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-logo" id="gateLogo"></div>
+    <h1>মা জুয়েলার্স <span>Admin</span></h1>
+    <div id="gateBody"><p class="muted">Loading…</p></div>
+  </div>
+  <a class="gate-back" href="index.html">← maa-jewellers</a>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app" hidden>
+  <aside class="side" id="side">
+    <div class="side-brand"><span id="sideLogo"></span><div><b>মা জুয়েলার্স</b><small>ADMIN CONSOLE</small></div></div>
+    <nav class="side-nav" id="sideNav"></nav>
+    <div class="side-foot">
+      <a href="index.html" target="_blank" rel="noopener" id="viewSite"></a>
+      <button type="button" id="logoutBtn"></button>
+    </div>
+  </aside>
+  <div class="main-col">
+    <header class="topbar">
+      <button class="icon-btn menu" type="button" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h2 id="viewTitle"></h2>
+      <span class="live-dot" id="liveDot"></span>
+      <div class="top-tools">
+        <button class="pill-btn" type="button" id="langBtn"></button>
+        <span class="who" id="who"></span>
+      </div>
+    </header>
+    <div class="verify-banner" id="verifyBanner" hidden></div>
+
+    <main class="views">
+      <!-- Dashboard -->
+      <section class="view" data-view="dash">
+        <div class="kpis" id="kpis"></div>
+        <div class="grid2">
+          <div class="card"><div class="card-h"><h3 data-a="dash_rates"></h3><button class="link-btn" type="button" data-go="rates" data-a="edit"></button></div><div id="dashRates"></div></div>
+          <div class="card"><div class="card-h"><h3 data-a="dash_recent"></h3><button class="link-btn" type="button" data-go="orders" data-a="see_all"></button></div><div id="dashRecent"></div></div>
+        </div>
+      </section>
+
+      <!-- Rates -->
+      <section class="view" data-view="rates">
+        <div class="grid2">
+          <form class="card" id="rateForm" autocomplete="off">
+            <div class="card-h"><h3 data-a="rates_h"></h3></div>
+            <p class="muted" data-a="rates_p"></p>
+            <label class="f"><span data-a="eff_date"></span><input type="date" id="rDate" required></label>
+            <div class="rate-inputs" id="rateInputs"></div>
+            <button class="a-btn gold" type="submit" id="rPublish"></button>
+            <p class="muted small" data-a="rates_src"></p>
+          </form>
+          <div class="card"><div class="card-h"><h3 data-a="rates_hist"></h3></div><div id="rateHist" class="tbl-wrap"></div></div>
+        </div>
+      </section>
+
+      <!-- Orders -->
+      <section class="view" data-view="orders">
+        <div class="toolbar">
+          <div class="chips" id="orderChips"></div>
+          <input class="search" type="search" id="orderSearch">
+        </div>
+        <div id="orderList" class="orders"></div>
+      </section>
+
+      <!-- Products -->
+      <section class="view" data-view="products">
+        <div class="toolbar">
+          <button class="a-btn gold" type="button" id="addProd"></button>
+          <button class="a-btn" type="button" id="seedProd"></button>
+          <span class="muted small" id="prodCount"></span>
+        </div>
+        <div id="prodGrid" class="pgrid"></div>
+      </section>
+
+      <!-- POS / in-store invoice (reuses the site's calculator engine) -->
+      <section class="view" data-view="pos">
+        <div class="ratechips glass" id="rateChips"></div>
+        <div class="pos-pick card">
+          <select id="posPick"></select>
+          <button class="a-btn" type="button" id="posAddPick"></button>
+          <button class="a-btn" type="button" id="addCustom"></button>
+        </div>
+        <div class="cart-grid">
+          <div class="cart-list" id="cartList"></div>
+          <aside class="summary card">
+            <h3 data-a="pos_buyer"></h3>
+            <div class="fgrid">
+              <div class="full"><label class="lbl" for="bName" data-a="name"></label><div class="in"><input id="bName" data-b="name" type="text"></div></div>
+              <div><label class="lbl" for="bPhone" data-a="phone"></label><div class="in"><input id="bPhone" data-b="phone" type="tel" inputmode="tel"></div></div>
+              <div><label class="lbl" for="bAddr" data-a="addr"></label><div class="in"><input id="bAddr" data-b="addr" type="text"></div></div>
+              <div><label class="lbl" for="bDisc" data-a="disc"></label><div class="in pad-u"><input id="bDisc" data-b="disc" type="text" inputmode="decimal" placeholder="0"><span class="u">%</span></div></div>
+              <div><label class="lbl" for="bVat" data-a="vat"></label><div class="in pad-u"><input id="bVat" data-b="vat" type="text" inputmode="decimal" placeholder="0"><span class="u">%</span></div></div>
+              <div class="full"><label class="lbl" for="bAdv" data-a="adv"></label><div class="in pad-u"><input id="bAdv" data-b="adv" type="text" inputmode="decimal" placeholder="0"><span class="u">৳</span></div></div>
+            </div>
+            <div class="sumrows" id="sumRows"></div>
+            <div class="grand"><span data-a="grand"></span><span id="grandVal">৳ 0</span></div>
+            <h3 data-a="pos_pay"></h3>
+            <div class="fgrid">
+              <div><label class="lbl" for="posMethod" data-a="method"></label><div class="in"><select id="posMethod"></select></div></div>
+              <div><label class="lbl" for="posAmt" data-a="received"></label><div class="in pad-u"><input id="posAmt" type="text" inputmode="decimal" placeholder="0"><span class="u">৳</span></div></div>
+              <div class="full" id="posTrxWrap"><label class="lbl" for="posTrx">TrxID</label><div class="in"><input id="posTrx" type="text" autocapitalize="characters"></div></div>
+              <div class="full"><label class="lbl" for="posStatus" data-a="status"></label><div class="in"><select id="posStatus"></select></div></div>
+            </div>
+            <div class="stack">
+              <button class="a-btn gold" type="button" id="posCreate"></button>
+              <button class="a-btn" type="button" id="posClear"></button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="view" data-view="settings">
+        <form class="card narrow" id="setForm" autocomplete="off">
+          <div class="card-h"><h3 data-a="set_h"></h3></div>
+          <div class="fgrid2">
+            <label class="f"><span data-a="set_making"></span><input type="number" step="0.1" min="0" max="40" id="sMaking" required></label>
+            <label class="f"><span data-a="set_lock"></span><input type="number" step="1" min="5" max="120" id="sLock" required></label>
+            <label class="f"><span>bKash</span><input type="tel" id="sBkash" pattern="01[3-9][0-9]{8}"></label>
+            <label class="f"><span>Nagad</span><input type="tel" id="sNagad" pattern="01[3-9][0-9]{8}"></label>
+          </div>
+          <label class="sw"><input type="checkbox" id="sNoticeOn"><span data-a="set_notice"></span></label>
+          <label class="f"><span>বাংলা</span><input type="text" id="sNoticeBn" maxlength="160"></label>
+          <label class="f"><span>English</span><input type="text" id="sNoticeEn" maxlength="160"></label>
+          <button class="a-btn gold" type="submit" data-a="save"></button>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- product editor -->
+<dialog class="a-dlg" id="prodDlg">
+  <form method="dialog" id="prodForm" autocomplete="off">
+    <div class="card-h"><h3 id="prodDlgTitle"></h3><button class="icon-btn" type="button" data-x aria-label="Close">✕</button></div>
+    <div class="pe">
+      <div class="pe-photo">
+        <div class="pe-prev" id="pePrev"></div>
+        <label class="a-btn small"><input type="file" accept="image/*" id="peFile" hidden><span data-a="upload"></span></label>
+        <label class="f"><span data-a="img_url"></span><input type="text" id="peImg" placeholder="https://…  /  Unsplash id"></label>
+        <label class="f"><span data-a="credit"></span><input type="text" id="peCredit"></label>
+      </div>
+      <div class="pe-fields">
+        <label class="f"><span data-a="name_bn"></span><input type="text" id="peNameBn" required></label>
+        <label class="f"><span data-a="name_en"></span><input type="text" id="peNameEn" required></label>
+        <div class="fgrid2">
+          <label class="f"><span data-a="cat"></span><select id="peCat"></select></label>
+          <label class="f"><span data-a="carat"></span><select id="peKt"></select></label>
+          <label class="f"><span data-a="weight_b"></span><input type="number" step="0.0001" min="0.001" id="peW" required></label>
+          <label class="f"><span data-a="gem"></span><select id="peGem"><option>diamond</option><option>ruby</option><option>emerald</option><option>sapphire</option></select></label>
+          <label class="f"><span data-a="badge"></span><select id="peBadge"><option value="">—</option><option value="new">new</option><option value="best">best</option><option value="bridal">bridal</option></select></label>
+          <label class="f"><span data-a="order"></span><input type="number" step="1" id="peOrder"></label>
+        </div>
+        <p class="muted small" id="peHint"></p>
+        <div class="sws">
+          <label class="sw"><input type="checkbox" id="peFeat"><span data-a="featured"></span></label>
+          <label class="sw"><input type="checkbox" id="peSold"><span data-a="sold"></span></label>
+          <label class="sw"><input type="checkbox" id="peHide"><span data-a="hidden"></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot"><button class="a-btn danger" type="button" id="peDel" data-a="delete"></button><span class="grow"></span><button class="a-btn" type="button" data-x data-a="cancel"></button><button class="a-btn gold" type="submit" data-a="save"></button></div>
+  </form>
+</dialog>
+
+<script src="assets/app.js"></script>
+<script type="module" src="assets/admin.js"></script>
+</body>
+</html>
