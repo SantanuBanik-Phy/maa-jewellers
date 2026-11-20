@@ -17,7 +17,11 @@ const A = {
   pos: ['দোকানে বিক্রি', 'In-store sale'], settings: ['সেটিংস', 'Settings'], view_site: ['ওয়েবসাইট দেখুন ↗', 'View website ↗'], logout: ['লগ আউট', 'Log out'],
   login_h: ['অ্যাডমিন লগইন', 'Admin sign in'], email: ['ইমেইল', 'Email'], password: ['পাসওয়ার্ড', 'Password'], login: ['লগইন', 'Sign in'],
   forgot: ['পাসওয়ার্ড ভুলে গেছেন?', 'Forgot password?'], reset_sent: ['পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে', 'Password reset link sent to your email'],
-  bad_login: ['ইমেইল বা পাসওয়ার্ড ভুল', 'Wrong email or password'], not_admin: ['এই অ্যাকাউন্টের অ্যাডমিন অনুমতি নেই', 'This account is not the shop admin'],
+  bad_login: ['ইমেইল বা পাসওয়ার্ড ভুল — Firebase-এ এই ইউজার যোগ করেছেন তো?', 'Wrong email or password — is this user added in Firebase Authentication?'],
+  e_disabled: ['Firebase-এ Email/Password লগইন চালু করা হয়নি (Authentication → Sign-in method)', 'Email/Password sign-in is not enabled in Firebase (Authentication → Sign-in method)'],
+  e_many: ['অনেকবার ভুল চেষ্টা — কিছুক্ষণ পরে চেষ্টা করুন বা পাসওয়ার্ড রিসেট করুন', 'Too many attempts — wait a while or reset the password'],
+  e_net: ['ইন্টারনেট সংযোগ নেই', 'No internet connection'], e_userdis: ['এই ইউজার বন্ধ করা আছে', 'This user is disabled'],
+  e_config: ['firebase-config.js এর তথ্য ভুল — Firebase থেকে আবার কপি করুন', 'firebase-config.js values are wrong — copy them again from Firebase'], not_admin: ['এই অ্যাকাউন্টের অ্যাডমিন অনুমতি নেই', 'This account is not the shop admin'],
   only_admin: ['শুধুমাত্র দোকান মালিকের জন্য', 'For the shop owner only'], no_fb: ['Firebase এখনো যুক্ত হয়নি', 'Firebase is not connected yet'],
   no_fb_p: ['assets/firebase-config.js ফাইলে আপনার Firebase প্রজেক্টের তথ্য বসান — ধাপগুলো FIREBASE-SETUP.md ফাইলে আছে।', 'Paste your Firebase project config into assets/firebase-config.js — the steps are in FIREBASE-SETUP.md.'],
   verify_b: ['ইমেইল যাচাই হয়নি — যাচাই না হলে দর বা অর্ডার পরিবর্তন সেভ হবে না।', 'Email not verified — changes will not save until you verify.'],
@@ -75,7 +79,11 @@ function loginForm(msg) {
     e.preventDefault();
     const btn = $('#loginForm button[type=submit]'); btn.disabled = true;
     try { await fb.login($('#lEmail').value.trim(), $('#lPass').value); }
-    catch (err) { loginForm(a('bad_login')); }
+    catch (err) {
+      const c = String(err && err.code || '');
+      const k = /operation-not-allowed/.test(c) ? 'e_disabled' : /too-many-requests/.test(c) ? 'e_many' : /network/.test(c) ? 'e_net' : /user-disabled/.test(c) ? 'e_userdis' : /api-key|configuration|invalid-api/.test(c) ? 'e_config' : 'bad_login';
+      loginForm(a(k) + (c && k !== 'bad_login' ? ' (' + c + ')' : ''));
+    }
   });
   $('#forgot').addEventListener('click', async () => {
     try { await fb.resetPassword($('#lEmail').value.trim() || fb.adminEmail); MJ.toast(a('reset_sent')); } catch (e) { fail(e); }

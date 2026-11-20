@@ -184,5 +184,16 @@
 
 <script src="assets/app.js"></script>
 <script type="module" src="assets/admin.js"></script>
+<script>
+/* If the admin code cannot start (usually a mistake in assets/firebase-config.js), say so instead of "Loading…" forever. */
+setTimeout(function () {
+  var b = document.getElementById('gateBody');
+  if (!b || !/Loading/.test(b.textContent)) return;
+  b.innerHTML = '<p class="err" style="color:#b3263c">অ্যাডমিন প্যানেল চালু হয়নি · Admin panel could not start.</p>' +
+    '<p class="muted small" style="text-align:left">assets/firebase-config.js দেখুন — প্রথম লাইন অবশ্যই <code>export const firebaseConfig = {</code> হবে, এবং Firebase-এর <code>import …</code> বা <code>initializeApp(…)</code> লাইন রাখবেন না।<br><br>' +
+    'Check assets/firebase-config.js — it must start with <code>export const firebaseConfig = {</code> and must not contain Firebase\'s <code>import …</code> or <code>initializeApp(…)</code> lines. Then refresh.</p>' +
+    '<button class="a-btn gold wide" onclick="location.reload()">↻ Refresh</button>';
+}, 15000);
+</script>
 </body>
 </html>
