@@ -5,7 +5,7 @@
    These values are public by design (security comes from firestore.rules).
    Until apiKey is filled in, the site runs without Firebase.
    ===================================================================== */
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyDvIVOWHmPs27FbqOxpDO51E3WXnJtoR6w",
   authDomain: "maa-jewellers-ee0b4.firebaseapp.com",
   projectId: "maa-jewellers-ee0b4",
