@@ -9,6 +9,8 @@
  *   3. Receives bKash / Nagad / bank SMS forwarded from the shop phone,
  *      reads TrxID + amount, and marks the matching order "Verified".
  *   4. Lets the website ask for an order's verification status.
+ *   5. Emails the customer: order confirmation when they order, and an update
+ *      when the shop verifies / delivers / SSLCommerz confirms a payment.
  *
  *  Setup: see SETUP-GOOGLE-SHEET.md (step by step, Bangla + English).
  * =====================================================================
@@ -19,18 +21,22 @@ const SETTINGS = {
   SECRET: 'CHANGE-THIS-maa-2026-secret',
   // Optional: email address that gets an alert for every new order / payment
   ALERT_EMAIL: '',
+  // Customer emails (order confirmation + status updates). Sent from your Gmail, max ~100/day.
+  CUSTOMER_EMAILS: true,
+  SHOP_PHONE: '01819-508127', SHOP_WHATSAPP: '01817-533313',
+  SITE_URL: 'https://maa-jewellers-shop.vercel.app',
   TZ: 'Asia/Dhaka',
   // An SMS amount this many taka below the "Paid" amount still counts as paid
   AMOUNT_TOLERANCE: 1
 };
 
 const TAB = { orders: 'Orders', items: 'Items', sms: 'Payments (SMS)', dash: 'Dashboard' };
-const STATUS = ['Pending', 'Verified', 'Amount mismatch', 'Duplicate TrxID', 'Cash at shop', 'Not paid', 'Rejected', 'Delivered'];
+const STATUS = ['Pending', 'Awaiting payment', 'Verified', 'Advance paid', 'Amount mismatch', 'Duplicate TrxID', 'Cash at shop', 'Cash on delivery', 'Not paid', 'Rejected', 'Delivered'];
 
 const OH = ['Order ID', 'Date', 'Time', 'Customer', 'Mobile', 'Address', 'Items', 'Pieces', 'Gold (g)',
   'Gold value', 'Making', 'Discount', 'VAT', 'Advance / old gold', 'Grand total',
   'Method', 'Paid', 'Due', 'TrxID', 'Paid from', 'Status', 'Verified at', 'SMS amount', 'SMS sender',
-  'Note', 'Language', 'Rate date'];
+  'Note', 'Language', 'Rate date', 'Email'];
 const IH = ['Order ID', 'Date', '#', 'Item', 'Carat', 'Weight', 'Grams', 'Rate / bhori', 'Making', 'Amount'];
 const SH = ['Received at', 'Provider', 'From', 'Amount', 'Sender number', 'TrxID', 'Matched order', 'Result', 'SMS text'];
 
@@ -158,6 +164,11 @@ function doPost(e) {
     }
     // Website order
     if (body.type === 'order') return json_(saveOrder_(body));
+    // Status email from the website server (needs the secret; refused while it is still the default)
+    if (body.type === 'mail') {
+      if (/^CHANGE-THIS/.test(SETTINGS.SECRET) || body.secret !== SETTINGS.SECRET) return json_({ ok: false, error: 'wrong secret' });
+      return json_(statusMail_(body));
+    }
     return json_({ ok: false, error: 'unknown request' });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
@@ -178,9 +189,9 @@ function saveOrder_(o) {
 
     const pay = o.pay || null, T = o.totals || {}, cu = o.customer || {};
     const items = Array.isArray(o.items) ? o.items.slice(0, 60) : [];
-    const trx = pay && pay.method !== 'cash' && pay.trx ? text_(pay.trx, 20).toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+    const trx = pay && ['bkash', 'nagad', 'qr'].indexOf(pay.method) >= 0 && pay.trx ? text_(pay.trx, 20).toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
     const paid = num_(pay && pay.amount);
-    let status = !pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : 'Pending';
+    let status = !pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : pay.method === 'cod' ? 'Cash on delivery' : pay.method === 'ssl' ? 'Awaiting payment' : 'Pending';
     let verifiedAt = '', smsAmount = '', smsSender = '';
 
     if (trx && trxUsed_(trx, id)) status = 'Duplicate TrxID';
@@ -212,8 +223,13 @@ function saveOrder_(o) {
       'VAT': Math.round(num_(T.vatAmt)), 'Advance / old gold': Math.round(num_(T.adv)), 'Grand total': Math.round(num_(T.grand)),
       'Method': pay ? text_(pay.methodLabel || pay.method, 30) : '—', 'Paid': Math.round(paid), 'Due': Math.round(num_(pay ? pay.due : T.grand)),
       'TrxID': trx, 'Paid from': text_(pay && pay.sender, 20), 'Status': status, 'Verified at': verifiedAt,
-      'SMS amount': smsAmount, 'SMS sender': smsSender, 'Note': '', 'Language': text_(o.lang, 4), 'Rate date': text_(o.rateDate, 12)
+      'SMS amount': smsAmount, 'SMS sender': smsSender, 'Language': text_(o.lang, 4), 'Rate date': text_(o.rateDate, 12),
+      'Note': [o.delivery && o.delivery.method === 'home' ? 'Home delivery' + (num_(o.delivery.fee) ? ' ৳' + num_(o.delivery.fee) : '') : 'Pickup at shop',
+               o.plan ? 'Plan: ' + text_(o.plan, 10) : '', items.some(i => i.desc) ? 'Design: ' + items.filter(i => i.desc).map(i => text_(i.desc, 120)).join(' | ') : '',
+               items.some(i => num_(i.photos)) ? 'Reference photos in admin panel' : ''].filter(String).join(' · '),
+      'Email': validEmail_(cu.email) ? text_(cu.email, 80) : ''
     };
+    if (!sheet_(TAB.orders).getRange(1, C('Email')).getValue()) sheet_(TAB.orders).getRange(1, C('Email')).setValue('Email').setFontWeight('bold');
     const sh = sheet_(TAB.orders);
     const r = sh.getLastRow() + 1;
     sh.getRange(r, 1, 1, OH.length).setNumberFormats([OH.map(h => ['Order ID', 'Mobile', 'TrxID', 'Paid from', 'SMS sender'].indexOf(h) >= 0 ? '@' : (['Gold value', 'Making', 'Discount', 'VAT', 'Advance / old gold', 'Grand total', 'Paid', 'Due', 'SMS amount'].indexOf(h) >= 0 ? '"৳"#,##0' : (h === 'Date' ? 'yyyy-mm-dd' : 'General')))]);
@@ -230,6 +246,7 @@ function saveOrder_(o) {
       ish.getRange(start, 2, vals.length, 1).setNumberFormat('yyyy-mm-dd');
     }
     alert_('New order ' + id + ' — ' + status, row);
+    if (row['Email']) orderMail_(o, id, status, row);
     return { ok: true, status: status };
   } finally {
     lock.releaseLock();
@@ -372,4 +389,90 @@ function alert_(subject, data) {
     const body = Object.keys(data).map(k => k + ': ' + data[k]).join('\n');
     MailApp.sendEmail(SETTINGS.ALERT_EMAIL, 'Maa Jewellers — ' + subject, body + '\n\n' + SpreadsheetApp.getActive().getUrl());
   } catch (err) { /* mail quota or not authorised */ }
+}
+
+
+/* =====================================================================
+   5. CUSTOMER EMAILS (sent from your Gmail with MailApp)
+   ===================================================================== */
+function validEmail_(e) { return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(String(e || '').trim()); }
+// at most 4 emails to one address per hour, so nobody can use the form to spam someone
+function mailAllowed_(to) {
+  const c = CacheService.getScriptCache(), k = 'm_' + Utilities.base64EncodeWebSafe(String(to).toLowerCase()).slice(0, 200);
+  const n = Number(c.get(k) || 0); if (n >= 4) return false;
+  c.put(k, String(n + 1), 3600); return MailApp.getRemainingDailyQuota() > 5;
+}
+const MT = {
+  bn: { hi: 'প্রিয় {n},', thanks: 'মা জুয়েলার্সে অর্ডার করার জন্য ধন্যবাদ!', got: 'আপনার অর্ডার আমরা পেয়েছি।', order: 'অর্ডার নং', total: 'সর্বমোট',
+        paid: 'পরিশোধ', due: 'বাকি', status: 'অবস্থা', track: 'অর্ডার দেখুন', del: { home: 'হোম ডেলিভারি', pickup: 'দোকান থেকে নেবেন' }, dl: 'ডেলিভারি',
+        next: { 'Pending': 'আমরা আপনার পেমেন্ট যাচাই করছি — যাচাই হলেই চালান খুলে যাবে।', 'Awaiting payment': 'অনলাইন পেমেন্ট সম্পন্ন হলেই অর্ডার নিশ্চিত হবে।',
+          'Cash on delivery': 'পাঠানোর আগে আমরা ফোন করে অর্ডার নিশ্চিত করব। গহনা হাতে পেয়ে নগদ পরিশোধ করুন।', 'Cash at shop': 'দোকানে এসে পরিশোধ করে গহনা নিয়ে যান।',
+          'Verified': 'আপনার পেমেন্ট যাচাই হয়েছে ✓ চালান এখন প্রিন্ট করতে পারবেন।', 'Advance paid': 'অগ্রিম পেয়েছি ✓ কারিগর আপনার ডিজাইন বানানো শুরু করবেন।',
+          'Delivered': 'গহনা হস্তান্তর সম্পন্ন। মা জুয়েলার্সের সাথে থাকার জন্য ধন্যবাদ!', 'Rejected': 'পেমেন্ট মেলেনি — অনুগ্রহ করে দোকানে যোগাযোগ করুন।',
+          'Amount mismatch': 'পরিশোধিত টাকা মেলেনি — অনুগ্রহ করে দোকানে যোগাযোগ করুন।' },
+        sub: { order: 'অর্ডার নিশ্চিতকরণ', paid: 'পেমেন্ট পেয়েছি', status: 'অর্ডার আপডেট' }, call: 'প্রশ্ন থাকলে কল করুন', foot: 'পরশুরাম বাজার, ফেনী' },
+  en: { hi: 'Dear {n},', thanks: 'Thank you for ordering from Maa Jewellers!', got: 'We have received your order.', order: 'Order no.', total: 'Grand total',
+        paid: 'Paid', due: 'Due', status: 'Status', track: 'View your order', del: { home: 'Home delivery', pickup: 'Pick up at the shop' }, dl: 'Delivery',
+        next: { 'Pending': 'We are checking your payment — your invoice unlocks as soon as it is verified.', 'Awaiting payment': 'Your order is confirmed as soon as the online payment completes.',
+          'Cash on delivery': 'We will call you to confirm before dispatch. Pay cash when you receive the jewellery.', 'Cash at shop': 'Please pay at the shop when you collect your jewellery.',
+          'Verified': 'Your payment is verified ✓ You can now print your invoice.', 'Advance paid': 'Advance received ✓ Our craftsmen will start on your design.',
+          'Delivered': 'Your jewellery has been handed over. Thank you for choosing Maa Jewellers!', 'Rejected': 'The payment could not be matched — please contact the shop.',
+          'Amount mismatch': 'The amount paid does not match — please contact the shop.' },
+        sub: { order: 'Order confirmation', paid: 'Payment received', status: 'Order update' }, call: 'Questions? Call us', foot: 'Parashuram Bazar, Feni' }
+};
+const ST_BN = { 'Pending': 'যাচাইয়ের অপেক্ষায়', 'Awaiting payment': 'অনলাইন পেমেন্টের অপেক্ষায়', 'Verified': 'যাচাইকৃত ✓', 'Advance paid': 'অগ্রিম পরিশোধিত ✓',
+  'Cash on delivery': 'ক্যাশ অন ডেলিভারি', 'Cash at shop': 'দোকানে পরিশোধ', 'Not paid': 'পরিশোধ হয়নি', 'Delivered': 'হস্তান্তরিত ✓', 'Rejected': 'বাতিল', 'Amount mismatch': 'টাকা মেলেনি' };
+function tk_(n, bn) { const s = '৳ ' + Math.round(num_(n)).toLocaleString('en-IN'); return bn ? s.replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]) : s; }
+function esc_(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function mailHtml_(L, bn, d) {
+  const gold = '#c9a227', rows = (d.items || []).map(i => '<tr><td style="padding:8px 0;border-bottom:1px solid #f0e6c8">' + esc_(bn ? (i.name_bn || i.name) : i.name) + (num_(i.qty) > 1 ? ' × ' + num_(i.qty) : '') +
+    '</td><td style="padding:8px 0;border-bottom:1px solid #f0e6c8;text-align:right;white-space:nowrap">' + tk_(i.total, bn) + '</td></tr>').join('');
+  const kv = (k, v, strong) => '<tr><td style="padding:6px 0;color:#7a6b52">' + k + '</td><td style="padding:6px 0;text-align:right;' + (strong ? 'font-weight:700;font-size:17px' : '') + '">' + v + '</td></tr>';
+  return '<div style="background:#f7f2e7;padding:24px 12px;font-family:\'Hind Siliguri\',Segoe UI,Arial,sans-serif;color:#1f170c">' +
+    '<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e7dcc6;border-radius:18px;overflow:hidden">' +
+    '<div style="height:6px;background:linear-gradient(90deg,#b8860b,#f6e27a,#c9a227)"></div>' +
+    '<div style="padding:26px 28px 8px;text-align:center"><div style="font-size:26px;font-weight:700;color:#1f170c">মা জুয়েলার্স</div>' +
+    '<div style="letter-spacing:.35em;font-size:11px;color:' + gold + '">MAA JEWELLERS</div></div>' +
+    '<div style="padding:10px 28px 4px"><h2 style="margin:10px 0 6px;font-size:20px;color:#1f170c">' + esc_(d.heading) + '</h2>' +
+    '<p style="margin:0 0 6px">' + esc_(L.hi.replace('{n}', d.name || '')) + '</p><p style="margin:0 0 14px;line-height:1.7">' + esc_(d.intro) + '</p>' +
+    '<div style="background:#fbf6ea;border:1px solid #efe3c4;border-radius:12px;padding:12px 16px;margin-bottom:14px"><b>' + L.order + ':</b> <span style="font-family:Consolas,monospace">' + esc_(d.id) + '</span><br>' +
+    '<b>' + L.status + ':</b> <span style="color:#8a6510">' + esc_(bn ? (ST_BN[d.status] || d.status) : d.status) + '</span></div>' +
+    (rows ? '<table style="width:100%;border-collapse:collapse;font-size:14.5px">' + rows + '</table>' : '') +
+    '<table style="width:100%;border-collapse:collapse;font-size:14.5px;margin-top:8px">' + kv(L.dl, L.del[d.delivery === 'home' ? 'home' : 'pickup']) +
+    kv(L.total, tk_(d.grand, bn), true) + kv(L.paid, tk_(d.paid, bn)) + kv(L.due, tk_(d.due, bn)) + '</table>' +
+    '<p style="margin:16px 0;line-height:1.7;background:#fff8e1;border-left:4px solid ' + gold + ';padding:10px 14px;border-radius:8px">' + esc_(d.next || '') + '</p>' +
+    '<div style="text-align:center;margin:20px 0 8px"><a href="' + SETTINGS.SITE_URL + '/track.html?id=' + encodeURIComponent(d.id) + '" style="display:inline-block;background:linear-gradient(135deg,#fff1b8,#e7c34c 45%,#c9a227);color:#1b1406;text-decoration:none;font-weight:700;padding:12px 26px;border-radius:999px">' + L.track + ' →</a></div></div>' +
+    '<div style="padding:16px 28px 22px;text-align:center;color:#7a6b52;font-size:13px;border-top:1px solid #f0e6c8">' + L.call + ': ' + SETTINGS.SHOP_PHONE + ' · WhatsApp ' + SETTINGS.SHOP_WHATSAPP + '<br>' + L.foot + '</div>' +
+    '<div style="height:6px;background:linear-gradient(90deg,#c9a227,#f6e27a,#b8860b)"></div></div></div>';
+}
+function sendMail_(to, kind, d) {
+  if (!SETTINGS.CUSTOMER_EMAILS || !validEmail_(to) || !mailAllowed_(to)) return false;
+  const bn = d.lang !== 'en', L = MT[bn ? 'bn' : 'en'];
+  d.next = L.next[d.status] || ''; d.heading = kind === 'order' ? L.thanks : L.sub[kind];
+  d.intro = kind === 'order' ? L.got : (bn ? 'আপনার অর্ডারের অবস্থা হালনাগাদ হয়েছে।' : 'Your order has been updated.');
+  try {
+    MailApp.sendEmail({ to: to, subject: 'মা জুয়েলার্স · ' + L.sub[kind] + ' · ' + d.id, htmlBody: mailHtml_(L, bn, d), name: 'Maa Jewellers · মা জুয়েলার্স',
+      body: L.order + ': ' + d.id + '\n' + L.status + ': ' + d.status + '\n' + L.total + ': ' + tk_(d.grand) + '\n' + d.next + '\n' + SETTINGS.SITE_URL + '/track.html?id=' + d.id });
+    return true;
+  } catch (err) { return false; }
+}
+function orderMail_(o, id, status, row) {
+  const items = (o.items || []).slice(0, 30).map(i => ({ name: text_(i.name, 60), name_bn: '', qty: num_(i.qty) || 1, total: num_(i.total) }));
+  sendMail_(row['Email'], 'order', { id: id, status: status, lang: o.lang, name: row['Customer'], grand: row['Grand total'], paid: status === 'Pending' ? row['Paid'] : 0,
+    due: row['Due'], delivery: o.delivery && o.delivery.method, items: items });
+}
+// called by the website server after SSLCommerz confirms a payment, or when the admin changes a status
+function statusMail_(b) {
+  const id = text_(b.id, 40), status = text_(b.status, 30);
+  if (!/^MJ-[0-9A-Z-]{6,40}$/.test(id) || STATUS.indexOf(status) < 0) return { ok: false, error: 'bad request' };
+  const f = findOrder_(id);
+  if (f) {
+    const sh = sheet_(TAB.orders);
+    sh.getRange(f.row, C('Status')).setValue(status);
+    if (b.kind === 'paid') { sh.getRange(f.row, C('Paid')).setValue(num_(b.paid)); sh.getRange(f.row, C('Due')).setValue(num_(b.due)); sh.getRange(f.row, C('TrxID')).setValue(text_(b.trx, 40)); sh.getRange(f.row, C('Method')).setValue('SSLCommerz ' + text_(b.card, 30)); }
+    if (status === 'Verified' || status === 'Advance paid') sh.getRange(f.row, C('Verified at')).setValue(stamp_());
+  }
+  const sent = sendMail_(text_(b.to, 80), b.kind === 'paid' ? 'paid' : 'status', { id: id, status: status, lang: b.lang, name: text_(b.name, 80), grand: b.grand, paid: b.paid, due: b.due, delivery: b.delivery, items: b.items || [] });
+  if (b.kind === 'paid') alert_('Online payment ' + id + ' — ' + status, { order: id, paid: b.paid, due: b.due, trx: b.trx });
+  return { ok: true, mailed: sent };
 }

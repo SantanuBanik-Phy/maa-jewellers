@@ -51,11 +51,16 @@ const A = {
   grand: ['সর্বমোট', 'Grand total'], pos_pay: ['পেমেন্ট', 'Payment'], method: ['মাধ্যম', 'Method'], received: ['গ্রহণ করা হয়েছে', 'Received'], status: ['অবস্থা', 'Status'],
   pos_create: ['চালান তৈরি ও সেভ', 'Create & save invoice'], pos_clear: ['নতুন বিক্রি', 'New sale'], pos_done: ['চালান সেভ হয়েছে — নতুন ট্যাবে খুলছে', 'Invoice saved — opening in a new tab'],
   set_h: ['দোকানের সেটিংস', 'Shop settings'], set_making: ['মজুরি (%)', 'Making charge (%)'], set_lock: ['দাম লকের সময় (মিনিট)', 'Price lock (minutes)'], set_notice: ['ওয়েবসাইটে নোটিশ দেখান', 'Show a notice on the website'],
-  err: ['সেভ হয়নি', 'Not saved'], perm: ['অনুমতি নেই — ইমেইল যাচাই করেছেন?', 'Permission denied — is your email verified?'], none: ['—', '—']
+  err: ['সেভ হয়নি', 'Not saved'],
+  dl_home: ['হোম ডেলিভারি', 'Home delivery'], dl_pickup: ['দোকান থেকে নেবে', 'Pickup at shop'], plan_advance: ['অগ্রিম', 'Advance'], plan_full: ['পুরো টাকা', 'Full payment'],
+  plan_cod: ['ক্যাশ অন ডেলিভারি', 'Cash on delivery'], plan_shop: ['দোকানে পরিশোধ', 'Pay at shop'], refs: ['রেফারেন্স ছবি', 'Reference photos'],
+  collected: ['টাকা পেয়েছি · হস্তান্তর', 'Cash collected · delivered'], mailed: ['গ্রাহককে ইমেইল পাঠানো হয়েছে', 'Customer emailed'],
+  set_fee: ['হোম ডেলিভারি চার্জ (৳)', 'Home delivery charge (৳)'], set_adv: ['কাস্টম অর্ডারে অগ্রিম (%)', 'Advance for custom orders (%)'], set_cod: ['ক্যাশ অন ডেলিভারি চালু', 'Allow cash on delivery'],
+  online: ['অনলাইন (SSLCommerz)', 'Online (SSLCommerz)'], perm: ['অনুমতি নেই — ইমেইল যাচাই করেছেন?', 'Permission denied — is your email verified?'], none: ['—', '—']
 };
 const a = (k, v) => { let s = (A[k] || [k, k])[MJ.lang === 'en' ? 1 : 0]; if (v) Object.keys(v).forEach(x => { s = s.replace('{' + x + '}', v[x]); }); return s; };
 const VIEWS = [['dash', '◈'], ['orders', '◎'], ['rates', '৳'], ['products', '❖'], ['pos', '✎'], ['settings', '⚙']];
-const STATUSES = ['Pending', 'Verified', 'Cash at shop', 'Not paid', 'Amount mismatch', 'Delivered', 'Rejected'];
+const STATUSES = ['Pending', 'Awaiting payment', 'Verified', 'Advance paid', 'Cash on delivery', 'Cash at shop', 'Not paid', 'Amount mismatch', 'Delivered', 'Rejected'];
 const fail = (e) => { console.error(e); MJ.toast(/permission/i.test(String(e && (e.code || e.message))) ? a('perm') : a('err') + ' · ' + (e && (e.code || e.message) || ''), true); };
 
 let user = null, orders = [], rateHist = [], fsProducts = null, settings = {}, view = 'dash', orderFilter = 'all', orderQ = '';
@@ -213,7 +218,9 @@ function priceCheck(o) {
   if (o.source === 'shop') return { ok: true };
   const R = o.rates || {}, mk = +o.making || 0;
   const known = sameRates(R, MJ.official) || rateHist.some(h => sameRates(R, h));
-  const re = (o.items || []).reduce((s, l) => s + (+l.tb || 0) * (+R[l.carat] || 0) * (1 + mk / 100), 0);
+  const ship = o.delivery && o.delivery.method === 'home' ? +o.delivery.fee || 0 : 0;
+  const re = (o.items || []).reduce((s, l) => s + (+l.tb || 0) * (+R[l.carat] || 0) * (1 + mk / 100), 0) + ship;
+  if (ship && Math.round(ship) !== Math.round(MJ.CONFIG.deliveryFee)) return { ok: false, known, okMath: false, re };
   const okMath = Math.abs(re - (+o.grand || 0)) <= Math.max(3, re * .001);
   const okMk = mk >= MJ.CONFIG.making - .01;          // a lower making charge than the shop's is suspicious
   return { ok: known && okMath && okMk, known, okMath, re };
@@ -226,8 +233,9 @@ function orderCard(o) {
   return `<article class="ord ${o.status === 'Pending' ? 'pending' : ''}" data-id="${esc(o.id)}">
     <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) + ' · ' + ftime(o.createdAt) : ''} · ${o.source === 'shop' ? a('shop') : a('web')}</small></div>${stBadge(o.status)}</header>
     <div class="ord-b">
-      <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span><small>${esc(c.addr || '')}</small></div>
-      <ul class="its">${(o.items || []).map(l => `<li><span>${l.custom ? '<em class="cust">✎</em> ' : ''}${esc(title(l))} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b>${l.desc ? `<p class="idesc">${esc(l.desc)}</p>` : ''}</li>`).join('')}</ul>
+      <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span>${c.email ? `<a class="em" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}<small>${esc(c.addr || '')}</small></div>
+      <div class="tags2"><span class="tg">${o.delivery && o.delivery.method === 'home' ? '🚚 ' + a('dl_home') + (o.delivery.fee ? ' · ' + money(o.delivery.fee) : '') : '🏬 ' + a('dl_pickup')}</span>${o.plan ? `<span class="tg">${a('plan_' + o.plan)}</span>` : ''}${P.method === 'ssl' ? `<span class="tg blue">${a('online')}</span>` : ''}</div>
+      <ul class="its">${(o.items || []).map(l => `<li><span>${l.custom ? '<em class="cust">✎</em> ' : ''}${esc(title(l))}${(+l.qty || 1) > 1 ? ' × ' + dg(l.qty) : ''} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b>${l.desc ? `<p class="idesc">${esc(l.desc)}</p>` : ''}${(l.refs || []).length ? `<div class="arefs">${l.refs.map(r => `<button type="button" class="aref" data-img><img src="${r}" alt="${a('refs')}"></button>`).join('')}</div>` : ''}</li>`).join('')}</ul>
       <div class="payx">
         <div><small>${MJ.t('grand')}</small><b>${money(o.grand)}</b></div>
         <div><small>${a('paid')}${P.method ? ' · ' + MJ.t('m_' + P.method) : ''}</small><b>${money(P.amount || 0)}</b></div>
@@ -238,7 +246,7 @@ function orderCard(o) {
     </div>
     <footer>
       ${o.status !== 'Verified' && o.status !== 'Delivered' ? `<button class="a-btn small gold" type="button" data-st="Verified">${a('verify')}</button>` : ''}
-      ${o.status !== 'Delivered' ? `<button class="a-btn small" type="button" data-st="Delivered">${a('deliver')}</button>` : ''}
+      ${o.status !== 'Delivered' ? `<button class="a-btn small" type="button" data-st="Delivered">${P.method === 'cod' || P.method === 'cash' ? a('collected') : a('deliver')}</button>` : ''}
       ${o.status === 'Pending' ? `<button class="a-btn small" type="button" data-st="Amount mismatch">${a('mismatch')}</button>` : ''}
       ${o.status !== 'Rejected' && o.status !== 'Delivered' ? `<button class="a-btn small danger" type="button" data-st="Rejected">${a('reject')}</button>` : ''}
       <span class="grow"></span>
@@ -263,11 +271,21 @@ $('#orderList').addEventListener('click', async e => {
   const st = e.target.closest('[data-st]');
   if (st) {
     st.disabled = true;
-    try { await fb.setOrderStatus(o.id, st.dataset.st, { by: user.email }); MJ.toast(a('status_set')); } catch (err) { fail(err); st.disabled = false; }
+    const S = st.dataset.st, P = o.pay || {};
+    const cashIn = S === 'Delivered' && (P.method === 'cod' || P.method === 'cash' || (+P.due || 0) > 0);
+    const extra = { by: user.email }, pub = {};
+    if (cashIn) { extra.pay = Object.assign({}, P, { amount: Math.round(+o.grand || 0), due: 0, collectedAt: Date.now() }); Object.assign(pub, { paid: Math.round(+o.grand || 0), due: 0 }); }
+    try {
+      await fb.setOrderStatus(o.id, S, extra, pub); MJ.toast(a('status_set'));
+      if (o.customer && o.customer.email && fb.idToken) fb.idToken().then(tk => fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: o.id, idToken: tk }) }))
+        .then(r => r && r.json()).then(j => { if (j && j.ok && !j.skipped) MJ.toast('✉ ' + a('mailed')); }).catch(() => {});
+    } catch (err) { fail(err); st.disabled = false; }
     return;
   }
+  const im = e.target.closest('[data-img]');
+  if (im) { const v = document.createElement('div'); v.className = 'imgview on'; v.innerHTML = `<img src="${$('img', im).src}" alt="">`; v.onclick = () => v.remove(); document.body.appendChild(v); return; }
   if (e.target.closest('[data-inv]')) {
-    MJ.openInvoice({ no: o.id, ts: o.createdAt || Date.now(), rateDate: o.rateDate, buyer: o.customer || {}, lines: o.items || [], totals: o.totals || { grand: o.grand }, pay: o.pay, status: o.status, cloud: true, sync: 'off' });
+    MJ.openInvoice({ no: o.id, ts: o.createdAt || Date.now(), rateDate: o.rateDate, buyer: o.customer || {}, lines: (o.items || []).map(l => Object.assign({ q: +l.qty || 1 }, l)), totals: o.totals || { grand: o.grand }, pay: o.pay, status: o.status, delivery: o.delivery, plan: o.plan, cloud: true, sync: 'off' });
   }
 });
 
@@ -385,12 +403,16 @@ function renderSettings() {
   $('#sMaking').value = settings.making != null ? settings.making : C.making;
   $('#sLock').value = settings.lockMinutes || C.lockMinutes;
   $('#sBkash').value = settings.bkash || C.bkash; $('#sNagad').value = settings.nagad || C.nagad;
+  $('#sFee').value = settings.deliveryFee != null ? settings.deliveryFee : C.deliveryFee;
+  $('#sAdv').value = settings.advancePct != null ? settings.advancePct : C.advancePct;
+  $('#sCod').checked = settings.codOn != null ? !!settings.codOn : C.codOn;
   $('#sNoticeOn').checked = !!settings.noticeOn; $('#sNoticeBn').value = settings.notice_bn || ''; $('#sNoticeEn').value = settings.notice_en || '';
 }
 $('#setForm').addEventListener('input', () => { setDirty = true; });
 $('#setForm').addEventListener('submit', async e => {
   e.preventDefault();
   const st = { making: +toNum($('#sMaking').value), lockMinutes: Math.round(toNum($('#sLock').value)) || 15, bkash: $('#sBkash').value.trim(), nagad: $('#sNagad').value.trim(),
+    deliveryFee: Math.max(0, Math.round(toNum($('#sFee').value))), advancePct: Math.min(100, Math.max(5, Math.round(toNum($('#sAdv').value)) || 30)), codOn: $('#sCod').checked,
     noticeOn: $('#sNoticeOn').checked, notice_bn: $('#sNoticeBn').value.trim(), notice_en: $('#sNoticeEn').value.trim() };
   try { await fb.saveSettings(st); setDirty = false; MJ.toast(a('saved')); } catch (err) { fail(err); }
 });

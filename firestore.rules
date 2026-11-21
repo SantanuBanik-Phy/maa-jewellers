@@ -14,7 +14,7 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
     function customerStatus() {
-      return ['Pending', 'Cash at shop', 'Not paid'];
+      return ['Pending', 'Cash at shop', 'Not paid', 'Awaiting payment', 'Cash on delivery'];
     }
 
     // BAJUS rates + shop settings: everyone reads, only admin writes
@@ -42,7 +42,7 @@ service cloud.firestore {
         && request.resource.data.grand is number && request.resource.data.grand > 0
         && request.resource.data.items is list && request.resource.data.items.size() <= 30
         && request.resource.data.keys().hasOnly(['id', 'createdAt', 'lang', 'rateDate', 'rates', 'making',
-             'customer', 'items', 'totals', 'grand', 'pay', 'status', 'lockUntil', 'source'])
+             'customer', 'items', 'totals', 'grand', 'pay', 'status', 'lockUntil', 'source', 'delivery', 'plan'])
       );
       allow read, update, delete: if isAdmin();
     }

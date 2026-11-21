@@ -9,10 +9,23 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
   Custom orders: calculator.html takes carat + weight + jewellery name (required) + type + description → cart line `{custom, name, desc}`.
   Invoice is locked (blurred, print/share blocked, prints a notice) until the shop marks it Verified/Delivered;
   for Firestore orders only the live `orderStatus` unlocks it (localStorage edits don't). Admin-opened invoices set `adminView`.
+  Cart: quantity stepper (`qty`, max 20; same product+carat merges), cart clears after an order. Custom orders can carry up to
+  3 reference photos (`refs`, ~800px JPEG data URLs stored in the order items).
+  Checkout: delivery (pickup / home + `deliveryFee`), plan (full / advance `advancePct` for custom orders / cash on delivery / pay at shop),
+  method (SSLCommerz `ssl` when `/api/pay/config` says on, bKash, Nagad, Bangla QR with TrxID). Optional email → confirmation mails.
+  Statuses: Pending, Awaiting payment (ssl), Advance paid, Verified, Cash on delivery, Cash at shop, Not paid, Amount mismatch, Delivered, Rejected.
 - **Admin console** — `admin.html` + `assets/admin.js` + `assets/admin.css` (own look, noindex).
   Firebase Auth email/password; only `santanubanik2k@gmail.com` with a verified email. Tabs: Dashboard,
   Orders (verify/reject/deliver, price-integrity check, chime on new orders), BAJUS rates (publish + history),
   Products (CRUD, photo upload → resized JPEG data URL), In-store sale (POS with discount/VAT/advance), Settings.
+
+## Server (Vercel functions, `api/`, no npm deps)
+- `api/_lib.js` helpers (service-account JWT → Firestore REST, price re-check, admin ID-token check, Apps Script mail).
+- `api/pay/config` (is SSL on), `api/pay/init` (re-checks price, opens SSLCommerz session), `api/pay/callback?r=success|fail|cancel|ipn`
+  (validates with SSLCommerz, marks order + orderStatus paid, emails), `api/notify` (admin status change → customer email).
+- Env vars on Vercel: FIREBASE_SERVICE_ACCOUNT, SSLCZ_STORE_ID, SSLCZ_STORE_PASSWORD, SSLCZ_LIVE, SHEET_SECRET (= Code.gs SECRET). See PAYMENTS-EMAIL-SETUP.md.
+- Test server code with Node and a fake `fetch` (`L.setFetch`) — never call the real gateway or Firebase from tests.
+- Emails are sent by `google-apps-script/Code.gs` (MailApp): order confirmation on new order; `type:'mail'` + secret for updates.
 
 ## Files
 - `assets/app.js` — all customer logic and all Bangla/English text (I18N). `PAGE === 'admin'` skips the
@@ -34,4 +47,5 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - Every new UI string needs both `bn` and `en` keys (I18N in app.js; admin strings in `A` in admin.js).
 - Keep the invoice print palette white/black/gold; check it still fits one A4 page.
 - Test headless (Playwright) at 1440 and 390 widths before pushing; `node --check assets/app.js`.
-  For admin/order flows, copy the site and replace `assets/fb.js` with an in-memory mock exporting the same API.
+  For admin/order flows, copy the site and replace `assets/fb.js` with an in-memory mock exporting the same API
+  (incl. `setOrderStatus(id, status, extra, pub)` and `idToken()`); stub `/api/*` with Playwright routes.

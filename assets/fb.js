@@ -87,6 +87,7 @@ export async function login(email, password) {
   await A.setPersistence(auth, A.browserLocalPersistence);
   return A.signInWithEmailAndPassword(auth, email, password);
 }
+export async function idToken() { if (!(await init()) || !auth.currentUser) return null; return auth.currentUser.getIdToken(); }
 export async function logout() { if (await init()) await A.signOut(auth); }
 export async function resetPassword(email) { await init(); return A.sendPasswordResetEmail(auth, email); }
 export async function sendVerify() { await init(); if (auth.currentUser) return A.sendEmailVerification(auth.currentUser); }
@@ -112,13 +113,13 @@ export async function onOrders(cb) {
   return F.onSnapshot(F.query(F.collection(db, 'orders'), F.orderBy('createdAt', 'desc'), F.limit(500)),
     q => cb(q.docs.map(d => Object.assign({ id: d.id }, plain(d)))), err => cb(null, err));
 }
-export async function setOrderStatus(id, status, extra) {
+export async function setOrderStatus(id, status, extra, pub) {
   await init();
   const b = F.writeBatch(db);
   const o = Object.assign({ status, statusAt: now() }, extra || {});
   if (status === 'Verified') o.verifiedAt = now();
   b.update(D('orders', id), o);
-  b.set(D('orderStatus', id), { status, updatedAt: now() }, { merge: true });
+  b.set(D('orderStatus', id), Object.assign({ status, updatedAt: now() }, pub || {}), { merge: true });
   await b.commit();
 }
 export async function createAdminOrder(order) {

@@ -28,6 +28,9 @@ const CONFIG = {
   sheetUrl: 'https://script.google.com/macros/s/AKfycbx57QPz_0xrFiQNwMC4FF7WiljoTLHs-5Yz63TXuqIsN-C5WB1jj1YMlReDC2vroNjeRg/exec',
   making: 6,                          // default making charge, % (admin can change in the panel)
   lockMinutes: 15,                    // checkout price lock
+  deliveryFee: 150,                   // home delivery charge (admin can change)
+  advancePct: 30,                     // advance % for custom-design orders (admin can change)
+  codOn: true,                        // allow cash on delivery (admin can change)
   liveEverySec: 60,                   // international price refresh
   fxEveryMin: 30
 };
@@ -180,7 +183,7 @@ bn: {
   rights: 'সর্বস্বত্ব সংরক্ষিত',
   /* whatsapp */
   nav_pay: 'পেমেন্ট', nav_pay_en: 'Payment',
-  pay_title: 'পেমেন্ট', pay_sub: 'বিকাশ, নগদ, বাংলা কিউআর বা দোকানে নগদ — আপনার সুবিধামতো পরিশোধ করুন।',
+  pay_title: 'পেমেন্ট', pay_sub: 'কার্ড ও অনলাইন পেমেন্ট, বিকাশ, নগদ, বাংলা কিউআর, ক্যাশ অন ডেলিভারি বা দোকানে — আপনার সুবিধামতো।',
   step_pay: 'পেমেন্ট', step_inv: 'চালান',
   m_h: 'পেমেন্ট মাধ্যম বেছে নিন', m_bkash: 'বিকাশ', m_nagad: 'নগদ', m_qr: 'বাংলা কিউআর', m_cash: 'দোকানে নগদ',
   m_bkash_d: 'বিকাশ অ্যাপ বা *247# থেকে', m_nagad_d: 'নগদ অ্যাপ বা *167# থেকে', m_qr_d: 'যেকোনো ব্যাংক / MFS অ্যাপে স্ক্যান', m_cash_d: 'দোকানে এসে পরিশোধ',
@@ -209,17 +212,35 @@ bn: {
   st_pending: 'যাচাইয়ের অপেক্ষায়', st_verified: 'যাচাইকৃত ✓', st_mismatch: 'পরিমাণ মেলেনি', st_dup: 'TrxID আগে ব্যবহৃত', st_cash: 'দোকানে নগদ', st_notpaid: 'পেমেন্ট ছাড়া', st_rejected: 'বাতিল', st_delivered: 'হস্তান্তরিত',
   ver_note: 'বিকাশ / নগদ / ব্যাংকের SMS মিলে গেলে স্বয়ংক্রিয়ভাবে যাচাই হয় — দোকান থেকেও যাচাই করা হয়। পাতাটি খোলা থাকলে নিজে থেকেই হালনাগাদ হবে।',
   t_dup: 'এই TrxID আগেই অন্য অর্ডারে ব্যবহার হয়েছে — সঠিক TrxID দিন', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'সর্বশেষ যাচাই {t}',
+  buyer_email: 'ইমেইল', email_hint: 'অর্ডার নিশ্চিতকরণ ও আপডেট ইমেইলে পাবেন', bad_email: 'সঠিক ইমেইল দিন',
+  co_s1: 'আপনার তথ্য', co_s2: 'ডেলিভারি', co_s3: 'কীভাবে পরিশোধ করবেন', co_s4: 'পেমেন্ট মাধ্যম',
+  dl_pickup: 'দোকান থেকে নেবেন', dl_pickup_d: 'পরশুরাম বাজার · কোনো চার্জ নেই', dl_home: 'হোম ডেলিভারি', dl_home_d: 'নিরাপদ কুরিয়ারে বাসায় · {f}',
+  need_addr: 'হোম ডেলিভারির জন্য পূর্ণ ঠিকানা দিন', delivery: 'ডেলিভারি চার্জ', delivery_l: 'ডেলিভারি', free: 'ফ্রি',
+  plan_full: 'পুরো টাকা এখন', plan_full_d: 'অনলাইনে সম্পূর্ণ পরিশোধ — দ্রুত প্রস্তুত', plan_adv: 'অগ্রিম {p}', plan_adv_d: 'কাস্টম ডিজাইনের অর্ডার — বাকি টাকা ডেলিভারিতে',
+  plan_cod: 'ক্যাশ অন ডেলিভারি', plan_cod_d: 'গহনা হাতে পেয়ে নগদ পরিশোধ', plan_shop: 'দোকানে পরিশোধ', plan_shop_d: 'নেওয়ার সময় দোকানে পরিশোধ',
+  m_ssl: 'অনলাইন পেমেন্ট', m_ssl_d: 'কার্ড · বিকাশ · নগদ · রকেট · ব্যাংক', m_cod: 'ক্যাশ অন ডেলিভারি',
+  ssl_h: 'SSLCommerz — নিরাপদ অনলাইন পেমেন্ট', ssl_p: 'বোতাম চাপলে SSLCommerz-এর সুরক্ষিত পাতায় যাবেন। ভিসা, মাস্টারকার্ড, অ্যামেক্স, বিকাশ, নগদ, রকেট, উপায় বা ইন্টারনেট ব্যাংকিং দিয়ে পরিশোধ করুন। সফল হলেই অর্ডার নিজে থেকে নিশ্চিত হবে — TrxID লিখতে হবে না।',
+  ssl_secure: 'ব্যাংক-মানের এনক্রিপশন · বাংলাদেশ ব্যাংক অনুমোদিত গেটওয়ে', ssl_off: 'অনলাইন পেমেন্ট শীঘ্রই চালু হবে',
+  pay_ssl_btn: 'নিরাপদে পরিশোধ করুন · {a}', place_cod: 'অর্ডার দিন — ক্যাশ অন ডেলিভারি', place_shop: 'অর্ডার দিন — দোকানে পরিশোধ',
+  redirecting: 'পেমেন্ট পাতায় নেওয়া হচ্ছে…', ssl_fail: 'অনলাইন পেমেন্ট শুরু করা যায়নি — চালান পাতা থেকে আবার চেষ্টা করুন',
+  pay_ok: 'পেমেন্ট সফল হয়েছে ✓ অর্ডার নিশ্চিত', pay_failed: 'পেমেন্ট সম্পন্ন হয়নি — আবার চেষ্টা করুন', pay_cancel: 'পেমেন্ট বাতিল করা হয়েছে', pay_now_btn: 'এখনই পরিশোধ করুন · {a}',
+  cod_note: 'ডেলিভারিম্যান গহনা হাতে দিলে নগদ পরিশোধ করুন। পাঠানোর আগে দোকান ফোন করে অর্ডার নিশ্চিত করবে।', cod_off: 'এই অর্ডারে ক্যাশ অন ডেলিভারি নেই',
+  st_await: 'অনলাইন পেমেন্টের অপেক্ষায়', st_cod: 'ক্যাশ অন ডেলিভারি', st_adv: 'অগ্রিম পরিশোধিত ✓',
+  qty: 'পরিমাণ', qty_max: 'একসাথে সর্বোচ্চ ২০টি',
+  ref_h: 'রেফারেন্স ছবি', ref_add: 'ছবি যোগ করুন', ref_note: 'পছন্দের ডিজাইনের ছবি দিন (সর্বোচ্চ ৩টি) — কারিগর সেই অনুযায়ী বানাবেন', ref_max: 'আর ছবি যোগ করা যাবে না', ref_bad: 'ছবিটি খোলা যায়নি',
+  placed_h: 'ধন্যবাদ! অর্ডার সম্পন্ন হয়েছে', placed_mail: 'নিশ্চিতকরণ ইমেইল পাঠানো হয়েছে: {m}', placed_nomail: 'দোকান শীঘ্রই ফোনে যোগাযোগ করবে', placed_next: 'পরবর্তী ধাপ',
+  adv_hint: 'কাস্টম ডিজাইনের অর্ডারে {p} অগ্রিম দিয়ে অর্ডার নিশ্চিত করুন', items_n: '{n}টি গহনা',
   inv_lock_h: 'চালান লক করা আছে', inv_lock_p: 'দোকান আপনার পেমেন্ট যাচাই করলেই চালান খুলে যাবে — তখন প্রিন্ট ও PDF করতে পারবেন। এই পাতা খোলা রাখুন, যাচাই হলে নিজে থেকেই খুলবে।',
   inv_lock_cash: 'দোকানে টাকা পরিশোধের পর দোকান যাচাই করলে চালান খুলবে।', inv_lock_t: 'যাচাইয়ের আগে প্রিন্ট বা শেয়ার করা যাবে না', inv_lock_print: 'এই চালান এখনো দোকান যাচাই করেনি — প্রিন্ট করা যাবে না।', inv_unlocked: 'পেমেন্ট যাচাই হয়েছে — চালান খুলে গেছে ✓',
   est_design_h: 'আপনার পছন্দের ডিজাইন', est_name: 'গহনার নাম', est_name_ph: 'যেমন: ময়ূর নকশার নেকলেস', est_desc: 'বিবরণ / ডিজাইনের তথ্য', est_desc_ph: 'নকশা, মাপ, পাথর, রং, ছবি থাকলে হোয়াটসঅ্যাপে পাঠান…', est_cat: 'গহনার ধরন', est_need_name: 'গহনার নাম লিখুন',
-  nav_cart: 'কার্ট', nav_cart_en: 'Cart', nav_track: 'অর্ডার ট্র্যাক', nav_track_en: 'Track order', step_cart: 'কার্ট',
+  nav_cart: 'কার্ট', nav_cart_en: 'Cart', nav_track: 'আমার অর্ডার', nav_track_en: 'My orders', step_cart: 'কার্ট',
   crt_title: 'আপনার কার্ট', crt_sub: 'গহনা, ওজন ও দাম — আজকের বাজুস দরে। পরের ধাপে পেমেন্ট।', crt_empty2: 'শপ থেকে পছন্দের গহনা যোগ করুন।',
   checkout_btn: 'চেকআউট — পেমেন্ট করুন', need_contact: 'নাম ও মোবাইল নম্বর দিন', ro_note: 'দাম বাজুস দর ও দোকানের মজুরি অনুযায়ী স্বয়ংক্রিয় — গ্রাহক পরিবর্তন করতে পারেন না।',
   est_title: 'দাম হিসাব', est_sub: 'যেকোনো ওজন ও ক্যারেটে আজকের বাজুস দরে আনুমানিক দাম জানুন।', est_result: 'আনুমানিক দাম', est_add: 'এই ওজনে অর্ডার করুন', est_wa: 'হোয়াটসঅ্যাপে জিজ্ঞাসা',
   est_making: 'মজুরি (দোকান নির্ধারিত)', est_note: 'দর ও মজুরি দোকান নির্ধারিত — শুধু অ্যাডমিন পরিবর্তন করতে পারেন।', custom_order: 'নিজস্ব অর্ডার', est_need: 'ওজন দিন', est_h1: 'ক্যারেট বেছে নিন', est_h2: 'ওজন',
   lock_h: 'দাম লক করা হয়েছে', lock_d: '{m} মিনিট এই দাম নিশ্চিত — দর বদলালেও আপনার দাম বদলাবে না।', lock_left: 'বাকি', lock_exp: 'লকের সময় শেষ — আজকের দরে আবার লক করা হয়েছে',
   tr_h: 'অর্ডার ট্র্যাকিং', tr_s1: 'অর্ডার গৃহীত', tr_s2: 'পেমেন্ট যাচাই', tr_s3: 'পেমেন্ট নিশ্চিত', tr_s4: 'হস্তান্তর', tr_live: 'লাইভ — দোকান যাচাই করলেই সাথে সাথে এখানে দেখাবে', tr_problem: 'সমস্যা হয়েছে — দোকানে যোগাযোগ করুন',
-  track_title: 'অর্ডার ট্র্যাক করুন', track_sub: 'চালান নম্বর দিয়ে অর্ডার ও পেমেন্টের অবস্থা লাইভ দেখুন।', track_ph: 'যেমন: MJ-261121-104512-K7Q4', track_btn: 'ট্র্যাক করুন',
+  track_title: 'আমার অর্ডার', track_sub: 'এই ডিভাইস থেকে দেওয়া সব অর্ডার ও পেমেন্টের অবস্থা লাইভ দেখুন, অথবা চালান নম্বর দিয়ে খুঁজুন।', track_ph: 'যেমন: MJ-261121-104512-K7Q4', track_btn: 'ট্র্যাক করুন',
   my_orders: 'এই ডিভাইসের অর্ডার', no_orders: 'এই ডিভাইসে এখনো কোনো অর্ডার নেই', not_found: 'এই নম্বরে কোনো অর্ডার পাওয়া যায়নি', track_off: 'অনলাইন ট্র্যাকিং এখনো চালু হয়নি — হোয়াটসঅ্যাপে যোগাযোগ করুন।', searching: 'খোঁজা হচ্ছে…',
   order_placed: '✦ অর্ডার সম্পন্ন — চালান তৈরি হয়েছে', order_saved_local: 'ইন্টারনেট সমস্যা — অর্ডার ডিভাইসে সংরক্ষিত, সংযোগ পেলে পাঠানো হবে', placing: 'অর্ডার পাঠানো হচ্ছে…',
   sold_out: 'স্টক শেষ', photo_note: 'ছবি প্রতীকী — আসল গহনা দোকানে বা হোয়াটসঅ্যাপে দেখে নিন।', photo_by: 'ছবি',
@@ -330,7 +351,7 @@ en: {
   foot_about: 'Modern, tasteful gold jewellery — at BAJUS rates, with a clear invoice.', foot_pages: 'Pages', foot_contact: 'Contact', foot_rates: "Today's rate",
   rights: 'All rights reserved',
   nav_pay: 'Payment', nav_pay_en: 'পেমেন্ট',
-  pay_title: 'Payment', pay_sub: 'bKash, Nagad, Bangla QR or cash at the shop — pay the way that suits you.',
+  pay_title: 'Payment', pay_sub: 'Card & online payment, bKash, Nagad, Bangla QR, cash on delivery or at the shop — whatever suits you.',
   step_pay: 'Pay', step_inv: 'Invoice',
   m_h: 'Choose a payment method', m_bkash: 'bKash', m_nagad: 'Nagad', m_qr: 'Bangla QR', m_cash: 'Cash at shop',
   m_bkash_d: 'From the bKash app or *247#', m_nagad_d: 'From the Nagad app or *167#', m_qr_d: 'Scan with any bank / MFS app', m_cash_d: 'Pay at the shop',
@@ -359,17 +380,35 @@ en: {
   st_pending: 'Waiting for verification', st_verified: 'Verified ✓', st_mismatch: 'Amount does not match', st_dup: 'TrxID already used', st_cash: 'Cash at shop', st_notpaid: 'No payment', st_rejected: 'Rejected', st_delivered: 'Delivered',
   ver_note: 'Verified automatically when the bKash / Nagad / bank SMS matches — the shop can also verify it. This page updates itself while open.',
   t_dup: 'This TrxID was already used on another order — enter the correct TrxID', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'Last checked {t}',
+  buyer_email: 'Email', email_hint: 'Get your order confirmation and updates by email', bad_email: 'Please enter a valid email',
+  co_s1: 'Your details', co_s2: 'Delivery', co_s3: 'How would you like to pay?', co_s4: 'Payment method',
+  dl_pickup: 'Pick up at the shop', dl_pickup_d: 'Parashuram Bazar · no charge', dl_home: 'Home delivery', dl_home_d: 'Insured courier to your door · {f}',
+  need_addr: 'Please enter your full address for home delivery', delivery: 'Delivery charge', delivery_l: 'Delivery', free: 'Free',
+  plan_full: 'Pay in full now', plan_full_d: 'Pay everything online — fastest to prepare', plan_adv: 'Advance {p}', plan_adv_d: 'For custom-design orders — rest on delivery',
+  plan_cod: 'Cash on delivery', plan_cod_d: 'Pay cash when the jewellery reaches you', plan_shop: 'Pay at the shop', plan_shop_d: 'Pay when you pick it up',
+  m_ssl: 'Online payment', m_ssl_d: 'Card · bKash · Nagad · Rocket · bank', m_cod: 'Cash on delivery',
+  ssl_h: 'SSLCommerz — secure online payment', ssl_p: 'You will go to the secure SSLCommerz page. Pay with Visa, Mastercard, Amex, bKash, Nagad, Rocket, Upay or internet banking. Your order is confirmed automatically — no TrxID needed.',
+  ssl_secure: 'Bank-grade encryption · Bangladesh Bank approved gateway', ssl_off: 'Online card payment is coming soon',
+  pay_ssl_btn: 'Pay securely · {a}', place_cod: 'Place order — cash on delivery', place_shop: 'Place order — pay at shop',
+  redirecting: 'Taking you to the payment page…', ssl_fail: 'Could not start online payment — try again from the invoice page',
+  pay_ok: 'Payment successful ✓ Order confirmed', pay_failed: 'Payment was not completed — please try again', pay_cancel: 'Payment cancelled', pay_now_btn: 'Pay now · {a}',
+  cod_note: 'Pay cash when the courier hands over your jewellery. The shop will call you to confirm before sending.', cod_off: 'Cash on delivery is not available for this order',
+  st_await: 'Waiting for online payment', st_cod: 'Cash on delivery', st_adv: 'Advance paid ✓',
+  qty: 'Qty', qty_max: 'Up to 20 at a time',
+  ref_h: 'Reference photos', ref_add: 'Add photos', ref_note: 'Add photos of the design you like (up to 3) — our craftsmen will follow them', ref_max: 'No more photos can be added', ref_bad: 'Could not open that image',
+  placed_h: 'Thank you! Your order is placed', placed_mail: 'Confirmation email sent to {m}', placed_nomail: 'The shop will call you shortly', placed_next: 'What happens next',
+  adv_hint: 'Custom-design orders: confirm with a {p} advance', items_n: 'Qty {n}',
   inv_lock_h: 'Invoice locked', inv_lock_p: 'Your invoice opens as soon as the shop verifies your payment — then you can print or save it as PDF. Keep this page open; it unlocks by itself.',
   inv_lock_cash: 'Pay at the shop — the invoice unlocks once the shop verifies the payment.', inv_lock_t: 'Printing and sharing are available after verification', inv_lock_print: 'This invoice has not been verified by the shop yet — it cannot be printed.', inv_unlocked: 'Payment verified — your invoice is unlocked ✓',
   est_design_h: 'Your own design', est_name: 'Jewellery name', est_name_ph: 'e.g. Peacock-design necklace', est_desc: 'Description / design details', est_desc_ph: 'Design, size, stones, colour… send photos on WhatsApp if you have them', est_cat: 'Type', est_need_name: 'Please enter the jewellery name',
-  nav_cart: 'Cart', nav_cart_en: 'কার্ট', nav_track: 'Track order', nav_track_en: 'অর্ডার ট্র্যাক', step_cart: 'Cart',
+  nav_cart: 'Cart', nav_cart_en: 'কার্ট', nav_track: 'My orders', nav_track_en: 'আমার অর্ডার', step_cart: 'Cart',
   crt_title: 'Your cart', crt_sub: "Jewellery, weight and price at today's BAJUS rate. Payment is the next step.", crt_empty2: 'Add your favourite pieces from the shop.',
   checkout_btn: 'Checkout — pay now', need_contact: 'Please enter your name and mobile number', ro_note: 'Prices follow the BAJUS rate and the shop’s making charge — they cannot be changed by customers.',
   est_title: 'Price calculator', est_sub: "Estimate the price of any weight and carat at today's BAJUS rate.", est_result: 'Estimated price', est_add: 'Order this weight', est_wa: 'Ask on WhatsApp',
   est_making: 'Making charge (set by shop)', est_note: 'Rates and making charge are set by the shop — only the admin can change them.', custom_order: 'Custom order', est_need: 'Enter a weight', est_h1: 'Choose carat', est_h2: 'Weight',
   lock_h: 'Price locked', lock_d: 'This price is guaranteed for {m} minutes — even if the rate changes.', lock_left: 'left', lock_exp: "Lock expired — re-locked at today's rate",
   tr_h: 'Order tracking', tr_s1: 'Order placed', tr_s2: 'Payment check', tr_s3: 'Payment confirmed', tr_s4: 'Handed over', tr_live: 'Live — updates here the moment the shop verifies', tr_problem: 'There is a problem — please contact the shop',
-  track_title: 'Track your order', track_sub: 'Enter your invoice number to see your order and payment status live.', track_ph: 'e.g. MJ-261121-104512-K7Q4', track_btn: 'Track',
+  track_title: 'My orders', track_sub: 'See every order placed from this device with its live payment status, or search by invoice number.', track_ph: 'e.g. MJ-261121-104512-K7Q4', track_btn: 'Track',
   my_orders: 'Orders on this device', no_orders: 'No orders on this device yet', not_found: 'No order found with this number', track_off: 'Online tracking is not switched on yet — please contact us on WhatsApp.', searching: 'Searching…',
   order_placed: '✦ Order placed — invoice created', order_saved_local: 'Connection problem — order saved on this device and will be sent when online', placing: 'Placing order…',
   sold_out: 'Sold out', photo_note: 'Photos are for illustration — see the actual piece in store or on WhatsApp.', photo_by: 'Photo',
@@ -472,7 +511,7 @@ let official = Object.assign({ from: 'builtin' }, BUILTIN);
 let override = null;                       // prices are set only by the admin (Firebase)
 const CART_KEY = PAGE === 'admin' ? 'mj_pos_cart' : 'mj_cart', BUYER_KEY = PAGE === 'admin' ? 'mj_pos_buyer' : 'mj_buyer';
 let cart = LS.get(CART_KEY, []); if (!Array.isArray(cart)) cart = [];
-let buyer = Object.assign({ name: '', phone: '', addr: '', disc: '', vat: '', adv: '' }, LS.get(BUYER_KEY, {}));
+let buyer = Object.assign({ name: '', phone: '', email: '', addr: '', disc: '', vat: '', adv: '' }, LS.get(BUYER_KEY, {}));
 if (PAGE !== 'admin') { buyer.disc = ''; buyer.vat = ''; buyer.adv = ''; }
 let catalog = PRODUCTS.slice();
 let fbMod = null;                           // Firebase layer (assets/fb.js), loaded when configured
@@ -490,6 +529,9 @@ function applySettings(st, quiet) {
   if (toNum(st.lockMinutes)) CONFIG.lockMinutes = Number(st.lockMinutes);
   if (/^01[3-9]\d{8}$/.test(st.bkash || '')) CONFIG.bkash = st.bkash;
   if (/^01[3-9]\d{8}$/.test(st.nagad || '')) CONFIG.nagad = st.nagad;
+  if (st.deliveryFee != null && isFinite(+st.deliveryFee)) CONFIG.deliveryFee = Math.max(0, +st.deliveryFee);
+  if (toNum(st.advancePct)) CONFIG.advancePct = Math.min(100, Math.max(5, +st.advancePct));
+  if (st.codOn != null) CONFIG.codOn = !!st.codOn;
   CONFIG.notice = st.noticeOn ? { bn: st.notice_bn || '', en: st.notice_en || '' } : null;
   if (!quiet) LS.set('mj_settings_cache', st);
 }
@@ -520,21 +562,26 @@ function dayChange() {
   return (live.spot - o.spot) / o.spot * 100;
 }
 
+const qtyOf = (l) => Math.min(20, Math.max(1, Math.round(toNum(l.qty) || 1)));
 function calc(l) {
-  const tb = l.mode === 'gram' ? toNum(l.g) / GRAM : toNum(l.b) + toNum(l.a) / 16 + toNum(l.r) / 96 + toNum(l.p) / 960;
+  const piece = l.mode === 'gram' ? toNum(l.g) / GRAM : toNum(l.b) + toNum(l.a) / 16 + toNum(l.r) / 96 + toNum(l.p) / 960;
+  const q = qtyOf(l), tb = piece * q;
   const rate = rateOf(l.carat), gold = tb * rate;
   const mc = PAGE === 'admin' ? toNum(l.mc) : CONFIG.making, mcu = PAGE === 'admin' ? l.mcu : 'pct';
   const making = mcu === 'tk' ? tb * mc : gold * mc / 100;
-  return { tb, rate, gold, making, total: gold + making };
+  return { tb, piece, q, rate, gold, making, total: gold + making };
 }
 function totals() {
   const lines = cart.map(calc);
   const gold = lines.reduce((s, x) => s + x.gold, 0), making = lines.reduce((s, x) => s + x.making, 0);
   const sub = gold + making, d = Math.min(toNum(buyer.disc), 100), discAmt = sub * d / 100, after = sub - discAmt;
   const v = toNum(buyer.vat), vatAmt = after * v / 100, adv = toNum(buyer.adv);
-  return { lines, gold, making, sub, d, discAmt, v, vatAmt, adv, grand: Math.max(after + vatAmt - adv, 0) };
+  const ship = PAGE === 'pay' && typeof payState !== 'undefined' && payState.delivery === 'home' ? CONFIG.deliveryFee : 0;
+  return { lines, gold, making, sub, d, discAmt, v, vatAmt, adv, ship, grand: Math.max(after + vatAmt - adv, 0) + ship };
 }
 const lineName = (l) => l.name || (l.pid ? pName(prod(l.pid)) : t('cat_' + (l.cat || 'custom')));
+const qtyTag = (q) => q > 1 ? ` × ${dg(q)}` : '';
+const hasCustom = () => cart.some(l => l.custom || !l.pid);
 function bhoriParts(w) {
   let pts = Math.round(w * 960);
   const b = Math.floor(pts / 960); pts %= 960; const a = Math.floor(pts / 60); pts %= 60; const r = Math.floor(pts / 10);
@@ -595,6 +642,12 @@ function emblem(opts = {}) {
 }
 
 const ICON = {
+  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg>',
+  truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 6h11v10H2zM13 9h4.5L21 12.5V16h-8"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+  store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM5 13v7h14v-7M10 20v-4h4v4"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>',
+  coins: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v4c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 14v3c0 1.7 2.7 3 6 3s6-1.3 6-3v-4c0-1.6-2.4-2.9-5.5-3"/></svg>',
   wa: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24zm4.52-6.17c-.25-.12-1.46-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28z"/></svg>',
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>',
   cartAdd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8a3 3 0 0 1 6 0M12 12v5M9.5 14.5h5"/></svg>',
@@ -1030,8 +1083,10 @@ function renderQV() {
    ===================================================================== */
 function addProduct(pid, kt, fromEl) {
   const p = prod(pid);
-  const base = { id: uid(), mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: '' };
-  if (p) cart.push(Object.assign(base, { pid, cat: p.cat, gem: p.gem, carat: kt || p.kt }, bhoriParts(p.w)));
+  const base = { id: uid(), mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: '', qty: 1 };
+  const same = p && PAGE !== 'admin' && cart.find(l => l.pid === pid && l.carat === (kt || p.kt));
+  if (same) same.qty = Math.min(20, qtyOf(same) + 1);
+  else if (p) cart.push(Object.assign(base, { pid, cat: p.cat, gem: p.gem, carat: kt || p.kt }, bhoriParts(p.w)));
   else cart.push(Object.assign(base, { pid: null, cat: 'custom', gem: 'diamond', carat: 'k22', b: '', a: '', r: '', p: '' }));
   saveCart();
   if (invoice) { invoice = null; LS.set('mj_invoice', null); }
@@ -1077,14 +1132,18 @@ function lineHTML(l) {
       <span class="tot" data-o="tot">${money(c.total)}</span></div>
   </div>`;
 }
+const refThumbs = (refs) => Array.isArray(refs) && refs.length ? `<div class="refs">${refs.map((r, i) => `<button type="button" class="ref" data-ref="${i}"><img src="${r}" alt="${t('ref_h')} ${dg(i + 1)}"></button>`).join('')}</div>` : '';
 function lineRO(l) {
   const c = calc(l);
   return `<div class="line ro glass ${c.tb ? '' : 'warn'}" data-id="${l.id}">
     <div class="line-h">
       ${lineThumb(l)}
-      <div class="ro-name"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${l.pid ? t('cat_' + l.cat) : t('custom_order') + (l.cat && l.cat !== 'custom' ? ' · ' + t('cat_' + l.cat) : '')}</small>${l.desc ? `<p class="ro-desc">${esc(l.desc)}</p>` : ''}</div>
+      <div class="ro-name"><b>${esc(lineName(l))}${qtyTag(c.q)}</b><small>${t(l.carat)} · ${l.pid ? t('cat_' + l.cat) : t('custom_order') + (l.cat && l.cat !== 'custom' ? ' · ' + t('cat_' + l.cat) : '')}</small>${l.desc ? `<p class="ro-desc">${esc(l.desc)}</p>` : ''}${refThumbs(l.refs)}</div>
       <button class="x" type="button" data-del aria-label="${t('remove')}">${ICON.trash}</button>
     </div>
+    <div class="qty-row"><span class="lbl">${t('qty')}</span><div class="qty" role="group" aria-label="${t('qty')}">
+      <button type="button" data-qty="-1" aria-label="−" ${c.q <= 1 ? 'disabled' : ''}>−</button><b data-o="q">${dg(c.q)}</b><button type="button" data-qty="1" aria-label="+" ${c.q >= 20 ? 'disabled' : ''}>+</button></div>
+      ${c.q > 1 ? `<small>${weightText(c.piece)} × ${dg(c.q)}</small>` : ''}</div>
     <div class="line-f"><div class="parts">
       <span>${t('weight')}: <b data-o="w">${wOut(c)}</b></span><span>${t('today_rate')}: <b>${money(c.rate)}</b></span><span>${t('gold_value')}: <b data-o="gold">${money(c.gold)}</b></span><span>${t('making')} (${pct(CONFIG.making)}): <b data-o="mk">${money(c.making)}</b></span></div>
       <span class="tot" data-o="tot">${money(c.total)}</span></div>
@@ -1140,6 +1199,10 @@ function bindCart() {
   box.addEventListener('click', e => {
     const line = e.target.closest('.line'); if (!line) return;
     const id = line.dataset.id;
+    const qb = e.target.closest('[data-qty]');
+    if (qb) { const l = cart.find(x => x.id === id); if (!l) return; l.qty = Math.min(20, Math.max(1, qtyOf(l) + +qb.dataset.qty)); if (l.qty === 20 && +qb.dataset.qty > 0) toast(t('qty_max')); saveCart(); renderCart(); updateCartBadges(); return; }
+    const rb = e.target.closest('[data-ref]');
+    if (rb) { const l = cart.find(x => x.id === id); if (l && l.refs) viewImg(l.refs[+rb.dataset.ref]); return; }
     if (e.target.closest('[data-del]')) {
       line.style.transition = 'opacity .35s, transform .35s'; line.style.opacity = '0'; line.style.transform = 'translateX(30px) scale(.97)';
       setTimeout(() => { cart = cart.filter(x => x.id !== id); saveCart(); renderCart(); }, 320);
@@ -1186,11 +1249,13 @@ function buildInvoice(pay, status) {
   const now = new Date();
   return {
     no: invoiceNo(now), ts: now.getTime(), rateDate: official.date,
-    buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), addr: buyer.addr.trim() },
-    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), desc: (l.desc || '').trim(), custom: !!l.custom, carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
-    totals: { gold: T.gold, making: T.making, sub: T.sub, d: T.d, discAmt: T.discAmt, v: T.v, vatAmt: T.vatAmt, adv: T.adv, grand: T.grand },
+    buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), email: String(buyer.email || '').trim(), addr: buyer.addr.trim() },
+    delivery: PAGE === 'pay' ? { method: payState.delivery, fee: T.ship } : { method: 'pickup', fee: 0 },
+    plan: PAGE === 'pay' ? payState.plan : (pay ? 'full' : 'shop'),
+    lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), desc: (l.desc || '').trim(), custom: !!l.custom, refs: Array.isArray(l.refs) ? l.refs.slice(0, 3) : [], carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
+    totals: { gold: T.gold, making: T.making, sub: T.sub, d: T.d, discAmt: T.discAmt, v: T.v, vatAmt: T.vatAmt, adv: T.adv, ship: T.ship || 0, grand: T.grand },
     pay: pay ? Object.assign({}, pay, { due: Math.max(Math.round(T.grand) - pay.amount, 0) }) : null,
-    status: status || (!pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : 'Pending'),
+    status: status || (!pay ? 'Not paid' : pay.method === 'cash' ? 'Cash at shop' : pay.method === 'cod' ? 'Cash on delivery' : pay.method === 'ssl' ? 'Awaiting payment' : 'Pending'),
     sync: sheetOn() ? 'pending' : 'off'
   };
 }
@@ -1201,10 +1266,11 @@ function orderDoc(I, source) {
   return JSON.parse(JSON.stringify({
     id: I.no, lang, rateDate: I.rateDate, rates, making: CONFIG.making,
     customer: I.buyer,
-    items: I.lines.map(l => ({ pid: l.pid || '', cat: l.cat || 'custom', gem: l.gem || '', name: l.name || '', desc: l.desc || '', custom: !!l.custom, title_bn: nameIn(l, 'bn'), title_en: nameIn(l, 'en'), carat: l.carat, mcu: l.mcu, mc: String(l.mc), tb: Math.round(l.tb * 10000) / 10000, rate: l.rate, gold: r2(l.gold), making: r2(l.making), total: r2(l.total) })),
+    items: I.lines.map(l => ({ pid: l.pid || '', cat: l.cat || 'custom', gem: l.gem || '', name: l.name || '', desc: l.desc || '', custom: !!l.custom, qty: l.q || 1, refs: l.refs || [], title_bn: nameIn(l, 'bn'), title_en: nameIn(l, 'en'), carat: l.carat, mcu: l.mcu, mc: String(l.mc), tb: Math.round(l.tb * 10000) / 10000, rate: l.rate, gold: r2(l.gold), making: r2(l.making), total: r2(l.total) })),
     totals: Object.fromEntries(Object.entries(I.totals).map(([k, v]) => [k, r2(v)])),
     grand: Math.round(I.totals.grand),
     pay: I.pay ? { method: I.pay.method, amount: I.pay.amount, trx: I.pay.trx || '', sender: I.pay.sender || '', due: I.pay.due } : null,
+    delivery: I.delivery || { method: 'pickup', fee: 0 }, plan: I.plan || 'full',
     status: I.status, lockUntil: lockValid() ? lockState.until : 0, source: source || 'web'
   }));
 }
@@ -1213,16 +1279,16 @@ function rememberOrder(I) {
   mine.unshift({ no: I.no, ts: I.ts, grand: Math.round(I.totals.grand), method: I.pay ? I.pay.method : '' });
   LS.set('mj_my_orders', mine.slice(0, 20));
 }
-function commitInvoice(inv, e) {
-  invoice = inv;
+function commitInvoice(inv, e, opt) {
+  invoice = Object.assign(inv, { justPlaced: PAGE !== 'admin' });
   LS.set('mj_invoice', invoice);
-  if (PAGE !== 'admin') rememberOrder(inv);
+  if (PAGE !== 'admin') { rememberOrder(inv); cart = []; saveCart(); updateCartBadges(); }
   if (sheetOn()) { outbox.push(orderPayload(invoice)); LS.set('mj_outbox', outbox); flushOutbox(true); }
   if (inv.pay) { payState.trx = ''; payState.sender = ''; payState.amount = ''; savePay(); }
   if (PAGE === 'pay') { lockState = null; LS.set('mj_lock', null); }
   renderSummary(); toast(inv.cloud ? t('order_placed') : t('t_inv'));
   burst(e && e.currentTarget);
-  if (PAGE === 'admin') return;
+  if (PAGE === 'admin' || (opt && opt.noNav)) return;
   setTimeout(() => go('invoice.html'), 750);
 }
 function makeInvoice(e, pay) {
@@ -1233,7 +1299,7 @@ function makeInvoice(e, pay) {
 /* =====================================================================
    INVOICE
    ===================================================================== */
-const OPEN_ST = ['Verified', 'Delivered'];
+const OPEN_ST = ['Verified', 'Delivered', 'Advance paid'];
 function invLocked(I) {
   if (!I) return true;
   if (I.adminView) return false;
@@ -1270,11 +1336,16 @@ function renderInvoice() {
   host.classList.toggle('locked', locked);
   lockUI();
   const lockCard = locked ? `<div class="inv-lock glass"><span class="ic">${ICON.lock}</span><h3>${t('inv_lock_h')}</h3>
-      <p>${I.pay && I.pay.method !== 'cash' ? t('inv_lock_p') : t('inv_lock_cash')}</p>
+      <p>${I.pay && I.pay.method === 'cod' ? t('cod_note') : I.pay && I.pay.method !== 'cash' ? t('inv_lock_p') : t('inv_lock_cash')}</p>
       <span class="vstat ${ST_CLS[I.status] || 'wait'}">${t(ST_KEY[I.status] || 'st_pending')}</span>
+      ${I.pay && I.pay.method === 'ssl' && I.status === 'Awaiting payment' && sslOn ? `<button class="btn btn-gold" type="button" data-paynow>${ICON.lock}<span>${t('pay_now_btn', { a: money(I.pay.amount) })}</span></button>` : ''}
       <a class="btn btn-glass btn-sm" href="track.html?id=${encodeURIComponent(I.no)}">${ICON.shield}<span>${t('nav_track')}</span></a></div>
     <div class="lock-print">${t('inv_lock_print')} · ${I.no}</div>` : '';
-  host.innerHTML = lockCard + `<article class="paper" id="paper" ${locked ? 'aria-hidden="true" inert' : ''}>
+  const placed = I.justPlaced ? `<div class="placed glass"><div class="placed-ic">${emblem({ sparkle: true })}</div>
+      <div><h3>${t('placed_h')}</h3><p><span class="mono">${esc(I.no)}</span> · ${money(T.grand)}</p>
+      <p class="hint">${I.buyer.email ? ICON.mail.replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-3px;margin-right:5px"') + t('placed_mail', { m: esc(I.buyer.email) }) : t('placed_nomail')}</p></div>
+      <button class="placed-x" type="button" data-unplace aria-label="×">${ICON.x}</button></div>` : '';
+  host.innerHTML = placed + lockCard + `<article class="paper" id="paper" ${locked ? 'aria-hidden="true" inert' : ''}>
     <div class="goldbar top"></div><div class="goldbar bottom"></div>
     <div class="wm">${emblem({ mono: true })}</div>
     <div class="wm-text"><span>MAA JEWELLERS</span><span>মা জুয়েলার্স</span></div>
@@ -1293,16 +1364,17 @@ function renderInvoice() {
       <div class="wide"><small>${t('address_l')}</small>${esc(I.buyer.addr || '—')}</div>
       <div><small>${t('mobile')}</small>${esc(I.buyer.phone ? dg(I.buyer.phone) : '—')}</div>
       <div><small>${t('rate_date')}</small>${fdate(I.rateDate)}</div>
+      ${I.delivery ? `<div class="wide"><small>${t('delivery_l')}</small>${t(I.delivery.method === 'home' ? 'dl_home' : 'dl_pickup')}${I.buyer.email ? ' · ' + esc(I.buyer.email) : ''}</div>` : ''}
     </div>
     <div class="ptw"><table class="pt">
       <thead><tr><th>${t('th_sl')}</th><th>${t('th_item')}</th><th>${t('th_kt')}</th><th>${t('th_w')}</th><th>${t('th_rate')}</th><th>${t('th_mc')}</th><th>${t('th_amt')}</th></tr></thead>
-      <tbody>${I.lines.map((l, i) => `<tr><td>${dg(i + 1)}</td><td><b>${esc(nm(l))}</b>${l.desc ? `<br><small class="idesc">${esc(l.desc)}</small>` : ''}</td><td>${t(l.carat)}</td>
+      <tbody>${I.lines.map((l, i) => `<tr><td>${dg(i + 1)}</td><td><b>${esc(nm(l))}${qtyTag(l.q || l.qty || 1)}</b>${l.desc ? `<br><small class="idesc">${esc(l.desc)}</small>` : ''}</td><td>${t(l.carat)}</td>
         <td>${weightText(l.tb)}<br><small>${num(l.tb * GRAM, 3)} ${t('gram')}</small></td><td>${money(l.rate)}</td>
         <td>${money(l.making)}<br><small>${l.mcu === 'tk' ? money(toNum(l.mc)) + ' / ' + t('bhori') : pct(toNum(l.mc))}</small></td><td>${money(l.total)}</td></tr>`).join('')}</tbody>
     </table></div>
     <div class="pbottom">
       <div>
-        ${P ? `<div class="stamp">${I.status === 'Verified' ? (P.due > 0 ? t('st_part') + ' ✓' : t('st_vstamp')) : (P.due > 0 ? t('st_part') : t('st_paid'))}</div>` : ''}
+        ${P && (P.amount > 0 || OPEN_ST.includes(I.status)) ? `<div class="stamp">${OPEN_ST.includes(I.status) ? (P.due > 0 ? t('st_part') + ' ✓' : t('st_vstamp')) : (P.due > 0 ? t('st_part') : t('st_paid'))}</div>` : ''}
         <div class="pwords"><small>${t('in_words')}</small>${words(Math.round(T.grand))} ${t('taka_only')}</div>
         ${payBlock}
         <div class="pnote">${t('inv_note', { d: fdate(I.rateDate) })}</div>
@@ -1314,6 +1386,7 @@ function renderInvoice() {
         ${T.d ? `<div class="r"><span>${t('less_disc', { p: pct(T.d) })}</span><span>− ${money(T.discAmt)}</span></div>` : ''}
         ${T.v ? `<div class="r"><span>${t('plus_vat', { p: pct(T.v) })}</span><span>+ ${money(T.vatAmt)}</span></div>` : ''}
         ${T.adv ? `<div class="r"><span>${t('less_adv')}</span><span>− ${money(T.adv)}</span></div>` : ''}
+        ${T.ship ? `<div class="r"><span>${t('delivery')}</span><span>+ ${money(T.ship)}</span></div>` : ''}
         <div class="g"><span>${t('grand')}</span><span>${money(T.grand)}</span></div>
         ${P ? `<div class="r paid"><span>${t('paid')} · ${t('m_' + P.method)}</span><span>${money(P.amount)}</span></div>
                <div class="r due"><span>${t('due')}</span><span>${money(P.due)}</span></div>` : ''}
@@ -1329,12 +1402,18 @@ function renderInvoice() {
 }
 function bindInvoice() {
   if (!$('#paperHost')) return;
+  $('#paperHost').addEventListener('click', e => {
+    if (e.target.closest('[data-paynow]') && invoice) { const b = e.target.closest('[data-paynow]'); b.disabled = true; startSsl(invoice.no).then(ok => { if (!ok) b.disabled = false; }); return; }
+    if (e.target.closest('[data-unplace]') && invoice) { invoice.justPlaced = false; LS.set('mj_invoice', invoice); renderInvoice(); }
+  });
+  const q = new URLSearchParams(location.search).get('pay');
+  if (q) { setTimeout(() => toast(t(q === 'success' ? 'pay_ok' : q === 'cancelled' ? 'pay_cancel' : 'pay_failed'), q !== 'success'), 600); history.replaceState(null, '', location.pathname); }
   $('#printBtn').addEventListener('click', () => { if (invLocked(invoice)) { toast(t('inv_lock_t'), true); return; } window.print(); });
   $('#shareWa').addEventListener('click', () => { if (!invoice) return; if (invLocked(invoice)) { toast(t('inv_lock_t'), true); return; } openWA(invoiceMsg()); });
   addEventListener('beforeprint', () => { if (invLocked(invoice)) toast(t('inv_lock_print'), true); });
   $('#newSale').addEventListener('click', () => {
     if (!confirm(t('confirm_new'))) return;
-    cart = []; invoice = null; buyer = { name: buyer.name, phone: buyer.phone, addr: buyer.addr, disc: '', vat: '', adv: '' };
+    cart = []; invoice = null; buyer = { name: buyer.name, phone: buyer.phone, email: buyer.email || '', addr: buyer.addr, disc: '', vat: '', adv: '' };
     saveCart(); saveBuyer(); LS.set('mj_invoice', null); toast(t('t_new'));
     setTimeout(() => go('shop.html'), 500);
   });
@@ -1366,23 +1445,43 @@ function invoiceMsg() {
    PAYMENT — bKash · Nagad · Bangla QR · Cash
    ===================================================================== */
 const METHODS = ['bkash', 'nagad', 'qr', 'cash'];
-let payState = Object.assign({ method: 'bkash', mode: 'full', amount: '', trx: '', sender: '' }, LS.get('mj_pay', {}));
-if (!METHODS.includes(payState.method)) payState.method = 'bkash';
+const ONLINE = ['ssl', 'bkash', 'nagad', 'qr'];
+let sslOn = false;
+let payState = Object.assign({ method: 'bkash', plan: 'full', delivery: 'pickup', trx: '', sender: '' }, LS.get('mj_pay', {}));
+if (!ONLINE.includes(payState.method)) payState.method = 'bkash';
+if (!['full', 'advance', 'cod', 'shop'].includes(payState.plan)) payState.plan = 'full';
+if (!['pickup', 'home'].includes(payState.delivery)) payState.delivery = 'pickup';
 const savePay = () => LS.set('mj_pay', payState);
 const fmtPhone = (n) => String(n).replace(/^(\d{5})(\d+)$/, '$1-$2');
 function mlogo(m) {
-  return { bkash: '<span class="mlogo bk">bKash</span>', nagad: '<span class="mlogo ng">Nagad</span>', qr: `<span class="mlogo qr">${ICON.qr}</span>`, cash: '<span class="mlogo cs">৳</span>' }[m];
+  return { bkash: '<span class="mlogo bk">bKash</span>', nagad: '<span class="mlogo ng">Nagad</span>', qr: `<span class="mlogo qr">${ICON.qr}</span>`, cash: '<span class="mlogo cs">৳</span>', cod: `<span class="mlogo cs">${ICON.truck}</span>`, ssl: `<span class="mlogo ssl">${ICON.card}</span>` }[m] || '';
 }
 function payBadges() {
   return `<span class="acc-l">${ICON.lock}${t('we_accept')}</span>
     <span class="pb">${mlogo('bkash')}<span>${dg(fmtPhone(CONFIG.bkash))}</span></span>
     <span class="pb">${mlogo('nagad')}<span>${dg(fmtPhone(CONFIG.nagad))}</span></span>
     <span class="pb">${mlogo('qr')}<span>Bangla QR</span></span>
-    <span class="pb">${mlogo('cash')}<span>${t('pay_cash_m')}</span></span>`;
+    ${sslOn ? `<span class="pb">${mlogo('ssl')}<span>SSLCommerz</span></span>` : ''}
+    <span class="pb">${mlogo('cod')}<span>${t('m_cod')}</span></span>`;
 }
+/* which choices make sense for this cart */
+function planOptions() {
+  const o = ['full'];
+  if (hasCustom()) o.push('advance');
+  if (payState.delivery === 'home' && CONFIG.codOn) o.push('cod');
+  if (payState.delivery === 'pickup') o.push('shop');
+  return o;
+}
+function normalizePlan() {
+  const o = planOptions();
+  if (!o.includes(payState.plan)) payState.plan = 'full';
+  if (payState.method === 'ssl' && !sslOn) payState.method = 'bkash';
+}
+const planOnline = () => payState.plan === 'full' || payState.plan === 'advance';
 function payAmount(T) {
   const g = Math.round(T.grand);
-  return payState.mode === 'full' ? g : Math.min(Math.round(toNum(payState.amount)), g);
+  if (payState.plan === 'advance') return Math.min(g, Math.round((g - T.ship) * CONFIG.advancePct / 100) + T.ship);
+  return planOnline() ? g : 0;
 }
 function copyText(v) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(v).catch(() => fallbackCopy(v));
@@ -1393,7 +1492,6 @@ function fallbackCopy(v) {
   document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { /* ignore */ } ta.remove();
 }
 function payRef() { const d = new Date(); return 'MJ' + String(d.getDate()).padStart(2, '0') + String(d.getMonth() + 1).padStart(2, '0'); }
-
 function trxFields(withSender) {
   return `<div class="fgrid">
     ${withSender ? `<div><label class="lbl" for="paySender">${t('sender')}</label><div class="in"><input id="paySender" data-p="sender" type="tel" inputmode="tel" autocomplete="tel" value="${esc(payState.sender)}" placeholder="${t('sender_ph')}"></div></div>` : ''}
@@ -1401,8 +1499,18 @@ function trxFields(withSender) {
   </div><p class="hint">${ICON.lock.replace('<svg', '<svg style="display:inline;width:13px;height:13px;vertical-align:-2px;margin-right:4px"')}${t('verify_note')}</p>`;
 }
 function panelHTML(T) {
-  const m = payState.method, a = money(payAmount(T));
+  const a = money(payAmount(T));
   const amtBox = `<div class="numbox"><div><small>${t('amount')}</small><b data-o="amt">${a}</b></div><button class="copy" type="button" data-copy-amt>${ICON.copy}<span>${t('copy')}</span></button></div>`;
+  if (payState.plan === 'cod') return `<div class="pay-head cash">${mlogo('cod')}<div><h3>${t('plan_cod')}</h3><small>${t('plan_cod_d')}</small></div></div>
+      <p class="co-note">${t('cod_note')}</p><div class="numbox"><div><small>${t('due')}</small><b>${money(T.grand)}</b></div></div>`;
+  if (payState.plan === 'shop') return `<div class="pay-head cash">${mlogo('cash')}<div><h3>${t('plan_shop')}</h3><small>${t('address')}</small></div></div>
+      <p class="co-note">${t('cash_note')}</p>
+      <div class="stack" style="flex-direction:row;flex-wrap:wrap"><a class="btn btn-glass btn-sm" href="tel:${CONFIG.phone}">${ICON.phone}<span>${t('call')}</span></a><a class="btn btn-glass btn-sm" href="contact.html">${ICON.pin}<span>${t('nav_contact')}</span></a></div>`;
+  const m = payState.method;
+  if (m === 'ssl') return `<div class="pay-head ssl">${mlogo('ssl')}<div><h3>${t('ssl_h')}</h3><small>${t('ssl_secure')}</small></div></div>
+      <p class="co-note">${t('ssl_p')}</p>
+      <div class="ssl-logos">${['VISA', 'Mastercard', 'AMEX', 'bKash', 'Nagad', 'Rocket', 'Upay', 'DBBL Nexus', 'City Touch'].map(x => `<span class="tag">${x}</span>`).join('')}</div>
+      <div class="numbox"><div><small>${t('amount')}</small><b data-o="amt">${a}</b></div></div>`;
   if (m === 'bkash' || m === 'nagad') {
     const n = m === 'bkash' ? CONFIG.bkash : CONFIG.nagad, ussd = m === 'bkash' ? '*247#' : '*167#';
     const steps = [t('mfs_s1', { app: t('m_' + m), ussd }), t('mfs_s2'), t('mfs_s3', { n: `<b>${dg(fmtPhone(n))}</b>` }), t('mfs_s4', { a: `<b data-o="amt">${a}</b>` }), t('mfs_s5', { r: `<b>${payRef()}</b>` }), t('mfs_s6')];
@@ -1414,9 +1522,8 @@ function panelHTML(T) {
       <ol class="howto">${steps.map(x => `<li><span>${x}</span></li>`).join('')}</ol>
       ${trxFields(true)}`;
   }
-  if (m === 'qr') {
-    const steps = [t('qr_s1'), t('qr_s2'), t('qr_s3'), t('qr_s4', { a: `<b data-o="amt">${a}</b>` }), t('qr_s5')];
-    return `<div class="pay-head qr">${mlogo('qr')}<div><h3>${t('m_qr')}</h3><small>${t('qr_bank')}</small></div></div>
+  const steps = [t('qr_s1'), t('qr_s2'), t('qr_s3'), t('qr_s4', { a: `<b data-o="amt">${a}</b>` }), t('qr_s5')];
+  return `<div class="pay-head qr">${mlogo('qr')}<div><h3>${t('m_qr')}</h3><small>${t('qr_bank')}</small></div></div>
       <div class="qr-wrap">
         <div class="qr-img"><img src="${CONFIG.qrImg}" alt="Bangla QR — ${CONFIG.qrMerchant}" width="600" height="780"></div>
         <div class="stack">
@@ -1428,10 +1535,12 @@ function panelHTML(T) {
       </div>
       <ol class="howto">${steps.map(x => `<li><span>${x}</span></li>`).join('')}</ol>
       ${trxFields(false)}`;
-  }
-  return `<div class="pay-head cash">${mlogo('cash')}<div><h3>${t('m_cash')}</h3><small>${t('address')}</small></div></div>
-    ${amtBox}<p style="color:var(--muted);margin:14px 0">${t('cash_note')}</p>
-    <div class="stack" style="flex-direction:row;flex-wrap:wrap"><a class="btn btn-glass btn-sm" href="tel:${CONFIG.phone}">${ICON.phone}<span>${t('call')}</span></a><a class="btn btn-glass btn-sm" href="contact.html">${ICON.pin}<span>${t('nav_contact')}</span></a></div>`;
+}
+function confirmLabel(T) {
+  if (payState.plan === 'cod') return t('place_cod');
+  if (payState.plan === 'shop') return t('place_shop');
+  if (payState.method === 'ssl') return t('pay_ssl_btn', { a: money(payAmount(T)) });
+  return t('confirm_pay');
 }
 function coSummaryHTML(T) {
   const amt = payAmount(T), due = Math.max(Math.round(T.grand) - amt, 0);
@@ -1439,23 +1548,25 @@ function coSummaryHTML(T) {
   if (T.d) rows.push([t('less_disc', { p: pct(T.d) }), '− ' + money(T.discAmt)]);
   if (T.v) rows.push([t('plus_vat', { p: pct(T.v) }), '+ ' + money(T.vatAmt)]);
   if (T.adv) rows.push([t('less_adv'), '− ' + money(T.adv)]);
-  return `<h3>${t('order_sum')}</h3>
-    <div class="co-items">${cart.map((l, i) => `<div class="co-it">${lineThumb(l)}<div class="meta"><b>${esc(lineName(l))}</b><small>${t(l.carat)} · ${weightText(T.lines[i].tb)}</small></div><span>${money(T.lines[i].total)}</span></div>`).join('')}</div>
+  rows.push([t('delivery'), T.ship ? '+ ' + money(T.ship) : t('free')]);
+  return `<h3>${t('order_sum')} <small class="cnt">${t('items_n', { n: dg(cart.reduce((s, l) => s + qtyOf(l), 0)) })}</small></h3>
+    <div class="co-items">${cart.map((l, i) => `<div class="co-it">${lineThumb(l)}<div class="meta"><b>${esc(lineName(l))}${qtyTag(T.lines[i].q)}</b><small>${t(l.carat)} · ${weightText(T.lines[i].tb)}</small></div><span>${money(T.lines[i].total)}</span></div>`).join('')}</div>
     <div class="sumrows">${rows.map(r => `<div class="r"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}</div>
     <div class="grand"><span>${t('grand')}</span><span>${money(T.grand)}</span></div>
-    <div><div class="lbl">${t('amt_h')}</div>
-      <div class="amtsel"><button class="cat" type="button" data-pmode="full" aria-pressed="${payState.mode === 'full'}">${t('pay_full')}</button><button class="cat" type="button" data-pmode="part" aria-pressed="${payState.mode === 'part'}">${t('pay_part')}</button></div>
-      ${payState.mode === 'part' ? `<div class="in pad-u" style="margin-top:10px"><input id="payAmt" data-p="amount" type="text" inputmode="decimal" value="${esc(payState.amount)}" placeholder="0" aria-label="${t('amt_to_pay')}"><span class="u">৳</span></div>` : ''}
-    </div>
     <div class="paysplit"><div><small>${t('pay_now')}</small><b data-o="paynow">${money(amt)}</b></div><div><small>${t('due')}</small><b data-o="due">${money(due)}</b></div></div>
     <div class="stack">
-      <button class="btn btn-gold" type="button" id="confirmPay">${ICON.check}<span>${t('confirm_pay')}</span></button>
-      <button class="btn btn-wa" type="button" id="sendProof">${ICON.wa}<span>${t('send_proof')}</span></button>
+      <button class="btn btn-gold btn-lg" type="button" id="confirmPay">${payState.method === 'ssl' && planOnline() ? ICON.lock : ICON.check}<span>${confirmLabel(T)}</span></button>
+      ${planOnline() && payState.method !== 'ssl' ? `<button class="btn btn-wa" type="button" id="sendProof">${ICON.wa}<span>${t('send_proof')}</span></button>` : ''}
       <a class="btn btn-glass" href="cart.html">${ICON.edit}<span>${t('edit_cart')}</span></a>
-    </div>`;
+    </div>
+    <p class="trust">${ICON.shield}<span>${t('ssl_secure')}</span></p>`;
+}
+function tile(group, val, on, icon, title, sub, extra) {
+  return `<button type="button" class="tile ${on ? 'on' : ''}" data-${group}="${val}" aria-pressed="${on}">${icon ? `<span class="ti">${icon}</span>` : ''}<span class="tt"><b>${title}</b><small>${sub}</small></span>${extra || ''}<i class="tick">${ICON.check}</i></button>`;
 }
 function renderCheckout() {
   const host = $('#checkout'); if (!host) return;
+  normalizePlan();
   const T = totals();
   if (!cart.length || T.lines.some(x => !x.tb)) {
     const empty = !cart.length;
@@ -1465,22 +1576,36 @@ function renderCheckout() {
     return;
   }
   ensureLock();
+  const plans = planOptions();
+  const planTile = (p) => tile('plan', p, payState.plan === p, { full: ICON.card, advance: ICON.coins, cod: ICON.truck, shop: ICON.store }[p],
+    p === 'advance' ? t('plan_adv', { p: pct(CONFIG.advancePct) }) : t('plan_' + p), t('plan_' + (p === 'advance' ? 'adv' : p) + '_d'));
+  const methods = (sslOn ? ['ssl'] : []).concat(['bkash', 'nagad', 'qr']);
   host.innerHTML = `<div class="lockbar glass" id="lockBar"><span class="ic">${ICON.lock}</span><div><b>${t('lock_h')}</b><small>${t('lock_d', { m: dg(CONFIG.lockMinutes) })}</small></div>
       <div class="lock-r"><span class="lock-t" id="lockT">--:--</span><small>${t('lock_left')}</small></div><div class="lock-prog"><i id="lockP"></i></div></div>
     <div class="co-grid">
     <div class="stack" style="gap:20px">
-      <div class="co-card glass"><h3>${t('buyer_h')}</h3><div class="fgrid">
-        <div class="full"><label class="lbl" for="cName">${t('buyer_name')} *</label><div class="in"><input id="cName" data-b="name" type="text" autocomplete="name" value="${esc(buyer.name)}"></div></div>
+      <div class="co-card glass"><h3 class="co-h"><i>${dg(1)}</i>${t('co_s1')}</h3><div class="fgrid">
+        <div><label class="lbl" for="cName">${t('buyer_name')} *</label><div class="in"><input id="cName" data-b="name" type="text" autocomplete="name" value="${esc(buyer.name)}"></div></div>
         <div><label class="lbl" for="cPhone">${t('buyer_phone')} *</label><div class="in"><input id="cPhone" data-b="phone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(buyer.phone)}"></div></div>
-        <div><label class="lbl" for="cAddr">${t('buyer_addr')}</label><div class="in"><input id="cAddr" data-b="addr" type="text" autocomplete="street-address" value="${esc(buyer.addr)}"></div></div>
+        <div class="full"><label class="lbl" for="cEmail">${t('buyer_email')}</label><div class="in ico">${ICON.mail}<input id="cEmail" data-b="email" type="email" inputmode="email" autocomplete="email" value="${esc(buyer.email || '')}" placeholder="name@gmail.com"></div><p class="hint">${t('email_hint')}</p></div>
+        <div class="full"><label class="lbl" for="cAddr">${t('buyer_addr')}${payState.delivery === 'home' ? ' *' : ''}</label><div class="in"><input id="cAddr" data-b="addr" type="text" autocomplete="street-address" value="${esc(buyer.addr)}"></div></div>
       </div></div>
-      <div class="co-card glass"><h3>${t('m_h')}</h3>
-        <div class="methods" role="radiogroup" aria-label="${t('m_h')}">${METHODS.map(m => `<div class="method"><input type="radio" name="pm" id="pm_${m}" value="${m}" ${payState.method === m ? 'checked' : ''}><label for="pm_${m}">${mlogo(m)}<b>${t('m_' + m)}</b><small>${t('m_' + m + '_d')}</small></label></div>`).join('')}</div>
+      <div class="co-card glass"><h3 class="co-h"><i>${dg(2)}</i>${t('co_s2')}</h3><div class="tiles two">
+        ${tile('dlv', 'pickup', payState.delivery === 'pickup', ICON.store, t('dl_pickup'), t('dl_pickup_d'))}
+        ${tile('dlv', 'home', payState.delivery === 'home', ICON.truck, t('dl_home'), t('dl_home_d', { f: CONFIG.deliveryFee ? money(CONFIG.deliveryFee) : t('free') }))}
+      </div></div>
+      <div class="co-card glass"><h3 class="co-h"><i>${dg(3)}</i>${t('co_s3')}</h3>
+        ${hasCustom() ? `<p class="co-hint">${ICON.coins}<span>${t('adv_hint', { p: pct(CONFIG.advancePct) })}</span></p>` : ''}
+        <div class="tiles ${plans.length > 2 ? 'three' : 'two'}">${plans.map(planTile).join('')}</div>
       </div>
+      ${planOnline() ? `<div class="co-card glass"><h3 class="co-h"><i>${dg(4)}</i>${t('co_s4')}</h3>
+        <div class="methods" role="radiogroup" aria-label="${t('m_h')}">${methods.map(m => `<div class="method ${m === 'ssl' ? 'feat' : ''}"><input type="radio" name="pm" id="pm_${m}" value="${m}" ${payState.method === m ? 'checked' : ''}><label for="pm_${m}">${mlogo(m)}<b>${t('m_' + m)}</b><small>${t('m_' + m + '_d')}</small></label></div>`).join('')}</div>
+      </div>` : ''}
       <div class="co-card glass" id="coPanel">${panelHTML(T)}</div>
     </div>
     <aside class="summary glass" id="coSum">${coSummaryHTML(T)}</aside>
-  </div>`;  tickLock();
+  </div>`;
+  tickLock();
 }
 function updatePayAmounts() {
   const T = totals(), amt = payAmount(T), due = Math.max(Math.round(T.grand) - amt, 0);
@@ -1488,56 +1613,85 @@ function updatePayAmounts() {
   const pn = $('[data-o="paynow"]'); if (pn) pn.textContent = money(amt);
   const du = $('[data-o="due"]'); if (du) du.textContent = money(due);
 }
+function focusField(sel) { const f = $(sel); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus({ preventScroll: true }); } }
 function payValid(T) {
   const ph = String(buyer.phone || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g, '');
-  if (!buyer.name.trim() || ph.length < 10) { toast(t('need_contact'), true); const f = $(!buyer.name.trim() ? '#cName' : '#cPhone'); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus({ preventScroll: true }); } return false; }
-  if (!(payAmount(T) > 0)) { toast(t('t_amt'), true); const a = $('#payAmt'); if (a) a.focus(); return false; }
-  if (payState.method !== 'cash' && !/^[A-Za-z0-9]{6,20}$/.test(String(payState.trx).trim())) { toast(t('t_trx'), true); const x = $('#payTrx'); if (x) { x.scrollIntoView({ behavior: 'smooth', block: 'center' }); x.focus({ preventScroll: true }); } return false; }
+  if (!buyer.name.trim() || ph.length < 10) { toast(t('need_contact'), true); focusField(!buyer.name.trim() ? '#cName' : '#cPhone'); return false; }
+  const em = String(buyer.email || '').trim();
+  if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { toast(t('bad_email'), true); focusField('#cEmail'); return false; }
+  if (payState.delivery === 'home' && String(buyer.addr || '').trim().length < 8) { toast(t('need_addr'), true); focusField('#cAddr'); return false; }
+  if (planOnline() && !(payAmount(T) > 0)) { toast(t('t_amt'), true); return false; }
+  if (planOnline() && payState.method !== 'ssl' && !/^[A-Za-z0-9]{6,20}$/.test(String(payState.trx).trim())) { toast(t('t_trx'), true); focusField('#payTrx'); return false; }
   return true;
 }
+function currentPay(T) {
+  if (payState.plan === 'cod') return { method: 'cod', methodLabel: 'Cash on delivery', amount: 0, trx: '', sender: '', plan: 'cod' };
+  if (payState.plan === 'shop') return { method: 'cash', methodLabel: I18N.en.m_cash, amount: 0, trx: '', sender: '', plan: 'shop' };
+  const ssl = payState.method === 'ssl';
+  return { method: payState.method, methodLabel: ssl ? 'SSLCommerz' : I18N.en['m_' + payState.method], amount: payAmount(T), plan: payState.plan,
+    trx: ssl ? '' : String(payState.trx || '').trim().toUpperCase(), sender: ssl ? '' : String(payState.sender || '').trim() };
+}
 function payMsg() {
-  const T = totals(), amt = payAmount(T), due = Math.max(Math.round(T.grand) - amt, 0);
-  const lines = cart.map((l, i) => `${dg(i + 1)}. ${lineName(l)} — ${t(l.carat)}, ${weightText(T.lines[i].tb)} → ${money(T.lines[i].total)}${l.desc ? '\n   ' + l.desc : ''}`).join('\n');
+  const T = totals(), P = currentPay(T), due = Math.max(Math.round(T.grand) - P.amount, 0);
+  const lines = cart.map((l, i) => `${dg(i + 1)}. ${lineName(l)}${qtyTag(T.lines[i].q)} — ${t(l.carat)}, ${weightText(T.lines[i].tb)} → ${money(T.lines[i].total)}${l.desc ? '\n   ' + l.desc : ''}`).join('\n');
   const who = [buyer.name, buyer.phone, buyer.addr].filter(Boolean).join(', ');
-  return `*${t('brand')} — ${t('wa_pay')}*\n\n${t('pay_method')}: ${t('m_' + payState.method)}\n${t('amount')}: ${money(amt)}${payState.method !== 'cash' && payState.trx ? `\nTrxID: ${String(payState.trx).trim().toUpperCase()}` : ''}${payState.method !== 'cash' && payState.sender ? `\n${t('pay_from')}: ${payState.sender}` : ''}\n${t('grand')}: ${money(T.grand)}\n${t('due')}: ${money(due)}\n\n${lines}${who ? `\n\n${t('bill_to')}: ${who}` : ''}\n\n— ${t('wa_from')}`;
+  return `*${t('brand')} — ${t('wa_pay')}*\n\n${t('pay_method')}: ${t('m_' + P.method)}\n${t('amount')}: ${money(P.amount)}${P.trx ? `\nTrxID: ${P.trx}` : ''}${P.sender ? `\n${t('pay_from')}: ${P.sender}` : ''}\n${t('delivery_l')}: ${t(payState.delivery === 'home' ? 'dl_home' : 'dl_pickup')}\n${t('grand')}: ${money(T.grand)}\n${t('due')}: ${money(due)}\n\n${lines}${who ? `\n\n${t('bill_to')}: ${who}` : ''}\n\n— ${t('wa_from')}`;
+}
+/* SSLCommerz: the server (api/pay/init) re-checks the price and opens a payment session */
+async function startSsl(orderId) {
+  try {
+    const r = await fetch('/api/pay/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.url && (/^https:\/\//.test(j.url) || location.hostname === 'localhost')) { toast(t('redirecting')); location.href = j.url; return true; }
+  } catch (e) { /* offline */ }
+  toast(t('ssl_fail'), true);
+  return false;
+}
+function loadSslConfig() {
+  return fetch('/api/pay/config', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { sslOn = !!(j && j.ssl); }).catch(() => { sslOn = false; })
+    .then(() => { if (PAGE === 'pay') { if (sslOn && !LS.get('mj_pay', null)) payState.method = 'ssl'; renderCheckout(); } if (PAGE === 'invoice') renderInvoice(); const f = $('#footAccept'); if (f) f.innerHTML = payBadges(); });
 }
 function bindCheckout() {
   const host = $('#checkout'); if (!host) return;
+  const rerender = () => { savePay(); renderCheckout(); };
   host.addEventListener('change', e => {
-    if (e.target.name === 'pm') { payState.method = e.target.value; savePay(); $('#coPanel').innerHTML = panelHTML(totals()); }
+    if (e.target.name === 'pm') { payState.method = e.target.value; rerender(); }
   });
   host.addEventListener('input', e => {
     if (e.target.dataset.b) { buyer[e.target.dataset.b] = e.target.value; saveBuyer(); return; }
     const f = e.target.dataset.p; if (!f) return;
     payState[f] = e.target.value; savePay();
-    if (f === 'amount') updatePayAmounts();
   });
   host.addEventListener('click', e => {
-    const pm = e.target.closest('[data-pmode]');
-    if (pm) { payState.mode = pm.dataset.pmode; savePay(); $('#coSum').innerHTML = coSummaryHTML(totals()); updatePayAmounts(); if (payState.mode === 'part') { const a = $('#payAmt'); if (a) a.focus(); } return; }
+    const dv = e.target.closest('[data-dlv]'); if (dv) { payState.delivery = dv.dataset.dlv; rerender(); return; }
+    const pl = e.target.closest('[data-plan]'); if (pl) { payState.plan = pl.dataset.plan; rerender(); return; }
     const cb = e.target.closest('#confirmPay');
     if (cb) {
       const T = totals(); if (!payValid(T)) return;
-      const cash = payState.method === 'cash';
-      const trx = cash ? '' : String(payState.trx || '').trim().toUpperCase();
-      const pay = { method: payState.method, methodLabel: I18N.en['m_' + payState.method], amount: payAmount(T), trx, sender: cash ? '' : String(payState.sender || '').trim() };
-      const go2 = () => makeInvoice({ currentTarget: cb }, pay);
+      const pay = currentPay(T), ssl = pay.method === 'ssl';
+      const lbl = $('span', cb), old = lbl.textContent;
       if (fbMod) {
         const inv = buildInvoice(pay); if (!inv) return;
-        cb.disabled = true; const lbl = $('span', cb), old = lbl.textContent; lbl.textContent = t('placing');
-        fbMod.placeOrder(orderDoc(inv)).then(r => {
-          cb.disabled = false; lbl.textContent = old;
-          if (r && r.dup) { toast(t('t_dup'), true); const x = $('#payTrx'); if (x) x.focus(); return; }
+        cb.disabled = true; lbl.textContent = t('placing');
+        fbMod.placeOrder(orderDoc(inv)).then(async r => {
+          if (r && r.dup) { cb.disabled = false; lbl.textContent = old; toast(t('t_dup'), true); focusField('#payTrx'); return; }
           if (r && r.ok) inv.cloud = true;
           else { const q = LS.get('mj_fb_outbox', []); q.push(orderDoc(inv)); LS.set('mj_fb_outbox', q); toast(t('order_saved_local'), true); }
+          if (ssl && inv.cloud) {
+            commitInvoice(inv, { currentTarget: cb }, { noNav: true }); lbl.textContent = t('redirecting');
+            if (!(await startSsl(inv.no))) setTimeout(() => go('invoice.html'), 1200);
+            return;
+          }
+          cb.disabled = false; lbl.textContent = old;
           commitInvoice(inv, { currentTarget: cb });
         });
         return;
       }
-      if (!sheetOn() || payState.method === 'cash') { go2(); return; }
-      cb.disabled = true; const lbl = $('span', cb), old = lbl.textContent; lbl.textContent = t('checking');
-      sheetGet({ action: 'checkTrx', trx }).then(r => {
-        if (r && r.used) { toast(t('t_dup'), true); const x = $('#payTrx'); if (x) x.focus(); return false; }
+      const go2 = () => makeInvoice({ currentTarget: cb }, pay);
+      if (!sheetOn() || !pay.trx) { go2(); return; }
+      cb.disabled = true; lbl.textContent = t('checking');
+      sheetGet({ action: 'checkTrx', trx: pay.trx }).then(r => {
+        if (r && r.used) { toast(t('t_dup'), true); focusField('#payTrx'); return false; }
         return true;
       }).catch(() => true).then(ok => { cb.disabled = false; lbl.textContent = old; if (ok) go2(); });
       return;
@@ -1594,11 +1748,11 @@ function orderPayload(I) {
   const en = (k) => I18N.en[k] || k;
   return {
     type: 'order', id: I.no, ts: I.ts, lang, rateDate: I.rateDate,
-    customer: I.buyer,
+    customer: I.buyer, delivery: I.delivery, plan: I.plan, status: I.status,
     items: I.lines.map(l => ({
       name: l.name || (l.pid ? (prod(l.pid) || { name: {} }).name.en || '' : en('cat_' + (l.cat || 'custom'))),
       carat: en(l.carat), weight: weightTextEn(l.tb), grams: +(l.tb * GRAM).toFixed(3),
-      rate: Math.round(l.rate), making: Math.round(l.making), total: Math.round(l.total)
+      rate: Math.round(l.rate), making: Math.round(l.making), total: Math.round(l.total), qty: l.q || 1, desc: l.desc || '', photos: (l.refs || []).length
     })),
     totals: I.totals,
     pay: I.pay ? Object.assign({}, I.pay, { methodLabel: en('m_' + I.pay.method) }) : null
@@ -1637,8 +1791,8 @@ async function checkStatus(manual) {
   } catch (e) { /* offline */ }
   finally { const b = $('#verNow'); if (b) { b.disabled = false; $('span', b).textContent = t('ver_check'); } }
 }
-const ST_KEY = { 'Pending': 'st_pending', 'Verified': 'st_verified', 'Amount mismatch': 'st_mismatch', 'Duplicate TrxID': 'st_dup', 'Cash at shop': 'st_cash', 'Not paid': 'st_notpaid', 'Rejected': 'st_rejected', 'Delivered': 'st_delivered' };
-const ST_CLS = { 'Verified': 'ok', 'Delivered': 'ok', 'Amount mismatch': 'bad', 'Duplicate TrxID': 'bad', 'Rejected': 'bad', 'Pending': 'wait' };
+const ST_KEY = { 'Awaiting payment': 'st_await', 'Cash on delivery': 'st_cod', 'Advance paid': 'st_adv', 'Pending': 'st_pending', 'Verified': 'st_verified', 'Amount mismatch': 'st_mismatch', 'Duplicate TrxID': 'st_dup', 'Cash at shop': 'st_cash', 'Not paid': 'st_notpaid', 'Rejected': 'st_rejected', 'Delivered': 'st_delivered' };
+const ST_CLS = { 'Advance paid': 'ok', 'Awaiting payment': 'wait', 'Cash on delivery': 'wait', 'Verified': 'ok', 'Delivered': 'ok', 'Amount mismatch': 'bad', 'Duplicate TrxID': 'bad', 'Rejected': 'bad', 'Pending': 'wait' };
 function renderVerify() {
   const el = $('#verifyBox'); if (!el) return;
   if (!invoice) { el.style.display = 'none'; return; }
@@ -1842,7 +1996,25 @@ function initGems() {
 /* =====================================================================
    PRICE ESTIMATOR (calculator.html) — public, rates & making fixed
    ===================================================================== */
-const estState = Object.assign({ kt: 'k22', mode: 'bhori', b: '1', a: '', r: '', p: '', g: '', name: '', desc: '', cat: 'necklace' }, LS.get('mj_est', {}));
+function shrinkImg(file, max, q) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); }; img.src = url;
+  });
+}
+function viewImg(src) {
+  if (!src) return;
+  const d = document.createElement('div'); d.className = 'imgview'; d.innerHTML = `<img src="${src}" alt=""><button type="button" aria-label="${t('close') || '×'}">${ICON.x}</button>`;
+  d.addEventListener('click', () => { d.classList.remove('on'); setTimeout(() => d.remove(), 250); });
+  document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on'));
+}
+const estState = Object.assign({ kt: 'k22', mode: 'bhori', b: '1', a: '', r: '', p: '', g: '', name: '', desc: '', cat: 'necklace', refs: [] }, LS.get('mj_est', {}));
 function estCalc() { return calc(Object.assign({ carat: estState.kt, mcu: 'pct', mc: CONFIG.making }, estState)); }
 function renderEstimator() {
   const host = $('#estimator'); if (!host) return;
@@ -1863,6 +2035,12 @@ function renderEstimator() {
           <div><label class="lbl" for="eName">${t('est_name')} *</label><div class="in"><input id="eName" data-e="name" type="text" maxlength="60" value="${esc(estState.name)}" placeholder="${esc(t('est_name_ph'))}"></div></div>
           <div><label class="lbl" for="eCat">${t('est_cat')}</label><div class="in"><select id="eCat" data-e="cat">${CATS.map(c => `<option value="${c}" ${estState.cat === c ? 'selected' : ''}>${t('cat_' + c)}</option>`).join('')}</select></div></div>
           <div class="full"><label class="lbl" for="eDesc">${t('est_desc')}</label><div class="in"><textarea id="eDesc" data-e="desc" rows="3" maxlength="300" placeholder="${esc(t('est_desc_ph'))}">${esc(estState.desc)}</textarea></div></div>
+          <div class="full"><div class="lbl">${t('ref_h')}</div>
+            <div class="ref-drop" id="refDrop">
+              ${(estState.refs || []).map((r, i) => `<div class="ref big"><img src="${r}" alt="${t('ref_h')} ${dg(i + 1)}"><button type="button" class="ref-x" data-rmref="${i}" aria-label="${t('remove')}">${ICON.x}</button></div>`).join('')}
+              ${(estState.refs || []).length < 3 ? `<label class="ref-add">${ICON.camera}<span>${t('ref_add')}</span><input type="file" accept="image/*" multiple id="refFile" hidden></label>` : ''}
+            </div>
+            <p class="hint">${t('ref_note')}</p></div>
         </div>
       </div>
     </div>
@@ -1892,8 +2070,19 @@ function bindEstimator() {
   const host = $('#estimator'); if (!host) return;
   const save = () => LS.set('mj_est', estState);
   host.addEventListener('input', e => { const f = e.target.dataset.e; if (!f) return; estState[f] = e.target.value; save(); if (!['name', 'desc'].includes(f)) renderEstOut(); });
-  host.addEventListener('change', e => { if (e.target.dataset.e === 'cat') { estState.cat = e.target.value; save(); } });
+  host.addEventListener('change', async e => {
+    if (e.target.dataset.e === 'cat') { estState.cat = e.target.value; save(); return; }
+    if (e.target.id === 'refFile') {
+      const files = Array.from(e.target.files || []); estState.refs = estState.refs || [];
+      for (const f of files) {
+        if (estState.refs.length >= 3) { toast(t('ref_max'), true); break; }
+        try { estState.refs.push(await shrinkImg(f, 800, .7)); } catch (err) { toast(t('ref_bad'), true); }
+      }
+      save(); renderEstimator();
+    }
+  });
   host.addEventListener('click', e => {
+    const rm = e.target.closest('[data-rmref]'); if (rm) { estState.refs.splice(+rm.dataset.rmref, 1); save(); renderEstimator(); return; }
     const k = e.target.closest('[data-ekt]'); if (k) { estState.kt = k.dataset.ekt; save(); $$('[data-ekt]').forEach(b => b.setAttribute('aria-pressed', b === k)); renderEstOut(); return; }
     const m = e.target.closest('[data-emode]');
     if (m && m.dataset.emode !== estState.mode) {
@@ -1905,8 +2094,8 @@ function bindEstimator() {
       const c = estCalc(); if (!c.tb) return;
       const nm = String(estState.name || '').trim().slice(0, 60);
       if (!nm) { toast(t('est_need_name'), true); const f = $('#eName'); if (f) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.focus({ preventScroll: true }); } return; }
-      cart.push(Object.assign({ id: uid(), pid: null, cat: CATS.includes(estState.cat) ? estState.cat : 'custom', gem: 'diamond', carat: estState.kt, mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: nm, desc: String(estState.desc || '').trim().slice(0, 300), custom: true }, bhoriParts(c.tb)));
-      estState.name = ''; estState.desc = ''; save();
+      cart.push(Object.assign({ id: uid(), pid: null, cat: CATS.includes(estState.cat) ? estState.cat : 'custom', gem: 'diamond', carat: estState.kt, mode: 'bhori', g: '', mcu: 'pct', mc: String(CONFIG.making), name: nm, desc: String(estState.desc || '').trim().slice(0, 300), custom: true, qty: 1, refs: (estState.refs || []).slice(0, 3) }, bhoriParts(c.tb)));
+      estState.name = ''; estState.desc = ''; estState.refs = []; save();
       saveCart(); if (invoice) { invoice = null; LS.set('mj_invoice', null); }
       updateCartBadges(); fly(e.target.closest('button')); toast(t('added'));
       setTimeout(() => go('cart.html'), 700); return;
@@ -1924,9 +2113,9 @@ function bindEstimator() {
 let liveStatus = null, statusUnsub = null;
 function trackerHTML(no, st) {
   const s = (st && st.status) || 'Pending';
-  const lvl = s === 'Delivered' ? 4 : s === 'Verified' ? 3 : 1;
+  const lvl = s === 'Delivered' ? 4 : s === 'Verified' || s === 'Advance paid' ? 3 : 1;
   const bad = ['Rejected', 'Duplicate TrxID', 'Amount mismatch'].includes(s);
-  const label = (k, i) => i === 1 && (s === 'Cash at shop' || s === 'Not paid') ? t(ST_KEY[s]) : t(k);
+  const label = (k, i) => i === 1 && ['Cash at shop', 'Not paid', 'Cash on delivery', 'Awaiting payment'].includes(s) ? t(ST_KEY[s]) : t(k);
   const money2 = st && st.grand ? `<div class="trk-amt"><div><small>${t('grand')}</small><b>${money(st.grand)}</b></div>${st.method ? `<div><small>${t('paid')} · ${t('m_' + st.method)}</small><b>${money(st.paid || 0)}</b></div>` : ''}<div><small>${t('due')}</small><b>${money(st.due || 0)}</b></div></div>` : '';
   return `<div class="trk glass ${bad ? 'bad' : ''}">
     <div class="trk-h"><span class="ic">${ICON.shield}</span><div><b>${t('tr_h')}</b><small>${t('order_id')}: <span class="mono">${esc(no)}</span></small></div><span class="vstat ${ST_CLS[s] || ''}">${t(ST_KEY[s] || 'st_pending')}</span></div>
@@ -1945,7 +2134,11 @@ function watchInvoice() {
   watchStatus(invoice.no, st => {
     const wasLocked = invLocked(invoice);
     liveStatus = st;
-    if (st && st.status) { invoice.status = st.status; LS.set('mj_invoice', invoice); }
+    if (st && st.status) {
+      invoice.status = st.status;
+      if (invoice.pay && st.paid != null) { invoice.pay.amount = +st.paid || 0; invoice.pay.due = +st.due || 0; if (st.method) invoice.pay.method = st.method; }
+      LS.set('mj_invoice', invoice);
+    }
     const nowLocked = invLocked(invoice);
     if (wasLocked !== nowLocked || !nowLocked) renderInvoice();
     if (wasLocked && !nowLocked) { toast(t('inv_unlocked')); burst($('#paperHost')); }
@@ -1963,7 +2156,21 @@ function renderTrack() {
       <div class="in"><input id="trackNo" type="text" value="${esc(trackState.no)}" placeholder="${t('track_ph')}" aria-label="${t('order_id')}" spellcheck="false"></div>
       <button class="btn btn-gold" type="submit">${ICON.shield}<span>${t('track_btn')}</span></button></form>
     <div id="trackRes" aria-live="polite">${res}</div>
-    <div class="my-orders glass"><h3>${t('my_orders')}</h3>${mine.length ? mine.map(o => `<button class="mo" type="button" data-track="${esc(o.no)}"><span class="mono">${esc(o.no)}</span><small>${fdate(o.ts)} · ${o.method ? t('m_' + o.method) : ''}</small><b>${money(o.grand)}</b></button>`).join('') : `<p class="hint">${t('no_orders')}</p>`}</div>`;
+    <div class="my-orders glass"><h3>${t('my_orders')}</h3>${mine.length ? mine.map(o => `<button class="mo" type="button" data-track="${esc(o.no)}"><span class="mono">${esc(o.no)}</span><small>${fdate(o.ts)} · ${o.method ? t('m_' + o.method) : ''}</small><b>${money(o.grand)}</b><span class="mo-st" data-st-of="${esc(o.no)}">${myStatus[o.no] ? `<span class="vstat ${ST_CLS[myStatus[o.no]] || ''}">${t(ST_KEY[myStatus[o.no]] || 'st_pending')}</span>` : ''}</span></button>`).join('') : `<p class="hint">${t('no_orders')}</p>`}</div>`;
+  watchMyOrders(mine);
+}
+const myStatus = {}, myWatch = {};
+function watchMyOrders(mine) {
+  if (!fbMod) return;
+  mine.slice(0, 12).forEach(o => {
+    if (myWatch[o.no]) return;
+    myWatch[o.no] = true;
+    fbMod.onOrderStatus(o.no, st => {
+      if (!st) return; myStatus[o.no] = st.status;
+      const el = document.querySelector(`[data-st-of="${o.no}"]`);
+      if (el) el.innerHTML = `<span class="vstat ${ST_CLS[st.status] || ''}">${t(ST_KEY[st.status] || 'st_pending')}</span>`;
+    });
+  });
 }
 function startTrack(no) {
   trackState.no = String(no || '').trim().toUpperCase(); trackState.st = undefined;
@@ -2018,7 +2225,7 @@ function loadFirebase() {
     });
     return m;
   }).catch(err => { console.warn('fb.js not loaded', err); return null; })
-    .then(m => { fbReadyDone = true; if (PAGE === 'track') startTrack(trackState.no); watchInvoice(); return m; });
+    .then(m => { fbReadyDone = true; if (PAGE === 'track') { if (trackState.no) startTrack(trackState.no); else renderTrack(); } watchInvoice(); return m; });
 }
 
 /* =====================================================================
@@ -2125,6 +2332,7 @@ initProgress();
 initGems();
 loadRatesFile();
 loadFirebase();
+if (PAGE === 'pay' || PAGE === 'invoice') loadSslConfig();
 liveTick();
 setInterval(liveTick, CONFIG.liveEverySec * 1000);
 setInterval(updateAgo, 1000);
