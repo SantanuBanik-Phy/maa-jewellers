@@ -57,3 +57,14 @@ On the admin login page click **Forgot password?** → a reset link goes to sant
 
 ## Changing the admin email · অ্যাডমিন ইমেইল বদলাতে
 Change it in **both** `assets/firebase-config.js` (`ADMIN_EMAIL`) and `firestore.rules` (then publish the rules again), and add that user in Authentication.
+
+---
+
+## Customer accounts (email + Google) · গ্রাহকের অ্যাকাউন্ট
+Customers can now register and sign in on `/account.html` ("আমার অ্যাকাউন্ট") to see their orders, wishlist and saved address.
+1. Firebase console → **Authentication → Sign-in method**:
+   - **Email/Password** is already on (you use it for admin).
+   - **Add new provider → Google → Enable** → choose your support email → **Save**.
+2. **Authentication → Settings → Authorized domains** → make sure `maa-jewellers-shop.vercel.app` (and any own domain) is listed — Google sign-in only works on listed domains.
+3. **Firestore → Rules** → paste the new `firestore.rules` from this repo → **Publish** (adds customer profiles and "read my own orders").
+4. Customer list: admin panel → **গ্রাহক / Customers** shows registered customers and guest buyers.

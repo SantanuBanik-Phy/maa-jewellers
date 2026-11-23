@@ -212,6 +212,30 @@ bn: {
   st_pending: 'যাচাইয়ের অপেক্ষায়', st_verified: 'যাচাইকৃত ✓', st_mismatch: 'পরিমাণ মেলেনি', st_dup: 'TrxID আগে ব্যবহৃত', st_cash: 'দোকানে নগদ', st_notpaid: 'পেমেন্ট ছাড়া', st_rejected: 'বাতিল', st_delivered: 'হস্তান্তরিত',
   ver_note: 'বিকাশ / নগদ / ব্যাংকের SMS মিলে গেলে স্বয়ংক্রিয়ভাবে যাচাই হয় — দোকান থেকেও যাচাই করা হয়। পাতাটি খোলা থাকলে নিজে থেকেই হালনাগাদ হবে।',
   t_dup: 'এই TrxID আগেই অন্য অর্ডারে ব্যবহার হয়েছে — সঠিক TrxID দিন', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'সর্বশেষ যাচাই {t}',
+  nav_account: 'আমার অ্যাকাউন্ট', nav_account_en: 'My account',
+  acc_title: 'আমার অ্যাকাউন্ট', acc_sub: 'অর্ডার, পছন্দের তালিকা ও ঠিকানা — সব এক জায়গায়।',
+  acc_login: 'লগইন', acc_register: 'নতুন অ্যাকাউন্ট', acc_google: 'Google দিয়ে চালিয়ে যান', acc_or: 'অথবা ইমেইল দিয়ে',
+  acc_email: 'ইমেইল', acc_pass: 'পাসওয়ার্ড', acc_pass_hint: 'কমপক্ষে ৬ অক্ষর', acc_name: 'আপনার নাম', acc_show: 'পাসওয়ার্ড দেখান',
+  acc_forgot: 'পাসওয়ার্ড ভুলে গেছেন?', acc_reset_sent: 'পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে', acc_need_email: 'আগে ইমেইল লিখুন',
+  acc_do_login: 'লগইন করুন', acc_do_register: 'অ্যাকাউন্ট খুলুন', acc_welcome: 'স্বাগতম, {n}!', acc_member: '{d} থেকে সদস্য', acc_logout: 'লগ আউট', acc_out: 'লগ আউট হয়েছে',
+  acc_off: 'অ্যাকাউন্ট সুবিধা শীঘ্রই চালু হবে। এখন চালান নম্বর দিয়ে অর্ডার ট্র্যাক করুন।', acc_loading: 'লোড হচ্ছে…',
+  acc_side_h: 'মা জুয়েলার্স পরিবারে স্বাগতম', acc_side_p: 'একটি অ্যাকাউন্টে আপনার সব কেনাকাটা।',
+  acc_p1: 'প্রতিটি অর্ডারের লাইভ অবস্থা', acc_p2: 'সংরক্ষিত ঠিকানায় দ্রুত চেকআউট', acc_p3: 'পছন্দের গহনার তালিকা', acc_p4: 'সব চালান এক জায়গায়',
+  acc_t_orders: 'আমার অর্ডার', acc_t_wish: 'পছন্দের তালিকা', acc_t_profile: 'প্রোফাইল',
+  acc_s_orders: 'মোট অর্ডার', acc_s_spent: 'মোট পরিশোধ', acc_s_active: 'চলমান অর্ডার', acc_s_wish: 'পছন্দের গহনা',
+  acc_no_orders: 'এই অ্যাকাউন্টে এখনো কোনো অর্ডার নেই — শপ থেকে পছন্দের গহনা বেছে নিন।', acc_device: 'এই ডিভাইস থেকে আগের অর্ডার দেখুন ({n}টি)',
+  acc_no_wish: 'পছন্দের তালিকা খালি — যেকোনো গহনার ♡ চাপলেই এখানে জমা হবে।', acc_saved: 'প্রোফাইল সেভ হয়েছে ✓', acc_save: 'সেভ করুন',
+  acc_change_pw: 'পাসওয়ার্ড বদলানোর লিংক পাঠান', acc_admin: 'অ্যাডমিন প্যানেল', acc_verify: 'আপনার ইমেইল যাচাই করুন — ইনবক্সে লিংক পাঠানো হয়েছে', acc_resend: 'আবার পাঠান',
+  acc_invoice: 'চালান', acc_track: 'ট্র্যাক', acc_signed: '{e} হিসেবে লগইন', acc_hint_co: 'লগইন করলে অর্ডার আপনার অ্যাকাউন্টে জমা থাকবে ও ঠিকানা মনে রাখবে', acc_signin_btn: 'লগইন / রেজিস্টার',
+  acc_profile_h: 'ডেলিভারির তথ্য', acc_more: 'আরও {n}টি', acc_hello: 'শুভেচ্ছা',
+  wish_add: 'পছন্দের তালিকায় যোগ হয়েছে ♥', wish_rm: 'পছন্দের তালিকা থেকে সরানো হয়েছে', wish_aria: 'পছন্দের তালিকা',
+  ae_exists: 'এই ইমেইলে আগেই অ্যাকাউন্ট আছে — লগইন করুন', ae_email: 'সঠিক ইমেইল দিন', ae_weak: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের দিন', ae_cred: 'ইমেইল বা পাসওয়ার্ড ভুল',
+  ae_popup: 'Google উইন্ডো বন্ধ হয়ে গেছে — আবার চেষ্টা করুন', ae_domain: 'এই ঠিকানা থেকে Google লগইন এখনো চালু হয়নি', ae_off: 'এই লগইন পদ্ধতি এখনো চালু হয়নি',
+  ae_many: 'অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে চেষ্টা করুন', ae_net: 'ইন্টারনেট সংযোগ দেখুন', ae_other: 'লগইন হয়নি — আবার চেষ্টা করুন', ae_name: 'আপনার নাম লিখুন',
+  k_cat: 'কালেকশন', cat_title: 'ধরন অনুযায়ী বেছে নিন', cat_sub: 'নেকলেস থেকে নাকফুল — প্রতিটি ডিজাইন আজকের বাজুস দরে।', cat_items: '{n}টি ডিজাইন',
+  cd_k: 'নিজের ডিজাইন', cd_t: 'আপনার স্বপ্নের গহনা, আমাদের কারিগরের হাতে', cd_d: 'পছন্দের ছবি দিন, ওজন ও ক্যারেট বেছে নিন — আজকের দরে দাম দেখে মাত্র {p} অগ্রিমে অর্ডার করুন।',
+  cd_btn: 'ডিজাইন অর্ডার করুন', cd_s1: 'ছবি দিন', cd_s2: 'ওজন বাছুন', cd_s3: 'অগ্রিম দিন', cd_s4: 'হাতে পান',
+  tb1: 'বাজুস দরে স্বচ্ছ দাম', tb2: 'SSLCommerz নিরাপদ পেমেন্ট', tb3: 'ক্যাশ অন ডেলিভারি', tb4: 'হোম ডেলিভারি', tb5: 'কাস্টম ডিজাইন', tb6: 'প্রতিটি কেনায় চালান', tb7: 'লাইভ অর্ডার ট্র্যাকিং',
   buyer_email: 'ইমেইল', email_hint: 'অর্ডার নিশ্চিতকরণ ও আপডেট ইমেইলে পাবেন', bad_email: 'সঠিক ইমেইল দিন',
   co_s1: 'আপনার তথ্য', co_s2: 'ডেলিভারি', co_s3: 'কীভাবে পরিশোধ করবেন', co_s4: 'পেমেন্ট মাধ্যম',
   dl_pickup: 'দোকান থেকে নেবেন', dl_pickup_d: 'পরশুরাম বাজার · কোনো চার্জ নেই', dl_home: 'হোম ডেলিভারি', dl_home_d: 'নিরাপদ কুরিয়ারে বাসায় · {f}',
@@ -380,6 +404,30 @@ en: {
   st_pending: 'Waiting for verification', st_verified: 'Verified ✓', st_mismatch: 'Amount does not match', st_dup: 'TrxID already used', st_cash: 'Cash at shop', st_notpaid: 'No payment', st_rejected: 'Rejected', st_delivered: 'Delivered',
   ver_note: 'Verified automatically when the bKash / Nagad / bank SMS matches — the shop can also verify it. This page updates itself while open.',
   t_dup: 'This TrxID was already used on another order — enter the correct TrxID', st_vstamp: 'PAID · VERIFIED ✓', last_check: 'Last checked {t}',
+  nav_account: 'My account', nav_account_en: 'আমার অ্যাকাউন্ট',
+  acc_title: 'My account', acc_sub: 'Your orders, wishlist and address — all in one place.',
+  acc_login: 'Sign in', acc_register: 'Create account', acc_google: 'Continue with Google', acc_or: 'or with email',
+  acc_email: 'Email', acc_pass: 'Password', acc_pass_hint: 'At least 6 characters', acc_name: 'Your name', acc_show: 'Show password',
+  acc_forgot: 'Forgot password?', acc_reset_sent: 'Password reset link sent to your email', acc_need_email: 'Enter your email first',
+  acc_do_login: 'Sign in', acc_do_register: 'Create account', acc_welcome: 'Welcome, {n}!', acc_member: 'Member since {d}', acc_logout: 'Sign out', acc_out: 'Signed out',
+  acc_off: 'Customer accounts are coming soon. Meanwhile, track orders with your invoice number.', acc_loading: 'Loading…',
+  acc_side_h: 'Welcome to the Maa Jewellers family', acc_side_p: 'All your purchases in one account.',
+  acc_p1: 'Live status of every order', acc_p2: 'Faster checkout with your saved address', acc_p3: 'Your wishlist of favourite pieces', acc_p4: 'Every invoice in one place',
+  acc_t_orders: 'My orders', acc_t_wish: 'Wishlist', acc_t_profile: 'Profile',
+  acc_s_orders: 'Orders', acc_s_spent: 'Total paid', acc_s_active: 'Active orders', acc_s_wish: 'Wishlist',
+  acc_no_orders: 'No orders in this account yet — pick your favourite pieces from the shop.', acc_device: 'See earlier orders from this device ({n})',
+  acc_no_wish: 'Your wishlist is empty — tap ♡ on any piece to save it here.', acc_saved: 'Profile saved ✓', acc_save: 'Save',
+  acc_change_pw: 'Send a password-change link', acc_admin: 'Admin panel', acc_verify: 'Please verify your email — we sent you a link', acc_resend: 'Send again',
+  acc_invoice: 'Invoice', acc_track: 'Track', acc_signed: 'Signed in as {e}', acc_hint_co: 'Sign in to keep your orders in your account and remember your address', acc_signin_btn: 'Sign in / Register',
+  acc_profile_h: 'Delivery details', acc_more: '+{n} more', acc_hello: 'Hello',
+  wish_add: 'Added to your wishlist ♥', wish_rm: 'Removed from your wishlist', wish_aria: 'Wishlist',
+  ae_exists: 'An account with this email already exists — please sign in', ae_email: 'Please enter a valid email', ae_weak: 'Use a password of at least 6 characters', ae_cred: 'Wrong email or password',
+  ae_popup: 'The Google window was closed — please try again', ae_domain: 'Google sign-in is not enabled for this address yet', ae_off: 'This sign-in method is not enabled yet',
+  ae_many: 'Too many attempts — please try again later', ae_net: 'Check your internet connection', ae_other: 'Could not sign in — please try again', ae_name: 'Please enter your name',
+  k_cat: 'Collections', cat_title: 'Shop by category', cat_sub: 'From necklaces to nose pins — every design at today’s BAJUS rate.', cat_items: '{n} designs',
+  cd_k: 'Your own design', cd_t: 'Your dream piece, crafted by our artisans', cd_d: 'Share a photo, choose weight and carat — see the price at today’s rate and order with just {p} advance.',
+  cd_btn: 'Order a design', cd_s1: 'Share a photo', cd_s2: 'Pick the weight', cd_s3: 'Pay an advance', cd_s4: 'Receive it',
+  tb1: 'Transparent BAJUS-rate pricing', tb2: 'SSLCommerz secure payment', tb3: 'Cash on delivery', tb4: 'Home delivery', tb5: 'Custom designs', tb6: 'Invoice with every purchase', tb7: 'Live order tracking',
   buyer_email: 'Email', email_hint: 'Get your order confirmation and updates by email', bad_email: 'Please enter a valid email',
   co_s1: 'Your details', co_s2: 'Delivery', co_s3: 'How would you like to pay?', co_s4: 'Payment method',
   dl_pickup: 'Pick up at the shop', dl_pickup_d: 'Parashuram Bazar · no charge', dl_home: 'Home delivery', dl_home_d: 'Insured courier to your door · {f}',
@@ -642,6 +690,12 @@ function emblem(opts = {}) {
 }
 
 const ICON = {
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.3 0 5.6 3.1 4.4 6.6-1.7 4.8-9.2 9.4-9.2 9.4z"/></svg>',
+  google: '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>',
+  box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>',
+  eyeoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.5 9.5 6-.5.8-1.6 2.3-3.2 3.6M6.4 7.6C4.6 8.9 3.2 10.7 2.5 12c1 1.5 4.5 6 9.5 6 1.5 0 2.9-.4 4.1-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
   card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg>',
   truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 6h11v10H2zM13 9h4.5L21 12.5V16h-8"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
   store: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM5 13v7h14v-7M10 20v-4h4v4"/></svg>',
@@ -714,6 +768,7 @@ function injectChrome() {
       <div class="tools">
         <button class="tbtn" type="button" data-lang-toggle>${ICON.globe}<span class="lbl-txt" id="langLbl"></span></button>
         <button class="tbtn" type="button" data-theme-toggle>${ICON.moon}${ICON.sun}</button>
+        <a class="tbtn acc-btn" href="account.html" id="accBtn">${ICON.user}<span class="av" id="accAv" hidden></span></a>
         <a class="tbtn" href="cart.html" id="cartBtn">${ICON.cart}<span class="cnt" id="cartCnt"></span></a>
         <button class="tbtn menu-btn" type="button" data-menu>${ICON.menu}</button>
       </div>
@@ -764,6 +819,10 @@ function renderChrome() {
   $('[data-menu]').setAttribute('aria-label', t('menu'));
   $$('[data-close-menu]').forEach(b => b.setAttribute('aria-label', t('close')));
   $('#cartBtn').setAttribute('aria-label', t('cart_aria'));
+  $('#accBtn').setAttribute('aria-label', t('nav_account')); $('#accBtn').classList.toggle('active', PAGE === 'account');
+  const av = $('#accAv');
+  if (av) { av.hidden = !user; av.innerHTML = user ? (user.photoURL ? `<img src="${esc(user.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc(initialOf(user))) : ''; }
+  $('#drawerLinks').insertAdjacentHTML('beforeend', `<a class="dl ${PAGE === 'account' ? 'active' : ''}" href="account.html">${t('nav_account')}<span>${t('nav_account_en')}</span></a>`);
   $('#fab').setAttribute('aria-label', t('cart_aria'));
   $('#waFab').setAttribute('aria-label', t('wa_tip'));
   $('#ticker').setAttribute('aria-label', t('intl_title'));
@@ -992,6 +1051,7 @@ function productCard(p, i = 0) {
       ${p.img && p.credit ? `<span class="credit">${t('photo_by')}: ${esc(p.credit)}</span>` : ''}
       ${p.soldOut ? `<span class="soldout">${t('sold_out')}</span>` : ''}
       <button class="qv" type="button" data-qv="${p.id}" aria-label="${esc(t('quick'))}">${ICON.eye}</button>
+      <button class="wish ${wish.has(p.id) ? 'on' : ''}" type="button" data-wish="${p.id}" aria-label="${esc(t('wish_aria'))}" aria-pressed="${wish.has(p.id)}">${ICON.heart}</button>
     </div>
     <h3>${esc(pName(p))}</h3>
     <div class="meta">${t('cat_' + p.cat)} · ${weightText(p.w)}</div>
@@ -1056,7 +1116,7 @@ function renderQV() {
   const e = estimate(p, qvState.kt);
   $('#qvBody').innerHTML = `<button class="tbtn dlg-x" type="button" data-close-dlg aria-label="${t('close')}">${ICON.x}</button>
     <div class="qv-grid">
-      <div class="qv-art">${art(p.cat, p.gem)}${photo(p, 900)}${p.img && p.credit ? `<span class="credit">${t('photo_by')}: ${esc(p.credit)}</span>` : ''}</div>
+      <div class="qv-art">${art(p.cat, p.gem)}${photo(p, 900)}<button class="wish ${wish.has(p.id) ? 'on' : ''}" type="button" data-wish="${p.id}" aria-label="${esc(t('wish_aria'))}" aria-pressed="${wish.has(p.id)}">${ICON.heart}</button>${p.img && p.credit ? `<span class="credit">${t('photo_by')}: ${esc(p.credit)}</span>` : ''}</div>
       <div>
         ${p.badge ? `<span class="tag custom">${t('b_' + p.badge)}</span>` : ''}
         <h3 style="margin-top:10px">${esc(pName(p))}</h3>
@@ -1271,7 +1331,8 @@ function orderDoc(I, source) {
     grand: Math.round(I.totals.grand),
     pay: I.pay ? { method: I.pay.method, amount: I.pay.amount, trx: I.pay.trx || '', sender: I.pay.sender || '', due: I.pay.due } : null,
     delivery: I.delivery || { method: 'pickup', fee: 0 }, plan: I.plan || 'full',
-    status: I.status, lockUntil: lockValid() ? lockState.until : 0, source: source || 'web'
+    status: I.status, lockUntil: lockValid() ? lockState.until : 0, source: source || 'web',
+    uid: user && PAGE !== 'admin' ? user.uid : undefined
   }));
 }
 function rememberOrder(I) {
@@ -1584,6 +1645,8 @@ function renderCheckout() {
       <div class="lock-r"><span class="lock-t" id="lockT">--:--</span><small>${t('lock_left')}</small></div><div class="lock-prog"><i id="lockP"></i></div></div>
     <div class="co-grid">
     <div class="stack" style="gap:20px">
+      ${fbMod ? (user ? `<div class="acc-chip glass"><span class="av">${user.photoURL ? `<img src="${esc(user.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc(initialOf(user))}</span><span>${t('acc_signed', { e: esc(user.email || '') })}</span><a href="account.html">${t('nav_account')} →</a></div>`
+        : `<div class="acc-chip glass hint">${ICON.user}<span>${t('acc_hint_co')}</span><a class="btn btn-glass btn-sm" href="account.html?next=checkout.html">${t('acc_signin_btn')}</a></div>`) : ''}
       <div class="co-card glass"><h3 class="co-h"><i>${dg(1)}</i>${t('co_s1')}</h3><div class="fgrid">
         <div><label class="lbl" for="cName">${t('buyer_name')} *</label><div class="in"><input id="cName" data-b="name" type="text" autocomplete="name" value="${esc(buyer.name)}"></div></div>
         <div><label class="lbl" for="cPhone">${t('buyer_phone')} *</label><div class="in"><input id="cPhone" data-b="phone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(buyer.phone)}"></div></div>
@@ -2186,6 +2249,190 @@ function bindTrack() {
 }
 
 /* =====================================================================
+   CUSTOMER ACCOUNTS (account.html) — Firebase email/password + Google
+   ===================================================================== */
+let user = null, profile = null, myOrders = null, myOrdersUnsub = null;
+const wish = new Set(LS.get('mj_wish', []));
+const accState = { mode: 'login', tab: 'orders', busy: false, err: '', show: false };
+const initialOf = (u) => String((u && (u.displayName || u.email)) || '?').trim().charAt(0).toUpperCase();
+const AUTH_ERR = { 'email-already-in-use': 'ae_exists', 'invalid-email': 'ae_email', 'weak-password': 'ae_weak', 'invalid-credential': 'ae_cred', 'wrong-password': 'ae_cred',
+  'user-not-found': 'ae_cred', 'invalid-login-credentials': 'ae_cred', 'popup-closed-by-user': 'ae_popup', 'cancelled-popup-request': 'ae_popup', 'unauthorized-domain': 'ae_domain',
+  'operation-not-allowed': 'ae_off', 'too-many-requests': 'ae_many', 'network-request-failed': 'ae_net' };
+const authMsg = (e) => t(AUTH_ERR[String((e && e.code) || '').replace('auth/', '')] || 'ae_other');
+function saveWish() {
+  LS.set('mj_wish', [...wish]);
+  if (user && fbMod) fbMod.saveProfile(user.uid, { wish: [...wish].slice(0, 100) }).catch(() => {});
+}
+function toggleWish(id, el) {
+  const on = !wish.has(id); on ? wish.add(id) : wish.delete(id); saveWish();
+  $$(`[data-wish="${id}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  if (on && el) { el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 600); burst(el, 8); }
+  toast(t(on ? 'wish_add' : 'wish_rm'));
+  if (PAGE === 'account') renderAccount();
+}
+async function onUserChange(u) {
+  user = u || null; profile = null;
+  if (myOrdersUnsub) { try { myOrdersUnsub(); } catch (e) { /* */ } myOrdersUnsub = null; }
+  myOrders = null;
+  if (user && fbMod) {
+    try { profile = await fbMod.getProfile(user.uid); } catch (e) { profile = null; }
+    const merged = new Set([...(profile && profile.wish || []), ...wish]);
+    const base = { name: (profile && profile.name) || user.displayName || '', email: user.email || '', photo: user.photoURL || '', provider: (user.providerData[0] || {}).providerId || 'password' };
+    if (!profile) fbMod.saveProfile(user.uid, Object.assign(base, { wish: [...merged].slice(0, 100), createdAt: Date.now() })).catch(() => {});
+    else if (merged.size !== (profile.wish || []).length) fbMod.saveProfile(user.uid, { wish: [...merged].slice(0, 100) }).catch(() => {});
+    wish.clear(); merged.forEach(x => wish.add(x)); LS.set('mj_wish', [...wish]);
+    profile = Object.assign(base, profile || {});
+    ['name', 'phone', 'addr'].forEach(k => { if (!buyer[k] && profile[k]) buyer[k] = profile[k]; });
+    if (!buyer.email && user.email) buyer.email = user.email;
+    saveBuyer();
+    if (PAGE === 'account') fbMod.onMyOrders(user.uid, list => { myOrders = list; renderAccount(); }).then(u2 => { myOrdersUnsub = u2; });
+    const next = new URLSearchParams(location.search).get('next');
+    if (PAGE === 'account' && next && /^[a-z]+\.html$/.test(next)) { go(next); return; }
+  }
+  renderChrome();
+  if (PAGE === 'account') renderAccount();
+  if (PAGE === 'pay') renderCheckout();
+  if (PAGE === 'shop') renderShop();
+  if (PAGE === 'home') renderFeatured();
+}
+function invoiceFromOrder(o) {
+  return { no: o.id, ts: o.createdAt || Date.now(), rateDate: o.rateDate, buyer: o.customer || {}, lines: (o.items || []).map(l => Object.assign({ q: +l.qty || 1 }, l)),
+    totals: o.totals || { grand: o.grand }, pay: o.pay, status: o.status, delivery: o.delivery, plan: o.plan, cloud: true, sync: 'off' };
+}
+function accOrderCard(o) {
+  const items = o.items || [], st = o.status || 'Pending';
+  const lvl = st === 'Delivered' ? 4 : OPEN_ST.includes(st) ? 3 : ['Rejected', 'Amount mismatch'].includes(st) ? 0 : 2;
+  const nm = (l) => (lang === 'en' ? l.title_en : l.title_bn) || l.name || t('cat_' + (l.cat || 'custom'));
+  return `<article class="aord glass">
+    <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) : ''} · ${t(o.delivery && o.delivery.method === 'home' ? 'dl_home' : 'dl_pickup')}</small></div>
+      <span class="vstat ${ST_CLS[st] || ''}">${t(ST_KEY[st] || 'st_pending')}</span></header>
+    <div class="aord-items">${items.slice(0, 4).map(l => `<div class="ai">${lineThumb(l)}<span><b>${esc(nm(l))}${qtyTag(+l.qty || 1)}</b><small>${t(l.carat)} · ${weightText(+l.tb || 0)}</small></span></div>`).join('')}
+      ${items.length > 4 ? `<span class="more">${t('acc_more', { n: dg(items.length - 4) })}</span>` : ''}</div>
+    <div class="aord-prog" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i class="${i <= lvl ? 'on' : ''}"></i>`).join('')}</div>
+    <footer><div><small>${t('grand')}</small><b>${money(o.grand)}</b></div>
+      <div class="acts"><a class="btn btn-glass btn-sm" href="track.html?id=${encodeURIComponent(o.id)}">${ICON.shield}<span>${t('acc_track')}</span></a>
+      <button class="btn btn-gold btn-sm" type="button" data-open-inv="${esc(o.id)}">${ICON.doc || ICON.download}<span>${t('acc_invoice')}</span></button></div></footer>
+  </article>`;
+}
+function renderAccount() {
+  const host = $('#accountBox'); if (!host) return;
+  if (!fbReadyDone) { host.innerHTML = `<div class="acc-wait glass"><span class="spin"></span>${t('acc_loading')}</div>`; return; }
+  if (!fbMod) { host.innerHTML = `<div class="trk-off glass"><p>${t('acc_off')}</p><a class="btn btn-gold btn-sm" href="track.html">${t('nav_track')}</a></div>`; return; }
+  if (!user) {
+    const reg = accState.mode === 'register';
+    host.innerHTML = `<div class="auth glass">
+      <aside class="auth-side">
+        <div class="auth-art">${emblem({ sparkle: true })}</div>
+        <h3>${t('acc_side_h')}</h3><p>${t('acc_side_p')}</p>
+        <ul>${['acc_p1', 'acc_p2', 'acc_p3', 'acc_p4'].map((k, i) => `<li style="animation-delay:${.15 + i * .1}s">${[ICON.shield, ICON.truck, ICON.heart, ICON.doc || ICON.box][i]}<span>${t(k)}</span></li>`).join('')}</ul>
+      </aside>
+      <div class="auth-main">
+        <div class="auth-tabs" role="tablist"><button type="button" role="tab" data-amode="login" aria-selected="${!reg}">${t('acc_login')}</button><button type="button" role="tab" data-amode="register" aria-selected="${reg}">${t('acc_register')}</button><i class="ink ${reg ? 'r' : ''}"></i></div>
+        <button class="gbtn" type="button" id="gSign" ${accState.busy ? 'disabled' : ''}>${ICON.google}<span>${t('acc_google')}</span></button>
+        <div class="or"><span>${t('acc_or')}</span></div>
+        <form id="authForm" novalidate>
+          ${reg ? `<label class="lbl" for="aName">${t('acc_name')}</label><div class="in ico">${ICON.user}<input id="aName" type="text" autocomplete="name" required></div>` : ''}
+          <label class="lbl" for="aEmail">${t('acc_email')}</label><div class="in ico">${ICON.mail}<input id="aEmail" type="email" inputmode="email" autocomplete="email" required value="${esc(accState.email || '')}"></div>
+          <label class="lbl" for="aPass">${t('acc_pass')}</label><div class="in ico pw">${ICON.lock}<input id="aPass" type="${accState.show ? 'text' : 'password'}" autocomplete="${reg ? 'new-password' : 'current-password'}" required minlength="6"><button type="button" class="eye" data-showpw aria-label="${t('acc_show')}">${accState.show ? ICON.eyeoff : ICON.eye}</button></div>
+          ${reg ? `<p class="hint">${t('acc_pass_hint')}</p>` : `<button type="button" class="linkish" data-forgot>${t('acc_forgot')}</button>`}
+          ${accState.err ? `<p class="aerr" role="alert">${esc(accState.err)}</p>` : ''}
+          <button class="btn btn-gold btn-lg" type="submit" ${accState.busy ? 'disabled' : ''}>${accState.busy ? '<span class="spin"></span>' : ICON.check}<span>${t(reg ? 'acc_do_register' : 'acc_do_login')}</span></button>
+        </form>
+      </div></div>`;
+    return;
+  }
+  const list = myOrders || [], P = profile || {};
+  const spent = list.reduce((s, o) => s + (o.pay ? +o.pay.amount || 0 : 0), 0);
+  const active = list.filter(o => !['Delivered', 'Rejected'].includes(o.status)).length;
+  const device = LS.get('mj_my_orders', []).filter(x => !list.some(o => o.id === x.no));
+  const wishList = [...wish].map(prod).filter(Boolean);
+  const since = user.metadata && user.metadata.creationTime ? fdate(Date.parse(user.metadata.creationTime)) : '';
+  const tab = accState.tab;
+  host.innerHTML = `<div class="acc-head glass">
+      <div class="acc-av">${user.photoURL ? `<img src="${esc(user.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc(initialOf(user))}</div>
+      <div class="acc-who"><small>${t('acc_hello')} ✦</small><h2>${esc(P.name || user.displayName || user.email || '')}</h2><p>${esc(user.email || '')}${since ? ' · ' + t('acc_member', { d: since }) : ''}</p></div>
+      <div class="acc-acts">${fbMod.isAdmin(user) ? `<a class="btn btn-glass btn-sm" href="admin.html">${ICON.shield}<span>${t('acc_admin')}</span></a>` : ''}<button class="btn btn-glass btn-sm" type="button" data-logout>${ICON.logout}<span>${t('acc_logout')}</span></button></div>
+    </div>
+    ${!user.emailVerified && (user.providerData[0] || {}).providerId === 'password' ? `<div class="acc-verify glass">${ICON.mail}<span>${t('acc_verify')}</span><button class="btn btn-glass btn-sm" type="button" data-resend>${t('acc_resend')}</button></div>` : ''}
+    <div class="acc-stats">${[['acc_s_orders', dg(list.length), ICON.box], ['acc_s_spent', money(spent), ICON.coins], ['acc_s_active', dg(active), ICON.truck], ['acc_s_wish', dg(wish.size), ICON.heart]]
+      .map(([k, v, ic], i) => `<div class="astat glass" style="animation-delay:${i * .07}s"><span class="ic">${ic}</span><small>${t(k)}</small><b>${v}</b></div>`).join('')}</div>
+    <div class="acc-tabs glass" role="tablist">${['orders', 'wish', 'profile'].map(k => `<button type="button" role="tab" data-atab="${k}" aria-selected="${tab === k}">${t('acc_t_' + k)}${k === 'orders' && list.length ? ` <em>${dg(list.length)}</em>` : k === 'wish' && wish.size ? ` <em>${dg(wish.size)}</em>` : ''}</button>`).join('')}</div>
+    <div class="acc-pane">${tab === 'orders'
+      ? (myOrders === null ? `<div class="acc-wait"><span class="spin"></span>${t('acc_loading')}</div>`
+        : (list.length ? `<div class="aords">${list.map(accOrderCard).join('')}</div>` : `<div class="empty glass"><h3>${t('acc_no_orders')}</h3><a class="btn btn-gold btn-sm" href="shop.html">${t('go_shop')}</a></div>`)
+          + (device.length ? `<a class="btn btn-glass btn-sm dev-link" href="track.html">${t('acc_device', { n: dg(device.length) })}</a>` : ''))
+      : tab === 'wish'
+        ? (wishList.length ? `<div class="grid">${wishList.map(productCard).join('')}</div>` : `<div class="empty glass"><h3>${t('acc_no_wish')}</h3><a class="btn btn-gold btn-sm" href="shop.html">${t('go_shop')}</a></div>`)
+        : `<form class="co-card glass acc-prof" id="profForm"><h3 class="co-h"><i>${ICON.user}</i>${t('acc_profile_h')}</h3><div class="fgrid">
+            <div><label class="lbl" for="pName">${t('buyer_name')}</label><div class="in"><input id="pName" data-pf="name" type="text" autocomplete="name" value="${esc(P.name || '')}"></div></div>
+            <div><label class="lbl" for="pPhone">${t('buyer_phone')}</label><div class="in"><input id="pPhone" data-pf="phone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(P.phone || '')}"></div></div>
+            <div class="full"><label class="lbl" for="pAddr">${t('buyer_addr')}</label><div class="in"><input id="pAddr" data-pf="addr" type="text" autocomplete="street-address" value="${esc(P.addr || '')}"></div></div>
+            <div class="full"><label class="lbl">${t('acc_email')}</label><div class="in ico">${ICON.mail}<input type="email" value="${esc(user.email || '')}" disabled></div></div>
+          </div>
+          <div class="stack" style="flex-direction:row;flex-wrap:wrap;margin-top:14px"><button class="btn btn-gold" type="submit">${ICON.check}<span>${t('acc_save')}</span></button>
+          ${(user.providerData[0] || {}).providerId === 'password' ? `<button class="btn btn-glass" type="button" data-pwreset>${ICON.lock}<span>${t('acc_change_pw')}</span></button>` : ''}</div></form>`}</div>`;
+}
+function bindAccount() {
+  const host = $('#accountBox'); if (!host) return;
+  host.addEventListener('click', async e => {
+    const m = e.target.closest('[data-amode]'); if (m) { accState.mode = m.dataset.amode; accState.err = ''; renderAccount(); return; }
+    const tb = e.target.closest('[data-atab]'); if (tb) { accState.tab = tb.dataset.atab; renderAccount(); return; }
+    if (e.target.closest('[data-showpw]')) { const v = $('#aPass') && $('#aPass').value; accState.show = !accState.show; accState.email = ($('#aEmail') || {}).value; renderAccount(); if ($('#aPass')) { $('#aPass').value = v || ''; $('#aPass').focus(); } return; }
+    if (e.target.closest('#gSign')) {
+      accState.busy = true; accState.err = ''; renderAccount();
+      try { await fbMod.signInGoogle(); } catch (err) { accState.err = authMsg(err); }
+      accState.busy = false; if (!user) renderAccount(); return;
+    }
+    if (e.target.closest('[data-forgot]')) {
+      const em = ($('#aEmail').value || '').trim(); if (!em) { accState.err = t('acc_need_email'); renderAccount(); return; }
+      try { await fbMod.resetPassword(em); toast(t('acc_reset_sent')); } catch (err) { accState.email = em; accState.err = authMsg(err); renderAccount(); } return;
+    }
+    if (e.target.closest('[data-logout]')) { await fbMod.logout(); toast(t('acc_out')); return; }
+    if (e.target.closest('[data-resend]')) { try { await fbMod.sendVerify(); toast(t('acc_verify')); } catch (err) { toast(authMsg(err), true); } return; }
+    if (e.target.closest('[data-pwreset]')) { try { await fbMod.resetPassword(user.email); toast(t('acc_reset_sent')); } catch (err) { toast(authMsg(err), true); } return; }
+    const oi = e.target.closest('[data-open-inv]');
+    if (oi) { const o = (myOrders || []).find(x => x.id === oi.dataset.openInv); if (o) { LS.set('mj_invoice', invoiceFromOrder(o)); go('invoice.html'); } }
+  });
+  host.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (e.target.id === 'profForm') {
+      const d = {}; $$('[data-pf]', e.target).forEach(i => { d[i.dataset.pf] = i.value.trim().slice(0, 160); });
+      try { await fbMod.saveProfile(user.uid, d); profile = Object.assign(profile || {}, d); Object.assign(buyer, { name: d.name || buyer.name, phone: d.phone || buyer.phone, addr: d.addr || buyer.addr }); saveBuyer(); toast(t('acc_saved')); renderAccount(); }
+      catch (err) { toast(authMsg(err), true); }
+      return;
+    }
+    if (e.target.id !== 'authForm') return;
+    const reg = accState.mode === 'register', em = ($('#aEmail').value || '').trim(), pw = $('#aPass').value, nm = reg ? ($('#aName').value || '').trim() : '';
+    accState.email = em;
+    if (reg && !nm) { accState.err = t('ae_name'); renderAccount(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { accState.err = t('ae_email'); renderAccount(); return; }
+    if (pw.length < 6) { accState.err = t('ae_weak'); renderAccount(); if ($('#aPass')) $('#aPass').focus(); return; }
+    accState.busy = true; accState.err = ''; renderAccount();
+    try {
+      if (reg) { const u = await fbMod.signUp(em, pw, nm); await fbMod.saveProfile(u.uid, { name: nm, email: em, provider: 'password', wish: [...wish], createdAt: Date.now() }); }
+      else await fbMod.signIn(em, pw);
+    } catch (err) { accState.err = authMsg(err); }
+    accState.busy = false; if (!user) { renderAccount(); if ($('#aEmail')) $('#aEmail').value = em; }
+  });
+}
+
+/* =====================================================================
+   HOME — category showcase + custom design band
+   ===================================================================== */
+function renderCatShow() {
+  const el = $('#catShow'); if (!el) return;
+  const vis = catalog.filter(p => !p.hidden);
+  el.innerHTML = CATS.map((c, i) => {
+    const n = vis.filter(p => p.cat === c).length, sample = vis.find(p => p.cat === c) || { gem: 'diamond' };
+    return `<a class="cat-tile glass tilt" href="shop.html#${c}" style="--d:${i * .06}s"><span class="halo"></span><span class="cart-art">${art(c, sample.gem)}</span>
+      <b>${t('cat_' + c)}</b><small>${t('cat_items', { n: dg(n) })}</small><span class="go">${ICON.arrow || '→'}</span></a>`;
+  }).join('');
+  const cd = $('#cdText'); if (cd) cd.textContent = t('cd_d', { p: pct(CONFIG.advancePct) });
+  const tr = $('#trustRow');
+  if (tr) { const items = ['tb1', 'tb2', 'tb3', 'tb4', 'tb5', 'tb6', 'tb7'].map(k => `<span class="tb">✦ ${t(k)}</span>`).join(''); tr.innerHTML = items + items; }
+}
+
+/* =====================================================================
    FIREBASE — live rates, settings, catalogue (admin-controlled)
    ===================================================================== */
 let fbReadyDone = false;
@@ -2208,13 +2455,15 @@ function loadFirebase() {
       if (PAGE === 'pay' && lockState && Date.now() - lockState.at < 20000 && CARATS.some(k => before[k] !== official[k])) ensureLock(true);
       rerenderRates();
     });
-    m.onSettings(st => { if (!st) return; applySettings(st); rerenderRates(); renderChrome(); renderPayCards(); });
+    m.onSettings(st => { if (!st) return; applySettings(st); rerenderRates(); renderChrome(); renderPayCards(); renderCatShow(); });
+    m.onAuth(u => onUserChange(u && !u.isAnonymous ? u : null));
     m.onProducts(list => {
       if (!list || !list.length) return;
       catalog = list.map(normProduct);
       LS.set('mj_catalog_cache', catalog.map(p => Object.assign({}, p, { img: /^data:/.test(p.img || '') ? '' : p.img })));
-      if (PAGE === 'home') renderFeatured();
+      if (PAGE === 'home') { renderFeatured(); renderCatShow(); }
       if (PAGE === 'shop') renderShop();
+      if (PAGE === 'account') renderAccount();
       if (PAGE === 'cart') renderCart();
     });
     const q = LS.get('mj_fb_outbox', []);
@@ -2225,7 +2474,7 @@ function loadFirebase() {
     });
     return m;
   }).catch(err => { console.warn('fb.js not loaded', err); return null; })
-    .then(m => { fbReadyDone = true; if (PAGE === 'track') { if (trackState.no) startTrack(trackState.no); else renderTrack(); } watchInvoice(); return m; });
+    .then(m => { fbReadyDone = true; if (PAGE === 'account') renderAccount(); if (PAGE === 'track') { if (trackState.no) startTrack(trackState.no); else renderTrack(); } watchInvoice(); return m; });
 }
 
 /* =====================================================================
@@ -2236,6 +2485,7 @@ function bindGlobal() {
   document.addEventListener('click', e => {
     const T = e.target;
     const add = T.closest('[data-add]'); if (add) { e.preventDefault(); addProduct(add.dataset.add, add.dataset.kt, add); return; }
+    const wb = T.closest('[data-wish]'); if (wb) { e.preventDefault(); e.stopPropagation(); toggleWish(wb.dataset.wish, wb); return; }
     const qv = T.closest('[data-qv]'); if (qv) { e.preventDefault(); openQV(qv.dataset.qv); return; }
     const qkt = T.closest('[data-qkt]'); if (qkt) { qvState.kt = qkt.dataset.qkt; renderQV(); return; }
     const cp = T.closest('[data-copy],[data-copy-amt]');
@@ -2276,7 +2526,8 @@ function bindGlobal() {
    ===================================================================== */
 function renderAll() {
   applyStatic(); renderChrome(); renderTicker();
-  if (PAGE === 'home') { renderHero(); renderRateBoard(); renderFeatured(); }
+  if (PAGE === 'home') { renderHero(); renderRateBoard(); renderFeatured(); renderCatShow(); }
+  if (PAGE === 'account') renderAccount();
   renderPayCards();
   if (PAGE === 'pay') renderCheckout();
   if (PAGE === 'shop') renderShop();
@@ -2318,6 +2569,7 @@ bindShop();
 bindCart();
 bindEstimator();
 bindTrack();
+bindAccount();
 bindInvoice();
 bindContact();
 bindCheckout();

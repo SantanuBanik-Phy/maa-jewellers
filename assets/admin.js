@@ -56,15 +56,24 @@ const A = {
   plan_cod: ['ক্যাশ অন ডেলিভারি', 'Cash on delivery'], plan_shop: ['দোকানে পরিশোধ', 'Pay at shop'], refs: ['রেফারেন্স ছবি', 'Reference photos'],
   collected: ['টাকা পেয়েছি · হস্তান্তর', 'Cash collected · delivered'], mailed: ['গ্রাহককে ইমেইল পাঠানো হয়েছে', 'Customer emailed'],
   set_fee: ['হোম ডেলিভারি চার্জ (৳)', 'Home delivery charge (৳)'], set_adv: ['কাস্টম অর্ডারে অগ্রিম (%)', 'Advance for custom orders (%)'], set_cod: ['ক্যাশ অন ডেলিভারি চালু', 'Allow cash on delivery'],
-  online: ['অনলাইন (SSLCommerz)', 'Online (SSLCommerz)'], perm: ['অনুমতি নেই — ইমেইল যাচাই করেছেন?', 'Permission denied — is your email verified?'], none: ['—', '—']
+  online: ['অনলাইন (SSLCommerz)', 'Online (SSLCommerz)'],
+  customers: ['গ্রাহক', 'Customers'], ch_sales: ['গত ১৪ দিনের বিক্রি', 'Sales — last 14 days'], ch_status: ['অর্ডারের অবস্থা', 'Order status'],
+  ch_top: ['সবচেয়ে বেশি বিক্রি', 'Best sellers'], ch_pay: ['পেমেন্ট মাধ্যম', 'Payment methods'], ch_cust: ['নতুন গ্রাহক', 'Newest customers'],
+  morning: ['শুভ সকাল', 'Good morning'], noon: ['শুভ দুপুর', 'Good afternoon'], evening: ['শুভ সন্ধ্যা', 'Good evening'], night: ['শুভ রাত্রি', 'Good night'],
+  hello_p: ['আজ {n}টি অর্ডার · {p}টি যাচাইয়ের অপেক্ষায়', '{n} orders today · {p} waiting for verification'],
+  q_rates: ['দর প্রকাশ', 'Publish rates'], q_sale: ['নতুন বিক্রি', 'New sale'], q_pending: ['যাচাই বাকি দেখুন', 'Review pending'],
+  csv: ['CSV ডাউনলোড', 'Download CSV'], registered: ['রেজিস্টার্ড', 'Registered'], guests: ['অতিথি', 'Guests'],
+  c_name: ['নাম', 'Name'], c_contact: ['যোগাযোগ', 'Contact'], c_orders: ['অর্ডার', 'Orders'], c_spent: ['মোট কেনা', 'Spent'], c_last: ['শেষ অর্ডার', 'Last order'],
+  c_wish: ['পছন্দ', 'Wishlist'], c_since: ['যোগদান', 'Joined'], no_cust: ['কোনো গ্রাহক নেই', 'No customers yet'], c_search: ['নাম, মোবাইল বা ইমেইল…', 'Name, phone or email…'],
+  view_orders: ['অর্ডার দেখুন', 'View orders'], sold: ['বিক্রি', 'sold'], none_yet: ['এখনো ডেটা নেই', 'No data yet'], perm: ['অনুমতি নেই — ইমেইল যাচাই করেছেন?', 'Permission denied — is your email verified?'], none: ['—', '—']
 };
 const a = (k, v) => { let s = (A[k] || [k, k])[MJ.lang === 'en' ? 1 : 0]; if (v) Object.keys(v).forEach(x => { s = s.replace('{' + x + '}', v[x]); }); return s; };
-const VIEWS = [['dash', '◈'], ['orders', '◎'], ['rates', '৳'], ['products', '❖'], ['pos', '✎'], ['settings', '⚙']];
+const VIEWS = [['dash', '◈'], ['orders', '◎'], ['customers', '♛'], ['rates', '৳'], ['products', '❖'], ['pos', '✎'], ['settings', '⚙']];
 const STATUSES = ['Pending', 'Awaiting payment', 'Verified', 'Advance paid', 'Cash on delivery', 'Cash at shop', 'Not paid', 'Amount mismatch', 'Delivered', 'Rejected'];
 const fail = (e) => { console.error(e); MJ.toast(/permission/i.test(String(e && (e.code || e.message))) ? a('perm') : a('err') + ' · ' + (e && (e.code || e.message) || ''), true); };
 
 let user = null, orders = [], rateHist = [], fsProducts = null, settings = {}, view = 'dash', orderFilter = 'all', orderQ = '';
-let seenIds = null;
+let seenIds = null, users = [], custFilter = 'all', custQ = '';
 
 /* ---------- gate ---------- */
 $('#gateLogo').innerHTML = MJ.emblem({ sparkle: true });
@@ -116,6 +125,7 @@ function startApp() {
   fb.onRateHistory(h => { rateHist = h || []; renderRatesView(); renderOrders(); });
   fb.onSettings(st => { settings = st || {}; MJ.setSettings(settings); renderSettings(); });
   fb.onProducts(list => { fsProducts = list || []; if (fsProducts.length) MJ.setCatalog(fsProducts); renderProducts(); renderPosPick(); });
+  if (fb.onUsers) fb.onUsers(list => { users = list || []; renderCustomers(); renderDash(); });
   fb.onOrders((list, err) => {
     if (!list) { if (err) fail(err); return; }
     const fresh = seenIds ? list.filter(o => !seenIds.has(o.id) && o.source !== 'shop') : [];
@@ -124,7 +134,7 @@ function startApp() {
     if (fresh.length) { MJ.toast('🔔 ' + a('new_order') + ' · ' + fresh[0].id); chime(); }
     const pend = orders.filter(o => o.status === 'Pending').length;
     document.title = (pend ? `(${pend}) ` : '') + 'Admin · মা জুয়েলার্স';
-    renderOrders(); renderDash();
+    renderOrders(); renderDash(); renderCustomers();
   });
   MJ.renderPOS();
 }
@@ -139,12 +149,13 @@ function renderShell() {
   $('#orderSearch').placeholder = a('search');
   $('#rPublish').textContent = a('publish');
   $('#addProd').textContent = a('add_prod'); $('#seedProd').textContent = a('seed');
+  $('#csvBtn').textContent = '⇩ ' + a('csv'); $('#custSearch').placeholder = a('c_search');
   $('#posAddPick').textContent = a('pos_add'); $('#addCustom').textContent = a('pos_custom');
   $('#posCreate').textContent = a('pos_create'); $('#posClear').textContent = a('pos_clear');
   $('#posMethod').innerHTML = ['cash', 'bkash', 'nagad', 'qr', 'none'].map(m => `<option value="${m}">${m === 'none' ? a('none') : MJ.t('m_' + m)}</option>`).join('');
   $('#posStatus').innerHTML = ['Delivered', 'Verified', 'Not paid'].map(s => `<option value="${s}">${MJ.t(MJ.ST_KEY[s])}</option>`).join('');
   $$('.view').forEach(v => { v.hidden = v.dataset.view !== view; });
-  renderDash(); renderRatesView(); renderOrders(); renderProducts(); renderSettings(); renderPosPick(); MJ.renderPOS(); posMethodUI();
+  renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderPosPick(); MJ.renderPOS(); posMethodUI();
 }
 function renderVerifyBanner() {
   const b = $('#verifyBanner');
@@ -165,6 +176,9 @@ document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]'); if (g) { setView(g.dataset.go); return; }
   if (e.target.closest('#menuBtn')) { $('#side').classList.toggle('open'); return; }
   if (e.target.closest('#logoutBtn')) { fb.logout(); return; }
+  if (e.target.closest('#themeBtn')) { const d = document.body.classList.toggle('dark'); try { localStorage.setItem('mj_admin_theme', d ? 'dark' : 'light'); } catch (er) { /* */ } return; }
+  const qf = e.target.closest('[data-qfilter]'); if (qf) { orderFilter = qf.dataset.qfilter; setView('orders'); renderOrders(); return; }
+  const co = e.target.closest('[data-cust-orders]'); if (co) { orderFilter = 'all'; orderQ = co.dataset.custOrders; $('#orderSearch').value = orderQ; setView('orders'); renderOrders(); return; }
   if (e.target.closest('#langBtn')) { MJ.lang = MJ.lang === 'en' ? 'bn' : 'en'; renderShell(); return; }
 });
 function chime() {
@@ -176,18 +190,113 @@ function chime() {
 
 /* ---------- dashboard ---------- */
 const dayKey = (ts) => { const d = new Date(ts || 0); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
+const PAID_ST = ['Verified', 'Delivered', 'Advance paid'];
+const paidOf = (o) => PAID_ST.includes(o.status) && o.pay ? +o.pay.amount || 0 : 0;
+const ST_COL = { 'Pending': '#e0a526', 'Awaiting payment': '#5b8def', 'Verified': '#c9a227', 'Advance paid': '#d9a441', 'Cash on delivery': '#8e6bd6', 'Cash at shop': '#7a6b52',
+  'Not paid': '#a7a09a', 'Amount mismatch': '#e56a3a', 'Delivered': '#1e7d33', 'Rejected': '#b3263c', 'Duplicate TrxID': '#b3263c' };
+function greet() { const h = new Date().getHours(); return a(h < 12 ? 'morning' : h < 16 ? 'noon' : h < 20 ? 'evening' : 'night'); }
+function salesChart() {
+  const days = [...Array(14)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 13 + i); return d; });
+  const vals = days.map(d => orders.filter(o => dayKey(o.createdAt) === dayKey(d.getTime())).reduce((s, o) => s + paidOf(o), 0));
+  const cnt = days.map(d => orders.filter(o => dayKey(o.createdAt) === dayKey(d.getTime())).length);
+  const max = Math.max(1, ...vals), W = 560, H = 210, bw = W / 14;
+  $('#salesTotal').textContent = money(vals.reduce((x, y) => x + y, 0));
+  return `<svg viewBox="0 0 ${W} ${H + 34}" preserveAspectRatio="none" role="img" aria-label="${a('ch_sales')}">
+    <defs><linearGradient id="barG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d77a"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs>
+    ${[.25, .5, .75, 1].map(f => `<line x1="0" x2="${W}" y1="${H - H * f + 4}" y2="${H - H * f + 4}" class="gl"/>`).join('')}
+    ${vals.map((v, i) => { const h = v ? Math.max(4, (v / max) * (H - 18)) : 2; const x = i * bw + bw * .18;
+      return `<g class="bar" style="--i:${i}"><rect x="${x}" y="${H - h + 4}" width="${bw * .64}" height="${h}" rx="5" fill="${v ? 'url(#barG)' : 'currentColor'}" opacity="${v ? 1 : .15}"><title>${fdate(days[i].getTime())} · ${money(v)} · ${dg(cnt[i])} ${a('orders')}</title></rect>
+      ${cnt[i] ? `<text x="${x + bw * .32}" y="${H - h - 2}" class="cnt">${dg(cnt[i])}</text>` : ''}
+      <text x="${x + bw * .32}" y="${H + 24}" class="dl">${dg(days[i].getDate())}</text></g>`; }).join('')}
+  </svg>`;
+}
+function donut() {
+  const counts = {}; orders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+  const ent = Object.entries(counts).sort((x, y) => y[1] - x[1]), tot = orders.length;
+  if (!tot) return `<p class="muted">${a('none_yet')}</p>`;
+  let acc = 0; const R = 70, C = 2 * Math.PI * R;
+  const segs = ent.map(([st, n]) => { const len = C * n / tot, seg = `<circle r="${R}" cx="90" cy="90" fill="none" stroke="${ST_COL[st] || '#999'}" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-acc}" class="seg"><title>${MJ.t(MJ.ST_KEY[st] || 'st_pending')} · ${n}</title></circle>`; acc += len; return seg; }).join('');
+  return `<svg viewBox="0 0 180 180" class="donut"><g transform="rotate(-90 90 90)">${segs}</g><text x="90" y="86" class="dn">${dg(tot)}</text><text x="90" y="108" class="dl2">${a('orders')}</text></svg>
+    <ul class="legend">${ent.map(([st, n]) => `<li><i style="background:${ST_COL[st] || '#999'}"></i><span>${MJ.t(MJ.ST_KEY[st] || 'st_pending')}</span><b>${dg(n)}</b></li>`).join('')}</ul>`;
+}
+function topProducts() {
+  const m = {}; orders.filter(o => o.status !== 'Rejected').forEach(o => (o.items || []).forEach(l => { const k = l.pid || ('c:' + (l.title_en || l.name)); const e = m[k] || (m[k] = { l, n: 0, sum: 0 }); e.n += +l.qty || 1; e.sum += +l.total || 0; }));
+  const top = Object.values(m).sort((x, y) => y.sum - x.sum).slice(0, 5), max = Math.max(1, ...top.map(x => x.sum));
+  if (!top.length) return `<p class="muted">${a('none_yet')}</p>`;
+  return `<ol class="toplist">${top.map((x, i) => `<li><span class="rk">${dg(i + 1)}</span><div><b>${esc((MJ.lang === 'en' ? x.l.title_en : x.l.title_bn) || x.l.name || x.l.cat)}</b><div class="tbar"><i style="width:${(x.sum / max * 100).toFixed(1)}%"></i></div><small>${dg(x.n)} ${a('sold')} · ${money(x.sum)}</small></div></li>`).join('')}</ol>`;
+}
+function payMix() {
+  const m = {}; orders.forEach(o => { const k = o.pay ? o.pay.method : 'none'; m[k] = (m[k] || 0) + 1; });
+  const ent = Object.entries(m).sort((x, y) => y[1] - x[1]), tot = orders.length || 1;
+  const col = { ssl: '#1f6fd1', bkash: '#e2136e', nagad: '#f26522', qr: '#2b2b2b', cod: '#8e6bd6', cash: '#c9a227', none: '#a7a09a' };
+  if (!orders.length) return `<p class="muted">${a('none_yet')}</p>`;
+  return `<div class="stackbar">${ent.map(([k, n]) => `<i style="width:${n / tot * 100}%;background:${col[k] || '#999'}" title="${k}"></i>`).join('')}</div>
+    <ul class="legend">${ent.map(([k, n]) => `<li><i style="background:${col[k] || '#999'}"></i><span>${k === 'none' ? a('none') : MJ.t('m_' + k)}</span><b>${dg(Math.round(n / tot * 100))}%</b></li>`).join('')}</ul>`;
+}
 function renderDash() {
   if (!$('#kpis')) return;
   const today = dayKey(Date.now()), td = orders.filter(o => dayKey(o.createdAt) === today);
   const pend = orders.filter(o => o.status === 'Pending' || o.status === 'Amount mismatch').length;
-  const rev = td.filter(o => ['Verified', 'Delivered'].includes(o.status)).reduce((s, o) => s + (o.pay ? +o.pay.amount || 0 : 0), 0);
+  const rev = td.reduce((s, o) => s + paidOf(o), 0);
   const pb = $('#pendBadge'); if (pb) pb.textContent = pend ? dg(pend) : '';
-  $('#kpis').innerHTML = [['k_today', dg(td.length), '◎'], ['k_pending', dg(pend), '◷'], ['k_rev', money(rev), '৳'], ['k_total', dg(orders.length), '❖']]
-    .map(([k, v, ic]) => `<div class="kpi ${k === 'k_pending' && pend ? 'hot' : ''}"><i>${ic}</i><small>${a(k)}</small><b>${v}</b></div>`).join('');
+  const name = (user && (user.displayName || user.email || '').split(/[@\s]/)[0]) || '';
+  $('#hello').innerHTML = `<div class="hello-in"><div><small>${new Date().toLocaleDateString(MJ.lang === 'en' ? 'en-GB' : 'bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</small>
+      <h2>${greet()}${name ? ', ' + esc(name) : ''} ✦</h2><p>${a('hello_p', { n: dg(td.length), p: dg(pend) })}</p></div>
+      <div class="q-acts"><button class="a-btn gold" type="button" data-go="rates">৳ ${a('q_rates')}</button><button class="a-btn" type="button" data-go="pos">✎ ${a('q_sale')}</button>${pend ? `<button class="a-btn hotbtn" type="button" data-qfilter="Pending">◷ ${a('q_pending')} · ${dg(pend)}</button>` : ''}</div></div>
+    <svg class="hello-art" viewBox="0 0 200 120" aria-hidden="true"><g fill="none" stroke="#f3d77a" stroke-width="1.2" opacity=".55"><path d="M10 20 C60 110 140 110 190 20"/><path d="M30 10 C70 80 130 80 170 10"/></g><g fill="#f3d77a">${[20, 45, 72, 100, 128, 155, 180].map((x, i) => `<circle cx="${x}" cy="${20 + Math.sin(i / 6 * Math.PI) * 62}" r="${i === 3 ? 7 : 4}"/>`).join('')}</g></svg>`;
+  const ord = orders.length, cust = new Set(orders.map(o => (o.customer && o.customer.phone) || o.uid || o.id)).size;
+  $('#kpis').innerHTML = [['k_today', dg(td.length), '◎', 'g1'], ['k_pending', dg(pend), '◷', 'g2'], ['k_rev', money(rev), '৳', 'g3'], ['k_total', dg(ord), '❖', 'g4'], ['customers', dg(Math.max(cust, users.length)), '♛', 'g5']]
+    .map(([k, v, ic, g], i) => `<div class="kpi ${g} ${k === 'k_pending' && pend ? 'hot' : ''}" style="animation-delay:${i * .06}s"><i>${ic}</i><small>${a(k)}</small><b>${v}</b></div>`).join('');
+  $('#chSales').innerHTML = salesChart(); $('#chStatus').innerHTML = donut(); $('#chTop').innerHTML = topProducts(); $('#chPay').innerHTML = payMix();
+  const newest = users.slice().sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0)).slice(0, 5);
+  $('#chCust').innerHTML = newest.length ? newest.map(u => `<div class="cu-mini"><span class="cav">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc(String(u.name || u.email || '?').charAt(0).toUpperCase())}</span><div><b>${esc(u.name || '—')}</b><small>${esc(u.email || '')}</small></div></div>`).join('') : `<p class="muted">${a('no_cust')}</p>`;
   const O = MJ.official;
   $('#dashRates').innerHTML = `<div class="rate-mini">${CARATS.map(k => `<div><small>${MJ.t(k)}</small><b>${money(O[k])}</b></div>`).join('')}</div><p class="muted small">${MJ.t(O.from === 'firebase' ? 'rate_meta_live' : 'rate_meta', { d: fdate(O.date) })}</p>`;
   $('#dashRecent').innerHTML = orders.slice(0, 6).map(o => `<button class="mini-order" type="button" data-go="orders"><span class="mono">${esc(o.id)}</span><span>${esc((o.customer && o.customer.name) || '—')}</span><b>${money(o.grand)}</b>${stBadge(o.status)}</button>`).join('') || `<p class="muted">${a('no_orders')}</p>`;
 }
+
+/* ---------- customers ---------- */
+function customerRows() {
+  const rows = new Map();
+  const key = (o) => o.uid ? 'u:' + o.uid : 'p:' + String((o.customer && o.customer.phone) || '').replace(/\D/g, '').slice(-10);
+  users.forEach(u => rows.set('u:' + u.uid, { reg: true, name: u.name || '', email: u.email || '', phone: u.phone || '', photo: u.photo || '', since: u.createdAt || 0, wish: (u.wish || []).length, orders: 0, spent: 0, last: 0, q: u.phone || u.email || '' }));
+  orders.forEach(o => {
+    if (o.source === 'shop' && !(o.customer && o.customer.phone)) return;
+    const k = key(o); if (k === 'p:') return;
+    const c = o.customer || {}, r = rows.get(k) || { reg: false, name: c.name || '', email: c.email || '', phone: c.phone || '', photo: '', since: 0, wish: 0, orders: 0, spent: 0, last: 0 };
+    r.orders++; r.spent += paidOf(o); r.last = Math.max(r.last, o.createdAt || 0);
+    if (!r.name) r.name = c.name || ''; if (!r.phone) r.phone = c.phone || ''; if (!r.email) r.email = c.email || '';
+    r.q = r.phone || r.email || r.name; rows.set(k, r);
+  });
+  return [...rows.values()];
+}
+function renderCustomers() {
+  if (!$('#custTable')) return;
+  const all = customerRows(), reg = all.filter(r => r.reg).length;
+  $('#custChips').innerHTML = [['all', a('all'), all.length], ['reg', a('registered'), reg], ['guest', a('guests'), all.length - reg]]
+    .map(([k, l, n]) => `<button type="button" class="chip ${custFilter === k ? 'on' : ''}" data-cf="${k}">${l} <em>${dg(n)}</em></button>`).join('');
+  const q = custQ.trim().toLowerCase();
+  const list = all.filter(r => (custFilter === 'all' || (custFilter === 'reg') === r.reg) && (!q || [r.name, r.phone, r.email].some(x => String(x).toLowerCase().includes(q))))
+    .sort((x, y) => y.spent - x.spent || y.last - x.last);
+  $('#custTable').innerHTML = list.length ? `<table class="tbl cust"><thead><tr><th>${a('c_name')}</th><th>${a('c_contact')}</th><th>${a('c_orders')}</th><th>${a('c_spent')}</th><th>${a('c_last')}</th><th></th></tr></thead><tbody>
+    ${list.map(r => `<tr><td><div class="cu-mini"><span class="cav">${r.photo ? `<img src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer">` : esc(String(r.name || r.email || '?').charAt(0).toUpperCase())}</span><div><b>${esc(r.name || '—')}</b><small>${r.reg ? '♛ ' + a('registered') + (r.since ? ' · ' + fdate(r.since) : '') : a('guests')}${r.wish ? ' · ♥ ' + dg(r.wish) : ''}</small></div></div></td>
+      <td>${esc(r.phone ? dg(r.phone) : '')}${r.email ? `<br><a class="em" href="mailto:${esc(r.email)}">${esc(r.email)}</a>` : ''}</td><td>${dg(r.orders)}</td><td><b>${money(r.spent)}</b></td><td>${r.last ? fdate(r.last) : '—'}</td>
+      <td>${r.orders ? `<button class="a-btn small" type="button" data-cust-orders="${esc(r.q)}">${a('view_orders')}</button>` : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="muted empty-a">${a('no_cust')}</p>`;
+}
+$('#custChips').addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (b) { custFilter = b.dataset.cf; renderCustomers(); } });
+$('#custSearch').addEventListener('input', e => { custQ = e.target.value; renderCustomers(); });
+
+/* ---------- CSV export (opens in Excel / Google Sheets) ---------- */
+$('#csvBtn').addEventListener('click', () => {
+  const cols = ['Order', 'Date', 'Status', 'Customer', 'Phone', 'Email', 'Address', 'Delivery', 'Plan', 'Items', 'Grand total', 'Paid', 'Due', 'Method', 'TrxID', 'Source'];
+  const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const rows = orders.map(o => { const c = o.customer || {}, P = o.pay || {};
+    return [o.id, o.createdAt ? new Date(o.createdAt).toISOString().slice(0, 16).replace('T', ' ') : '', o.status, c.name, c.phone, c.email, c.addr, (o.delivery || {}).method || '', o.plan || '',
+      (o.items || []).map(l => `${l.title_en || l.name || l.cat} ${l.carat} ${(+l.tb || 0).toFixed(4)}bh x${l.qty || 1}`).join(' | '), Math.round(+o.grand || 0), Math.round(+P.amount || 0), Math.round(+(P.due != null ? P.due : o.grand) || 0), P.method || '', P.trx || '', o.source || ''].map(q).join(','); });
+  const blob = new Blob(['﻿' + [cols.map(q).join(',')].concat(rows).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob), link = document.createElement('a');
+  link.href = url; link.download = 'maa-jewellers-orders-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+});
 const stBadge = (s) => `<span class="st ${MJ.ST_CLS[s] || ''}">${MJ.t(MJ.ST_KEY[s] || 'st_pending')}</span>`;
 
 /* ---------- rates ---------- */

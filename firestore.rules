@@ -3,7 +3,8 @@ rules_version = '2';
 // Maa Jewellers — Firestore security rules
 // Paste into Firebase console → Firestore Database → Rules → Publish.
 // Only the admin (verified email below) can change prices, products, settings and order status.
-// Customers can only create a new order and read the status of an order whose ID they know.
+// Customers can create orders, read the status of an order whose ID they know, and — when signed in —
+// read their own orders and their own profile (users/{uid}).
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -41,10 +42,22 @@ service cloud.firestore {
         && request.resource.data.source == 'web'
         && request.resource.data.grand is number && request.resource.data.grand > 0
         && request.resource.data.items is list && request.resource.data.items.size() <= 30
+        && (!('uid' in request.resource.data) || (request.auth != null && request.resource.data.uid == request.auth.uid))
         && request.resource.data.keys().hasOnly(['id', 'createdAt', 'lang', 'rateDate', 'rates', 'making',
-             'customer', 'items', 'totals', 'grand', 'pay', 'status', 'lockUntil', 'source', 'delivery', 'plan'])
+             'customer', 'items', 'totals', 'grand', 'pay', 'status', 'lockUntil', 'source', 'delivery', 'plan', 'uid'])
       );
-      allow read, update, delete: if isAdmin();
+      // a signed-in customer can read the orders placed from their account
+      allow read: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Customer profile: only the owner (and the admin) can read it; only the owner writes it
+    match /users/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'phone', 'addr', 'email', 'wish', 'photo', 'provider', 'createdAt', 'updatedAt'])
+        && (!('wish' in request.resource.data) || (request.resource.data.wish is list && request.resource.data.wish.size() <= 100));
+      allow delete: if isAdmin();
     }
 
     // Public order status (no personal data) — for live tracking

@@ -13,11 +13,17 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
   3 reference photos (`refs`, ~800px JPEG data URLs stored in the order items).
   Checkout: delivery (pickup / home + `deliveryFee`), plan (full / advance `advancePct` for custom orders / cash on delivery / pay at shop),
   method (SSLCommerz `ssl` when `/api/pay/config` says on, bKash, Nagad, Bangla QR with TrxID). Optional email → confirmation mails.
+  Accounts: `account.html` — Firebase email/password + Google sign-in (fb.signUp/signIn/signInGoogle), profile in `users/{uid}`
+  {name, phone, addr, email, wish[], photo, provider}; orders placed while signed in carry `uid` and show in the account
+  (fb.onMyOrders). Wishlist hearts on product cards (LS `mj_wish`, synced to the profile). Header avatar button → account.
+  Home extras: trust ribbon (`#trustRow`), category showcase (`#catShow`), animated custom-design band (`.cd-band`).
   Statuses: Pending, Awaiting payment (ssl), Advance paid, Verified, Cash on delivery, Cash at shop, Not paid, Amount mismatch, Delivered, Rejected.
 - **Admin console** — `admin.html` + `assets/admin.js` + `assets/admin.css` (own look, noindex).
   Firebase Auth email/password; only `santanubanik2k@gmail.com` with a verified email. Tabs: Dashboard,
   Orders (verify/reject/deliver, price-integrity check, chime on new orders), BAJUS rates (publish + history),
-  Products (CRUD, photo upload → resized JPEG data URL), In-store sale (POS with discount/VAT/advance), Settings.
+  Products (CRUD, photo upload → resized JPEG data URL), In-store sale (POS with discount/VAT/advance), Settings,
+  Customers (registered users + guests aggregated by phone). Dashboard: greeting, 5 KPIs, 14-day sales bars, status donut,
+  best sellers, payment mix, newest customers. Orders CSV export. Dark mode (LS `mj_admin_theme`).
 
 ## Server (Vercel functions, `api/`, no npm deps)
 - `api/_lib.js` helpers (service-account JWT → Firestore REST, price re-check, admin ID-token check, Apps Script mail).
@@ -48,4 +54,5 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - Keep the invoice print palette white/black/gold; check it still fits one A4 page.
 - Test headless (Playwright) at 1440 and 390 widths before pushing; `node --check assets/app.js`.
   For admin/order flows, copy the site and replace `assets/fb.js` with an in-memory mock exporting the same API
-  (incl. `setOrderStatus(id, status, extra, pub)` and `idToken()`); stub `/api/*` with Playwright routes.
+  (incl. `setOrderStatus(id, status, extra, pub)`, `idToken()`, and the account functions signUp/signIn/signInGoogle/
+  getProfile/saveProfile/onMyOrders/onUsers with an auth listener list); stub `/api/*` with Playwright routes.

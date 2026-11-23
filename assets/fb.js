@@ -76,6 +76,39 @@ export async function onOrderStatus(id, cb) {
   return F.onSnapshot(D('orderStatus', id), s => cb(s.exists() ? plain(s) : null), () => cb(null));
 }
 
+/* ---------------- Customer accounts ---------------- */
+export async function signUp(email, password, name) {
+  await init(); await A.setPersistence(auth, A.browserLocalPersistence);
+  const c = await A.createUserWithEmailAndPassword(auth, email, password);
+  if (name) { try { await A.updateProfile(c.user, { displayName: name }); } catch (e) { /* */ } }
+  try { await A.sendEmailVerification(c.user); } catch (e) { /* */ }
+  return c.user;
+}
+export async function signIn(email, password) {
+  await init(); await A.setPersistence(auth, A.browserLocalPersistence);
+  return (await A.signInWithEmailAndPassword(auth, email, password)).user;
+}
+export async function signInGoogle() {
+  await init(); await A.setPersistence(auth, A.browserLocalPersistence);
+  const p = new A.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
+  try { return (await A.signInWithPopup(auth, p)).user; }
+  catch (e) {
+    if (/popup-blocked|operation-not-supported|web-storage/.test(e.code || '')) { await A.signInWithRedirect(auth, p); return null; }
+    throw e;
+  }
+}
+export async function getProfile(uid) { if (!(await init())) return null; const s = await F.getDoc(D('users', uid)); return s.exists() ? plain(s) : null; }
+export async function saveProfile(uid, data) { await init(); await F.setDoc(D('users', uid), Object.assign({}, data, { updatedAt: now() }), { merge: true }); }
+export async function onMyOrders(uid, cb) {
+  if (!uid || !(await init())) return null;
+  return F.onSnapshot(F.query(F.collection(db, 'orders'), F.where('uid', '==', uid), F.limit(100)),
+    q => cb(q.docs.map(d => Object.assign({ id: d.id }, plain(d))).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))), err => cb([], err));
+}
+export async function onUsers(cb) {
+  if (!(await init())) return null;
+  return F.onSnapshot(F.query(F.collection(db, 'users'), F.limit(1000)), q => cb(q.docs.map(d => Object.assign({ uid: d.id }, plain(d)))), err => cb(null, err));
+}
+
 /* ---------------- Admin ---------------- */
 export const isAdmin = (u) => !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
 export async function onAuth(cb) {
