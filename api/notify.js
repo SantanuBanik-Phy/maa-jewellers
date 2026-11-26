@@ -8,15 +8,21 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return L.send(res, 405, { error: 'method' });
   if (!L.serviceAccount()) return L.send(res, 503, { error: 'not_configured' });
   try {
-    const { orderId, idToken } = await L.body(req);
+    const { orderId, idToken, test } = await L.body(req);
     if (!(await L.verifyAdminToken(idToken))) return L.send(res, 403, { error: 'forbidden' });
+    if (test) {   // admin Settings → "send test email": goes only to the shop's own Gmail, touches no order
+      if (!process.env.SHEET_SECRET) return L.send(res, 200, { ok: false, why: 'no_secret' });
+      const out = await L.sheetMail({ kind: 'status', id: 'MJ-000000-000000-TEST', status: 'Verified', lang: 'bn', to: L.ADMIN_EMAIL, name: 'মা জুয়েলার্স (টেস্ট)',
+        grand: 0, paid: 0, due: 0, method: '', delivery: 'pickup', items: [] });
+      return L.send(res, 200, { ok: !!out.ok, mailed: !!out.mailed, why: out.ok ? (out.mailed ? '' : 'not_sent') : String(out.error || 'script') });
+    }
     const id = String(orderId || '').toUpperCase();
     if (!L.ORDER_RE.test(id)) return L.send(res, 400, { error: 'bad_order' });
     const o = await L.getDoc('orders/' + id);
     if (!o) return L.send(res, 404, { error: 'not_found' });
     if (!o.customer || !o.customer.email) return L.send(res, 200, { ok: true, skipped: 'no_email' });
     const out = await L.sheetMail(L.mailPayload(o, o.status));
-    return L.send(res, 200, { ok: !!out.ok, skipped: out.skipped || undefined });
+    return L.send(res, 200, { ok: !!out.ok, mailed: out.mailed === undefined ? undefined : !!out.mailed, skipped: out.skipped || undefined });
   } catch (e) {
     console.error('notify', e);
     return L.send(res, 500, { error: 'server' });

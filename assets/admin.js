@@ -25,6 +25,12 @@ const A = {
   fix_rules_unknown: ['যাচাই করা যায়নি — নিশ্চিত হতে নতুন firestore.rules আবার Publish করুন', 'Could not check — publish the new firestore.rules again to be sure'],
   fix_ssl_not: ['SSLCZ_STORE_ID ও SSLCZ_STORE_PASSWORD যোগ করলে চালু হবে', 'Turns on after you add SSLCZ_STORE_ID and SSLCZ_STORE_PASSWORD'],
   fix_ssl_err: ['SSLCommerz Store ID / Password গ্রহণ করেনি — ইমেইল থেকে আবার কপি করুন; টেস্ট স্টোর হলে SSLCZ_LIVE = false', 'SSLCommerz refused the Store ID / Password — copy them again from the email; for a test store SSLCZ_LIVE = false'],
+  mt_btn: ['টেস্ট ইমেইল পাঠান (আপনার জিমেইলে)', 'Send a test email (to your Gmail)'], mt_sending: ['পাঠানো হচ্ছে…', 'Sending…'],
+  mt_ok: ['✓ পাঠানো হয়েছে {e}-এ — ইনবক্স না পেলে Spam / Promotions দেখুন। তাহলে গ্রাহকের ইমেইলও যাবে।', '✓ Sent to {e} — if it is not in the inbox, look in Spam / Promotions. Customer emails work the same way.'],
+  mt_not_sent: ['✕ গুগল শিট স্ক্রিপ্ট ইমেইল পাঠাতে পারেনি। Google Sheet → Extensions → Apps Script → ▶ Run → setup চালান এবং “Review permissions → Allow” দিয়ে জিমেইল দিয়ে পাঠানোর অনুমতি দিন। (একই ঠিকানায় এক ঘণ্টায় ৪টির বেশি ইমেইল যায় না — টেস্ট বেশি হলে এক ঘণ্টা পরে আবার চেষ্টা করুন।)',
+    '✕ The Google Sheet script could not send. Open Google Sheet → Extensions → Apps Script → ▶ Run → setup and choose “Review permissions → Allow” so it may send from your Gmail. (At most 4 emails per hour go to one address — after many tests, wait an hour.)'],
+  mt_fail: ['✕ পাঠানো যায়নি', '✕ Could not send'], mt_forbidden: ['✕ অ্যাডমিন যাচাই হয়নি — আবার লগইন করুন', '✕ Admin check failed — sign in again'],
+  mail_not_sent: ['স্ট্যাটাস সেভ হয়েছে, কিন্তু গ্রাহকের ইমেইল যায়নি — সেটিংস → টেস্ট ইমেইল দেখুন', 'Status saved, but the customer email was not sent — see Settings → test email'],
   fix_mail_old: ['গুগল শিটে পুরোনো Apps Script চলছে — Extensions → Apps Script-এ নতুন Code.gs পুরোটা পেস্ট করুন, SECRET বসান, তারপর Deploy → Manage deployments → ✏️ → New version → Deploy (ইমেইল পাঠানোর অনুমতি দিন)', 'The Google Sheet still runs the old Apps Script — paste the new Code.gs, set SECRET, then Deploy → Manage deployments → ✏️ → New version → Deploy (allow sending email)'],
   fix_mail_secret: ['Apps Script-এর SECRET আর Vercel-এর SHEET_SECRET মেলেনি — দুটো হুবহু এক করুন (Apps Script-এ বদলালে New version Deploy করুন; Vercel-এ বদলালে Redeploy)', 'The Apps Script SECRET and Vercel SHEET_SECRET differ — make them identical (new Apps Script version / Vercel redeploy after changing)'],
   fix_mail_net: ['গুগল শিট স্ক্রিপ্টে পৌঁছানো যায়নি — Deploy-এর সময় “Who has access: Anyone” দেওয়া আছে কিনা দেখুন', 'Could not reach the Google Sheet script — check the deployment has “Who has access: Anyone”'],
@@ -437,7 +443,7 @@ $('#orderList').addEventListener('click', async e => {
     try {
       await fb.setOrderStatus(o.id, S, extra, pub); MJ.toast(a('status_set'));
       if (o.customer && o.customer.email && fb.idToken) fb.idToken().then(tk => fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: o.id, idToken: tk }) }))
-        .then(r => r && r.json()).then(j => { if (j && j.ok && !j.skipped) MJ.toast('✉ ' + a('mailed')); }).catch(() => {});
+        .then(r => r && r.json()).then(j => { if (j && j.ok && !j.skipped) MJ.toast(j.mailed === false ? '⚠ ' + a('mail_not_sent') : '✉ ' + a('mailed'), j.mailed === false); }).catch(() => {});
     } catch (err) { fail(err); st.disabled = false; }
     return;
   }
@@ -593,8 +599,21 @@ function renderSetup() {
       c.mail === 'ok' || c.mail === 'set' ? '' : a({ not_set: 'fix_mail', old_script: 'fix_mail_old', secret_mismatch: 'fix_mail_secret' }[c.mail] || 'fix_mail_net')),
     row(a('ck_sms'), c.sms === 'on' ? true : null, c.sms === 'on' ? '' : a('fix_sms'))
   ].join('');
-  host.innerHTML = `<div class="card-h"><h3>${a('setup_h')}</h3><button class="a-btn small" type="button" id="setupRe" ${setupBusy ? 'disabled' : ''}>${a('setup_re')}</button></div><div class="cks">${body}</div>`;
+  host.innerHTML = `<div class="card-h"><h3>${a('setup_h')}</h3><button class="a-btn small" type="button" id="setupRe" ${setupBusy ? 'disabled' : ''}>${a('setup_re')}</button></div><div class="cks">${body}</div>
+    <div class="mailtest"><button class="a-btn small gold" type="button" id="mailTest">✉ ${a('mt_btn')}</button><p class="muted small" id="mailTestRes">${esc(mailTestMsg)}</p></div>`;
   $('#setupRe').onclick = runSetup;
+  $('#mailTest').onclick = mailTest;
+}
+let mailTestMsg = '';
+async function mailTest() {
+  const b = $('#mailTest'); b.disabled = true; mailTestMsg = a('mt_sending'); $('#mailTestRes').textContent = mailTestMsg;
+  try {
+    const tk = await fb.idToken();
+    const r = await fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ test: true, idToken: tk }) });
+    const j = await r.json().catch(() => ({}));
+    mailTestMsg = j.mailed ? a('mt_ok', { e: (user && user.email) || 'Gmail' }) : j.why === 'not_sent' ? a('mt_not_sent') : j.why === 'no_secret' ? a('fix_mail') : r.status === 403 ? a('mt_forbidden') : a('mt_fail') + ' (' + (j.why || j.error || r.status) + ')';
+  } catch (e) { mailTestMsg = a('ck_net'); }
+  renderSetup();
 }
 
 /* ---------- settings ---------- */
