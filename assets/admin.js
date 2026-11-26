@@ -13,6 +13,14 @@ const { esc, money, dg, fdate, ftime, toNum, CARATS, CATS, GRAM } = MJ;
 
 /* ---------- admin text (Bangla / English) ---------- */
 const A = {
+  sms_h: ['স্বয়ংক্রিয় পেমেন্ট যাচাই (SMS) — ফ্রি', 'Automatic payment check (SMS) — free'],
+  sms_on: ['চালু', 'On'], sms_off: ['বন্ধ — সেটআপ বাকি', 'Off — setup needed'],
+  sms_p: ['দোকানের ফোনে বিকাশ / নগদ / ব্যাংকের “টাকা পেয়েছেন” SMS এলে TrxID ও টাকার পরিমাণ মিলিয়ে অর্ডার নিজে থেকে যাচাই হয়, ক্রেতার চালান খুলে যায় ও ইমেইল যায়। প্রেরকের নম্বর না মিললে বা টাকা কম হলে আপনাকে হাতে দেখতে বলা হবে।',
+    'When a bKash / Nagad / bank “money received” SMS reaches the shop phone, the order with the same TrxID and amount is verified automatically — the invoice unlocks and the customer gets an email. If the sender number differs or the amount is short, it waits for you.'],
+  sms_url: ['SMS ফরওয়ার্ডার অ্যাপে এই লিংক দিন', 'Put this link in the SMS forwarder app'], sms_secret: ['আপনার-SECRET', 'YOUR-SECRET'],
+  sms_recent: ['সাম্প্রতিক পেমেন্ট SMS', 'Recent payment SMS'], sms_none: ['এখনো কোনো SMS আসেনি', 'No payment SMS yet'], sms_wait: ['অর্ডারের অপেক্ষায়', 'Waiting for an order'],
+  auto_ok: ['স্বয়ংক্রিয় যাচাই', 'Auto-verified'], sms_sender_bad: ['প্রেরকের নম্বর মেলেনি — দেখে যাচাই করুন', 'sender number differs — check and verify'],
+  sms_amt_bad: ['SMS-এ টাকা কম', 'SMS amount is short'],
   dash: ['ড্যাশবোর্ড', 'Dashboard'], rates: ['বাজুস দর', 'BAJUS rates'], orders: ['অর্ডার', 'Orders'], products: ['পণ্য', 'Products'],
   pos: ['দোকানে বিক্রি', 'In-store sale'], settings: ['সেটিংস', 'Settings'], view_site: ['ওয়েবসাইট দেখুন ↗', 'View website ↗'], logout: ['লগ আউট', 'Log out'],
   login_h: ['অ্যাডমিন লগইন', 'Admin sign in'], email: ['ইমেইল', 'Email'], password: ['পাসওয়ার্ড', 'Password'], login: ['লগইন', 'Sign in'],
@@ -77,6 +85,7 @@ let seenIds = null, users = [], custFilter = 'all', custQ = '';
 /* smooth rendering: only the visible tab is redrawn, at most once per frame; hidden tabs catch up when opened */
 let ordersLoaded = false, orderLimit = 40, dashSettled = false;
 const freshIds = new Map();
+let smsLog = null, autoOn = null;
 const dirty = new Set();
 const shown = (name) => { if (view === name) return true; dirty.add(name); return false; };
 let rq = 0;
@@ -139,6 +148,8 @@ function startApp() {
   fb.onSettings(st => { settings = st || {}; MJ.setSettings(settings); renderSettings(); });
   fb.onProducts(list => { fsProducts = list || []; if (fsProducts.length) MJ.setCatalog(fsProducts); renderProducts(); renderPosPick(); });
   if (fb.onUsers) fb.onUsers(list => { users = list || []; refresh(); });
+  if (fb.onSmsLog) fb.onSmsLog(list => { smsLog = list; renderSms(); });
+  fetch('/api/pay/config', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { autoOn = !!(j && j.auto); }).catch(() => { autoOn = false; }).then(renderSms);
   fb.onOrders((list, err) => {
     if (!list) { if (err) fail(err); return; }
     const fresh = seenIds ? list.filter(o => !seenIds.has(o.id) && o.source !== 'shop') : [];
@@ -169,7 +180,7 @@ function renderShell() {
   $('#posMethod').innerHTML = ['cash', 'bkash', 'nagad', 'qr', 'none'].map(m => `<option value="${m}">${m === 'none' ? a('none') : MJ.t('m_' + m)}</option>`).join('');
   $('#posStatus').innerHTML = ['Delivered', 'Verified', 'Not paid'].map(s => `<option value="${s}">${MJ.t(MJ.ST_KEY[s])}</option>`).join('');
   $$('.view').forEach(v => { v.hidden = v.dataset.view !== view; });
-  updBadge(); renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderPosPick(); MJ.renderPOS(); posMethodUI();
+  updBadge(); renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderSms(); renderPosPick(); MJ.renderPOS(); posMethodUI();
 }
 function renderVerifyBanner() {
   const b = $('#verifyBanner');
@@ -359,7 +370,7 @@ function orderCard(o) {
     <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) + ' · ' + ftime(o.createdAt) : ''} · ${o.source === 'shop' ? a('shop') : a('web')}</small></div>${stBadge(o.status)}</header>
     <div class="ord-b">
       <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span>${c.email ? `<a class="em" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}<small>${esc(c.addr || '')}</small></div>
-      <div class="tags2"><span class="tg">${o.delivery && o.delivery.method === 'home' ? '🚚 ' + a('dl_home') + (o.delivery.fee ? ' · ' + money(o.delivery.fee) : '') : '🏬 ' + a('dl_pickup')}</span>${o.plan ? `<span class="tg">${a('plan_' + o.plan)}</span>` : ''}${P.method === 'ssl' ? `<span class="tg blue">${a('online')}</span>` : ''}</div>
+      <div class="tags2"><span class="tg">${o.delivery && o.delivery.method === 'home' ? '🚚 ' + a('dl_home') + (o.delivery.fee ? ' · ' + money(o.delivery.fee) : '') : '🏬 ' + a('dl_pickup')}</span>${o.plan ? `<span class="tg">${a('plan_' + o.plan)}</span>` : ''}${P.method === 'ssl' ? `<span class="tg blue">${a('online')}</span>` : ''}${smsChip(o)}</div>
       <ul class="its">${(o.items || []).map(l => `<li><span>${l.custom ? '<em class="cust">✎</em> ' : ''}${esc(title(l))}${(+l.qty || 1) > 1 ? ' × ' + dg(l.qty) : ''} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b>${l.desc ? `<p class="idesc">${esc(l.desc)}</p>` : ''}${(l.refs || []).length ? `<div class="arefs">${l.refs.map(r => `<button type="button" class="aref" data-img><img src="${r}" alt="${a('refs')}"></button>`).join('')}</div>` : ''}</li>`).join('')}</ul>
       <div class="payx">
         <div><small>${MJ.t('grand')}</small><b>${money(o.grand)}</b></div>
@@ -524,6 +535,24 @@ $('#posCreate').addEventListener('click', async e => {
   MJ.clearPOS(); $('#posAmt').value = ''; delete $('#posAmt').dataset.touched; $('#posTrx').value = '';
 });
 $('#posClear').addEventListener('click', () => { MJ.clearPOS(); $('#posAmt').value = ''; delete $('#posAmt').dataset.touched; });
+
+/* ---------- free automatic payment check (payment SMS from the shop phone) ---------- */
+function smsChip(o) {
+  const m = o.sms; if (!m) return '';
+  const bad = m.check === 'sender' ? a('sms_sender_bad') : m.check === 'amount' ? a('sms_amt_bad') : '';
+  return `<span class="tg ${bad ? 'warn' : 'green'}">${o.verifiedBy === 'sms' ? '⚡ ' + a('auto_ok') + ' · ' : '✉ '}SMS ${money(m.amount || 0)}${m.sender ? ' · ' + esc(dg(m.sender)) : ''}${bad ? ' · ' + bad : ''}</span>`;
+}
+function renderSms() {
+  const host = $('#smsCard'); if (!host) return;
+  const st = autoOn == null ? '' : `<span class="tg ${autoOn ? 'green' : 'warn'}">${autoOn ? '● ' + a('sms_on') : '○ ' + a('sms_off')}</span>`;
+  const res = (x) => x.order ? `<span class="mono">${esc(x.order)}</span> · ${MJ.t(MJ.ST_KEY[x.result] || 'st_pending')}` : `<span class="muted">${a('sms_wait')}</span>`;
+  const rows = smsLog == null ? `<p class="muted small">—</p>` : !smsLog.length ? `<p class="muted small">${a('sms_none')}</p>`
+    : `<div class="sms-log">${smsLog.map(x => `<div class="sl"><small>${x.at ? fdate(x.at) + ' · ' + ftime(x.at) : ''} · ${esc(x.provider || '')}</small><b>${money(x.amount || 0)}</b><span class="mono">${esc(x.trx || x.id)}</span><span>${res(x)}</span></div>`).join('')}</div>`;
+  host.innerHTML = `<div class="card-h"><h3>${a('sms_h')}</h3>${st}</div>
+    <p class="muted small">${a('sms_p')}</p>
+    <div class="sms-url"><small>${a('sms_url')}</small><code>${esc(location.origin)}/api/sms?key=<i>${a('sms_secret')}</i></code></div>
+    <h4 class="sms-sub">${a('sms_recent')}</h4>${rows}`;
+}
 
 /* ---------- settings ---------- */
 let setDirty = false;

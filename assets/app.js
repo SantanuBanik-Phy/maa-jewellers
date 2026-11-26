@@ -30,6 +30,7 @@ const CONFIG = {
   lockMinutes: 15,                    // checkout price lock
   deliveryFee: 150,                   // home delivery charge (admin can change)
   advancePct: 30,                     // advance % for custom-design orders (admin can change)
+  mfsMax: 50000,                      // bKash / Nagad Send Money: most a customer can send in one day (Bangladesh Bank limit)
   codOn: true,                        // allow cash on delivery (admin can change)
   liveEverySec: 60,                   // international price refresh
   fxEveryMin: 30
@@ -204,6 +205,8 @@ bn: {
   scan_due: 'বাকি পরিশোধে স্ক্যান করুন', we_accept: 'আমরা গ্রহণ করি', pay_cash_m: 'দোকানে নগদ',
   k_pay: 'Easy payment', pay_h: 'সহজ ও নিরাপদ পেমেন্ট', pay_hd: 'বিকাশ, নগদ অথবা যেকোনো ব্যাংক অ্যাপে বাংলা কিউআর স্ক্যান করে পরিশোধ করুন।',
   pay_send_money: 'Send Money', pay_any_app: 'সেলফিন, NPSB, ভিসা, মাস্টারকার্ড সহ যেকোনো অ্যাপ', pay_go: 'পেমেন্ট পাতায় যান',
+  mfs_max: 'সর্বোচ্চ {m}', mfs_limit: 'বিকাশ ও নগদে দিনে সর্বোচ্চ {m} পাঠানো যায় — এই অঙ্কের জন্য বাংলা কিউআর (যেকোনো ব্যাংক অ্যাপ) বেছে নিন, অথবা দোকানে এসে পরিশোধ করুন।',
+  verify_auto: 'টাকা দোকানের নম্বরে পৌঁছালেই আপনার TrxID মিলিয়ে স্বয়ংক্রিয়ভাবে যাচাই হবে — সাধারণত ১–২ মিনিটে চালান খুলে যায়।',
   tr1: 'বাজুস দরে বিক্রি', tr2: 'বিকাশ · নগদ · বাংলা কিউআর', tr3: 'হোয়াটসঅ্যাপ সাপোর্ট', tr4: 'প্রতিটি কেনায় চালান',
   q5: 'কীভাবে পেমেন্ট করব?', a5: 'বিকাশ (০১৮১৯-৫০৮১২৭), নগদ (০১৭৫৮-১৭৮৮৮০), ইসলামী ব্যাংকের বাংলা কিউআর — যেকোনো ব্যাংক বা MFS অ্যাপে স্ক্যান করে, অথবা দোকানে নগদ। পেমেন্ট পাতায় ধাপে ধাপে নির্দেশনা আছে।',
   wa_pay: 'পেমেন্ট সম্পন্ন',
@@ -396,6 +399,8 @@ en: {
   scan_due: 'Scan to pay the balance', we_accept: 'We accept', pay_cash_m: 'Cash at shop',
   k_pay: 'Easy payment', pay_h: 'Easy, secure payment', pay_hd: 'Pay with bKash, Nagad, or scan our Bangla QR with any bank app.',
   pay_send_money: 'Send Money', pay_any_app: 'Cellfin, NPSB, Visa, Mastercard and any Bangla QR app', pay_go: 'Go to payment',
+  mfs_max: 'Up to {m}', mfs_limit: 'bKash and Nagad allow at most {m} a day — for this amount choose Bangla QR (any bank app), or pay at the shop.',
+  verify_auto: 'As soon as the money reaches the shop, your TrxID is matched automatically — the invoice usually unlocks within 1–2 minutes.',
   tr1: 'Sold at BAJUS rate', tr2: 'bKash · Nagad · Bangla QR', tr3: 'WhatsApp support', tr4: 'Invoice with every purchase',
   q5: 'How can I pay?', a5: 'bKash (01819-508127), Nagad (01758-178880), Islami Bank Bangla QR — scan with any bank or MFS app — or cash at the shop. The payment page has step-by-step instructions.',
   wa_pay: 'Payment made',
@@ -1510,7 +1515,7 @@ function invoiceMsg() {
    ===================================================================== */
 const METHODS = ['bkash', 'nagad', 'qr', 'cash'];
 const ONLINE = ['ssl', 'bkash', 'nagad', 'qr'];
-let sslOn = false;
+let sslOn = false, autoOn = false;
 let payState = Object.assign({ method: 'bkash', plan: 'full', delivery: 'pickup', trx: '', sender: '' }, LS.get('mj_pay', {}));
 if (!ONLINE.includes(payState.method)) payState.method = 'bkash';
 if (!['full', 'advance', 'cod', 'shop'].includes(payState.plan)) payState.plan = 'full';
@@ -1540,6 +1545,15 @@ function normalizePlan() {
   const o = planOptions();
   if (!o.includes(payState.plan)) payState.plan = 'full';
   if (payState.method === 'ssl' && !sslOn) payState.method = 'bkash';
+  if (isMfs(payState.method) && mfsOver(totals())) payState.method = sslOn ? 'ssl' : 'qr';
+}
+const isMfs = (m) => m === 'bkash' || m === 'nagad';
+const mfsOver = (T) => planOnline() && payAmount(T) > CONFIG.mfsMax;
+/* free automatic check: ask the server to match this order's TrxID with the payment SMS the shop phone received */
+const matchAsked = {};
+function askMatch(no) {
+  if (!no || matchAsked[no]) return; matchAsked[no] = true;
+  fetch('/api/pay/match', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: no }), keepalive: true }).catch(() => {});
 }
 const planOnline = () => payState.plan === 'full' || payState.plan === 'advance';
 function payAmount(T) {
@@ -1560,7 +1574,7 @@ function trxFields(withSender) {
   return `<div class="fgrid">
     ${withSender ? `<div><label class="lbl" for="paySender">${t('sender')}</label><div class="in"><input id="paySender" data-p="sender" type="tel" inputmode="tel" autocomplete="tel" value="${esc(payState.sender)}" placeholder="${t('sender_ph')}"></div></div>` : ''}
     <div class="${withSender ? '' : 'full'}"><label class="lbl" for="payTrx">${t('trx')}</label><div class="in"><input id="payTrx" data-p="trx" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" value="${esc(payState.trx)}" placeholder="${t('trx_ph')}"></div></div>
-  </div><p class="hint">${ICON.lock.replace('<svg', '<svg style="display:inline;width:13px;height:13px;vertical-align:-2px;margin-right:4px"')}${t('verify_note')}</p>`;
+  </div><p class="hint">${ICON.lock.replace('<svg', '<svg style="display:inline;width:13px;height:13px;vertical-align:-2px;margin-right:4px"')}${withSender && autoOn ? t('verify_auto') : t('verify_note')}</p>`;
 }
 function panelHTML(T) {
   const a = money(payAmount(T));
@@ -1644,6 +1658,7 @@ function renderCheckout() {
   const planTile = (p) => tile('plan', p, payState.plan === p, { full: ICON.card, advance: ICON.coins, cod: ICON.truck, shop: ICON.store }[p],
     p === 'advance' ? t('plan_adv', { p: pct(CONFIG.advancePct) }) : t('plan_' + p), t('plan_' + (p === 'advance' ? 'adv' : p) + '_d'));
   const methods = (sslOn ? ['ssl'] : []).concat(['bkash', 'nagad', 'qr']);
+  const over = mfsOver(T);
   host.innerHTML = `<div class="lockbar glass" id="lockBar"><span class="ic">${ICON.lock}</span><div><b>${t('lock_h')}</b><small>${t('lock_d', { m: dg(CONFIG.lockMinutes) })}</small></div>
       <div class="lock-r"><span class="lock-t" id="lockT">--:--</span><small>${t('lock_left')}</small></div><div class="lock-prog"><i id="lockP"></i></div></div>
     <div class="co-grid">
@@ -1665,7 +1680,8 @@ function renderCheckout() {
         <div class="tiles ${plans.length > 2 ? 'three' : 'two'}">${plans.map(planTile).join('')}</div>
       </div>
       ${planOnline() ? `<div class="co-card glass"><h3 class="co-h"><i>${dg(4)}</i>${t('co_s4')}</h3>
-        <div class="methods" role="radiogroup" aria-label="${t('m_h')}">${methods.map(m => `<div class="method ${m === 'ssl' ? 'feat' : ''}"><input type="radio" name="pm" id="pm_${m}" value="${m}" ${payState.method === m ? 'checked' : ''}><label for="pm_${m}">${mlogo(m)}<b>${t('m_' + m)}</b><small>${t('m_' + m + '_d')}</small></label></div>`).join('')}</div>
+        <div class="methods" role="radiogroup" aria-label="${t('m_h')}">${methods.map(m => { const off = isMfs(m) && over; return `<div class="method ${m === 'ssl' ? 'feat' : ''} ${off ? 'off' : ''}"><input type="radio" name="pm" id="pm_${m}" value="${m}" ${payState.method === m ? 'checked' : ''} ${off ? 'disabled' : ''}><label for="pm_${m}">${mlogo(m)}<b>${t('m_' + m)}</b><small>${off ? t('mfs_max', { m: money(CONFIG.mfsMax) }) : t('m_' + m + '_d')}</small></label></div>`; }).join('')}</div>
+        ${over ? `<p class="co-note mfs-lim">${ICON.shield}<span>${t('mfs_limit', { m: money(CONFIG.mfsMax) })}</span></p>` : ''}
       </div>` : ''}
       <div class="co-card glass" id="coPanel">${panelHTML(T)}</div>
     </div>
@@ -1687,6 +1703,7 @@ function payValid(T) {
   if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { toast(t('bad_email'), true); focusField('#cEmail'); return false; }
   if (payState.delivery === 'home' && String(buyer.addr || '').trim().length < 8) { toast(t('need_addr'), true); focusField('#cAddr'); return false; }
   if (planOnline() && !(payAmount(T) > 0)) { toast(t('t_amt'), true); return false; }
+  if (isMfs(payState.method) && mfsOver(T)) { toast(t('mfs_limit', { m: money(CONFIG.mfsMax) }), true); return false; }
   if (planOnline() && payState.method !== 'ssl' && !/^[A-Za-z0-9]{6,20}$/.test(String(payState.trx).trim())) { toast(t('t_trx'), true); focusField('#payTrx'); return false; }
   return true;
 }
@@ -1714,7 +1731,7 @@ async function startSsl(orderId) {
   return false;
 }
 function loadSslConfig() {
-  return fetch('/api/pay/config', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { sslOn = !!(j && j.ssl); }).catch(() => { sslOn = false; })
+  return fetch('/api/pay/config', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { sslOn = !!(j && j.ssl); autoOn = !!(j && j.auto); }).catch(() => { sslOn = false; autoOn = false; })
     .then(() => { if (PAGE === 'pay') { if (sslOn && !LS.get('mj_pay', null)) payState.method = 'ssl'; renderCheckout(); } if (PAGE === 'invoice') renderInvoice(); const f = $('#footAccept'); if (f) f.innerHTML = payBadges(); });
 }
 function bindCheckout() {
@@ -1741,7 +1758,7 @@ function bindCheckout() {
         cb.disabled = true; lbl.textContent = t('placing');
         fbMod.placeOrder(orderDoc(inv)).then(async r => {
           if (r && r.dup) { cb.disabled = false; lbl.textContent = old; toast(t('t_dup'), true); focusField('#payTrx'); return; }
-          if (r && r.ok) inv.cloud = true;
+          if (r && r.ok) { inv.cloud = true; if (pay.trx) askMatch(inv.no); }
           else { const q = LS.get('mj_fb_outbox', []); q.push(orderDoc(inv)); LS.set('mj_fb_outbox', q); toast(t('order_saved_local'), true); }
           if (ssl && inv.cloud) {
             commitInvoice(inv, { currentTarget: cb }, { noNav: true }); lbl.textContent = t('redirecting');
@@ -2232,6 +2249,7 @@ function watchInvoice() {
   watchStatus(invoice.no, st => {
     const wasLocked = invLocked(invoice);
     liveStatus = st;
+    if (st && st.status === 'Pending' && invoice.pay && ['bkash', 'nagad', 'qr'].includes(invoice.pay.method) && invoice.pay.trx) askMatch(invoice.no);
     if (st && st.status) {
       invoice.status = st.status;
       if (invoice.pay && st.paid != null) { invoice.pay.amount = +st.paid || 0; invoice.pay.due = +st.due || 0; if (st.method) invoice.pay.method = st.method; }

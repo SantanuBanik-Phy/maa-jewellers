@@ -7,6 +7,7 @@
  *   SSLCZ_LIVE                 "true" for real payments, anything else = sandbox (test cards)
  *   SHEET_URL                  optional — Google Apps Script /exec URL (for emails); defaults to the site's
  *   SHEET_SECRET               optional — same value as SETTINGS.SECRET in Code.gs (for emails)
+ *   SMS_SECRET                 optional — key the shop phone's SMS forwarder sends to /api/sms (defaults to SHEET_SECRET)
  * Underscore files in /api are helpers, not endpoints.
  */
 'use strict';
@@ -149,6 +150,67 @@ function mailPayload(o, status, extra) {
   }, extra || {});
 }
 
+/* ---------- free automatic check of bKash / Nagad / Bangla QR payments ----------
+ * The shop phone forwards every "money received" SMS to /api/sms. The server keeps it in smsPay/{TRXID}
+ * and, when an order with the same TrxID exists, marks it paid (amount and sender number must agree). */
+const smsSecret = () => String(process.env.SMS_SECRET || process.env.SHEET_SECRET || '');
+const smsConfigured = () => !!(serviceAccount() && smsSecret().length >= 8 && !/^CHANGE-THIS/.test(smsSecret()));
+function safeEq(a, b) {
+  const x = Buffer.from(String(a || '')), y = Buffer.from(String(b || ''));
+  return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
+}
+/* Only alphanumeric sender IDs of the payment companies count — an SMS typed by a person comes from a phone number */
+function trustedSender(from) {
+  const f = String(from || '').trim();
+  if (!f || /^\+?\d{10,}$/.test(f.replace(/[\s-]/g, ''))) return false;   // a personal phone number is never trusted
+  return /bkash|nagad|ibbl|islami|cellfin/i.test(f) || /^(16247|16167)$/.test(f);
+}
+function parseSms(text, from) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  const all = String(from || '') + ' ' + t;
+  const provider = /bkash/i.test(all) ? 'bKash' : /nagad/i.test(all) ? 'Nagad' : /islami|ibbl|cellfin|qr/i.test(all) ? 'Bangla QR' : 'Other';
+  const incoming = /(received|credited|cash ?in|deposit|payment received|জমা|পেয়েছেন)/i.test(t) &&
+    !/(you have sent|send money to|cash ?out|payment to|paid to|debited)/i.test(t);
+  const trxM = t.match(/(?:Trx\s*ID|TrxId|TxnID|Txn\s*ID|Transaction\s*ID|Trans\.?\s*ID|TXN)\s*[:.#\-]?\s*([A-Z0-9]{6,20})/i);
+  const amtM = t.match(/(?:received|credited|amount|tk\.?|bdt|৳)[^0-9]{0,24}([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
+  const sndM = t.match(/(?:from|sender|by)\s*[:\-]?\s*(?:a\/c\s*)?(?:\+?88)?(01[3-9][0-9]{8})/i) || t.match(/(?:\+?88)?(01[3-9][0-9]{8})/);
+  return { provider, incoming, trx: trxM ? trxM[1].toUpperCase() : '', amount: amtM ? parseFloat(amtM[1].replace(/,/g, '')) : 0, sender: sndM ? sndM[1] : '' };
+}
+const MFS = ['bkash', 'nagad', 'qr'];
+const OPEN_ST = ['Pending', 'Amount mismatch'];
+const PAID_ST = ['Verified', 'Advance paid'];
+const last11 = (s) => String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g, '').slice(-11);
+async function matchPayment(id, smsDoc) {
+  const o = await getDoc('orders/' + id);
+  if (!o) return { ok: false, why: 'no_order' };
+  const pay = o.pay || {}, trx = String(pay.trx || '').toUpperCase();
+  if (!trx || !MFS.includes(pay.method)) return { ok: false, why: 'not_mfs' };
+  if (!OPEN_ST.includes(o.status)) return { ok: true, status: o.status, already: true };
+  const s = smsDoc || await getDoc('smsPay/' + trx);
+  if (!s) return { ok: false, why: 'no_sms', status: o.status };
+  if (s.order && s.order !== id) return { ok: false, why: 'sms_used', status: o.status };
+  const need = Math.round(+pay.amount || 0), got = +s.amount || 0;
+  const senderOk = !pay.sender || !s.sender || last11(pay.sender) === last11(s.sender);
+  const check = got + 1 < need ? 'amount' : !senderOk ? 'sender' : 'ok';
+  const status = check === 'amount' ? 'Amount mismatch' : check === 'sender' ? 'Pending' : (+pay.due || 0) > 0 ? 'Advance paid' : 'Verified';
+  const now = Date.now();
+  const upd = { sms: { amount: got, sender: s.sender || '', provider: s.provider || '', at: s.at || now, check } };
+  if (status !== o.status) Object.assign(upd, { status, statusAt: now });
+  if (PAID_ST.includes(status)) Object.assign(upd, { verifiedAt: now, verifiedBy: 'sms' });
+  await patchDoc('smsPay/' + trx, { order: id, result: status, matchedAt: now });
+  await patchDoc('orders/' + id, upd);
+  if (status !== o.status) await patchDoc('orderStatus/' + id, { status, updatedAt: now });
+  if (PAID_ST.includes(status)) await sheetMail(mailPayload(Object.assign({ id }, o), status, { kind: 'paid', trx }));
+  return { ok: true, status, check };
+}
+/* keep the Google Sheet's "Payments (SMS)" tab filled too (optional) */
+async function sheetSms(from, text) {
+  const url = process.env.SHEET_URL || DEFAULT_SHEET, key = process.env.SHEET_SECRET;
+  if (!url || !key || /^CHANGE-THIS/.test(key)) return false;
+  try { await _fetch(url, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'sms', key, from, text }), redirect: 'follow' }); return true; }
+  catch (e) { return false; }
+}
+
 /* ---------- http helpers ---------- */
 function send(res, code, obj) { res.statusCode = code; res.setHeader('content-type', 'application/json'); res.setHeader('cache-control', 'no-store'); res.end(JSON.stringify(obj)); }
 function redirect(res, url) { res.statusCode = 303; res.setHeader('location', url); res.setHeader('cache-control', 'no-store'); res.end(); }
@@ -164,4 +226,5 @@ async function body(req) {
 }
 
 module.exports = { ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, getDoc, listDocs, patchDoc, verifyOrder,
-  verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a) };
+  verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a),
+  smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms };

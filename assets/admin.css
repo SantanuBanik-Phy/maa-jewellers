@@ -188,6 +188,14 @@ body.admin [hidden]{display:none!important}
 .tags2{display:flex;flex-wrap:wrap;gap:6px}
 .tg{font-size:12px;padding:3px 10px;border-radius:999px;background:#fbf6ea;border:1px solid var(--a-line)}
 .tg.blue{background:#e8f0fc;border-color:#bcd2f3;color:#1f4f99}
+.tg.green{background:#e7f6ea;border-color:#b6e0bf;color:#1d6b33} .tg.warn{background:#fdf0e1;border-color:#f1cf9f;color:#8a4b06}
+.sms-card{margin-top:18px} .sms-sub{margin:16px 0 8px;font:600 15px 'Hind Siliguri','Jost',sans-serif}
+.sms-url{display:grid;gap:4px;margin-top:10px} .sms-url code{display:block;padding:10px 12px;border-radius:12px;background:#fbf6ea;border:1px dashed var(--a-line);font:500 13px ui-monospace,Consolas,monospace;word-break:break-all}
+.sms-url code i{color:#a2731a;font-style:normal;font-weight:700}
+.sms-log{display:grid;gap:6px} .sms-log .sl{display:grid;grid-template-columns:1.3fr .8fr 1fr 1.4fr;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--a-line);border-radius:12px;font-size:13px}
+.sms-log .sl small{color:var(--a-mut)}
+@media (max-width:640px){.sms-log .sl{grid-template-columns:1fr 1fr}}
+body.admin.dark .sms-url code{background:#241c12} body.admin.dark .tg.green{background:#183222;color:#8fd6a3;border-color:#2c5a3a} body.admin.dark .tg.warn{background:#3a2610;color:#f3c27f;border-color:#6a4818}
 .arefs{grid-column:1/-1;display:flex;gap:6px;margin:4px 0 6px}
 .aref{width:58px;height:58px;padding:0;border-radius:10px;overflow:hidden;border:1px solid var(--a-line);cursor:zoom-in;background:#fff}
 .aref img{width:100%;height:100%;object-fit:cover}

@@ -43,6 +43,10 @@
 
 ## ধাপ ৩ — SMS দিয়ে স্বয়ংক্রিয় TrxID যাচাই (দোকানের Android ফোন)
 
+> **নতুন (নভেম্বর ২০২৬):** এখন অর্ডার Firebase-এ থাকে, তাই ফরওয়ার্ডারের লিংক হবে ওয়েবসাইটের —
+> `https://maa-jewellers-shop.vercel.app/api/sms?key=আপনার-SECRET` (PAYMENTS-EMAIL-SETUP.md → সেকশন F)।
+> ওয়েবসাইট অর্ডার যাচাই করবে এবং SMS-টি এই শিটের Payments (SMS) ট্যাবেও পাঠিয়ে দেবে। নিচের পুরোনো লিংক আর দরকার নেই।
+
 যে ফোনে বিকাশ / নগদ / ব্যাংকের টাকা আসার SMS আসে, সেই ফোনে:
 
 1. Play Store থেকে একটি **SMS forwarder (webhook)** অ্যাপ ইনস্টল করুন — যেমন **“SMS to URL Forwarder”**

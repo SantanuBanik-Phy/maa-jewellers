@@ -27,9 +27,15 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 
 ## Server (Vercel functions, `api/`, no npm deps)
 - `api/_lib.js` helpers (service-account JWT → Firestore REST, price re-check, admin ID-token check, Apps Script mail).
-- `api/pay/config` (is SSL on), `api/pay/init` (re-checks price, opens SSLCommerz session), `api/pay/callback?r=success|fail|cancel|ipn`
+- `api/pay/config` (is SSL on, is SMS auto-check on), `api/pay/init` (re-checks price, opens SSLCommerz session), `api/pay/callback?r=success|fail|cancel|ipn`
   (validates with SSLCommerz, marks order + orderStatus paid, emails), `api/notify` (admin status change → customer email).
-- Env vars on Vercel: FIREBASE_SERVICE_ACCOUNT, SSLCZ_STORE_ID, SSLCZ_STORE_PASSWORD, SSLCZ_LIVE, SHEET_SECRET (= Code.gs SECRET). See PAYMENTS-EMAIL-SETUP.md.
+- Free auto-check (no gateway): the shop phone's SMS forwarder posts every SMS to `api/sms?key=SMS_SECRET|SHEET_SECRET`.
+  Only alphanumeric sender IDs (bKash/NAGAD/IBBL…) count; "money received" SMS → `smsPay/{TRXID}` → matched through `trx/{TRXID}`
+  (`L.matchPayment`): amount ≥ order pay.amount and same sender number → Verified / Advance paid (`verifiedBy:'sms'`, `sms{}` on the order),
+  short → Amount mismatch, other sender → stays Pending with `sms.check:'sender'`. The client calls `api/pay/match` after placing a TrxID
+  order and on the invoice while Pending (SMS usually arrives first). Admin Settings shows the SMS log (`fb.onSmsLog`) and order cards a chip.
+- bKash/Nagad Send Money is capped by `CONFIG.mfsMax` (৳50,000/day): checkout disables them above it and steers to Bangla QR / SSL.
+- Env vars on Vercel: FIREBASE_SERVICE_ACCOUNT, SSLCZ_STORE_ID, SSLCZ_STORE_PASSWORD, SSLCZ_LIVE, SHEET_SECRET (= Code.gs SECRET), optional SMS_SECRET. See PAYMENTS-EMAIL-SETUP.md.
 - Test server code with Node and a fake `fetch` (`L.setFetch`) — never call the real gateway or Firebase from tests.
 - Emails are sent by `google-apps-script/Code.gs` (MailApp): order confirmation on new order; `type:'mail'` + secret for updates.
 
@@ -41,7 +47,8 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - `assets/fb.js` — Firebase layer (SDK 12.11.0 from gstatic, loaded on demand). Safe no-op while not configured.
 - `assets/firebase-config.js` — web config + ADMIN_EMAIL (public values; security = `firestore.rules`).
 - `firestore.rules` — paste into Firebase console. Collections: `public/rates`, `public/settings`, `products`,
-  `rateHistory`, `orders` (admin-read only, PII), `orderStatus` (public get, no PII), `trx/{TRXID}` (create-only → no duplicate TrxID).
+  `rateHistory`, `orders` (admin-read only, PII), `orderStatus` (public get, no PII), `trx/{TRXID}` (create-only → no duplicate TrxID),
+  `smsPay/{TRXID}` (server-written payment SMS, admin read).
 - Order id format `MJ-YYMMDD-HHMMSS-XXXX` (rules + Code.gs regex depend on it).
 - Rate priority: Firestore `public/rates` (admin) > `rates.json` > `BUILTIN`. Checkout locks prices for `lockMinutes`.
 - `assets/style.css` — customer design (glass, dark/light, floating cut-diamond canvas `#gems`), print invoice (white · black · gold only)
@@ -63,4 +70,4 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - Test headless (Playwright) at 1440 and 390 widths before pushing; `node --check assets/app.js`.
   For admin/order flows, copy the site and replace `assets/fb.js` with an in-memory mock exporting the same API
   (incl. `setOrderStatus(id, status, extra, pub)`, `idToken()`, and the account functions signUp/signIn/signInGoogle/
-  getProfile/saveProfile/onMyOrders/onUsers with an auth listener list); stub `/api/*` with Playwright routes.
+  getProfile/saveProfile/onMyOrders/onUsers with an auth listener list, onSmsLog); stub `/api/*` with Playwright routes.

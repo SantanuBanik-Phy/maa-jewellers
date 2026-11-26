@@ -71,6 +71,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Payment SMS forwarded from the shop phone (bKash / Nagad / bank). Written only by the server
+    // (api/sms with the service account); the admin can read the log.
+    match /smsPay/{trxId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // One document per used TrxID — create-only, so the same TrxID can never be used twice
     match /trx/{trxId} {
       allow get: if true;

@@ -146,6 +146,11 @@ export async function onOrders(cb) {
   return F.onSnapshot(F.query(F.collection(db, 'orders'), F.orderBy('createdAt', 'desc'), F.limit(500)),
     q => cb(q.docs.map(d => Object.assign({ id: d.id }, plain(d)))), err => cb(null, err));
 }
+export async function onSmsLog(cb) {
+  if (!(await init())) return null;
+  return F.onSnapshot(F.query(F.collection(db, 'smsPay'), F.orderBy('at', 'desc'), F.limit(12)),
+    q => cb(q.docs.map(d => Object.assign({ id: d.id }, plain(d)))), () => cb(null));
+}
 export async function setOrderStatus(id, status, extra, pub) {
   await init();
   const b = F.writeBatch(db);
