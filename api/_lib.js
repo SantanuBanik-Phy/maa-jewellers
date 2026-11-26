@@ -27,8 +27,11 @@ function serviceAccount() {
     return sa && sa.client_email && sa.private_key && sa.project_id ? sa : null;
   } catch (e) { return null; }
 }
-const sslConfigured = () => !!(process.env.SSLCZ_STORE_ID && process.env.SSLCZ_STORE_PASSWORD && serviceAccount());
-const sslLive = () => String(process.env.SSLCZ_LIVE || '').toLowerCase() === 'true';
+/* values pasted into Vercel sometimes carry spaces, line breaks or quote marks — ignore them */
+const envClean = (k) => String(process.env[k] || '').trim().replace(/^["'`]+|["'`]+$/g, '').trim();
+const sslId = () => envClean('SSLCZ_STORE_ID'), sslPass = () => envClean('SSLCZ_STORE_PASSWORD');
+const sslConfigured = () => !!(sslId() && sslPass() && serviceAccount());
+const sslLive = () => envClean('SSLCZ_LIVE').toLowerCase() === 'true';
 const sslHost = () => (sslLive() ? 'https://securepay.sslcommerz.com' : 'https://sandbox.sslcommerz.com');
 
 /* ---------- Google OAuth token from the service account (RS256 JWT) ---------- */
@@ -238,9 +241,9 @@ async function diagnose(base) {
       }
     } catch (e) { out.rules = 'unknown'; }
   }
-  if (process.env.SSLCZ_STORE_ID && process.env.SSLCZ_STORE_PASSWORD) {
+  if (sslId() && sslPass()) {
     try {
-      const form = { store_id: process.env.SSLCZ_STORE_ID, store_passwd: process.env.SSLCZ_STORE_PASSWORD, total_amount: '10.00', currency: 'BDT',
+      const form = { store_id: sslId(), store_passwd: sslPass(), total_amount: '10.00', currency: 'BDT',
         tran_id: 'CHECK-' + Date.now().toString(36).toUpperCase(), success_url: base + '/', fail_url: base + '/', cancel_url: base + '/',
         cus_name: 'Setup check', cus_email: ADMIN_EMAIL, cus_add1: 'Parashuram Bazar', cus_city: 'Feni', cus_postcode: '3940', cus_country: 'Bangladesh',
         cus_phone: '01819508127', shipping_method: 'NO', num_of_item: '1', product_name: 'Setup check', product_category: 'Jewellery', product_profile: 'physical-goods' };
@@ -267,6 +270,6 @@ async function body(req) {
   return {};
 }
 
-module.exports = { ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, getDoc, listDocs, patchDoc, verifyOrder,
+module.exports = { ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, sslId, sslPass, getDoc, listDocs, patchDoc, verifyOrder,
   verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a),
   smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms, diagnose };

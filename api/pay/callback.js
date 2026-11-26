@@ -8,7 +8,7 @@ async function confirm(id, tran, valId) {
   const o = await L.getDoc('orders/' + id);
   if (!o || !o.ssl || o.ssl.tran_id !== tran) return { ok: false, why: 'unknown' };
   if (o.ssl.paid) return { ok: true, already: true };
-  const q = new URLSearchParams({ val_id: valId, store_id: process.env.SSLCZ_STORE_ID, store_passwd: process.env.SSLCZ_STORE_PASSWORD, v: '1', format: 'json' });
+  const q = new URLSearchParams({ val_id: valId, store_id: L.sslId(), store_passwd: L.sslPass(), v: '1', format: 'json' });
   const r = await L.http(L.sslHost() + '/validator/api/validationserverAPI.php?' + q.toString());
   const v = await r.json().catch(() => ({}));
   if (!['VALID', 'VALIDATED'].includes(v.status) || v.tran_id !== tran) return { ok: false, why: 'invalid' };

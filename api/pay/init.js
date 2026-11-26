@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
     const c = o.customer || {}, home = o.delivery && o.delivery.method === 'home';
     const items = o.items || [];
     const form = {
-      store_id: process.env.SSLCZ_STORE_ID, store_passwd: process.env.SSLCZ_STORE_PASSWORD,
+      store_id: L.sslId(), store_passwd: L.sslPass(),
       total_amount: amount.toFixed(2), currency: 'BDT', tran_id: tran,
       success_url: cb('success'), fail_url: cb('fail'), cancel_url: cb('cancel'), ipn_url: cb('ipn'),
       cus_name: String(c.name || 'Customer').slice(0, 50), cus_email: c.email || 'santanubanik2k@gmail.com',
