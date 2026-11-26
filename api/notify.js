@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
       if (!process.env.SHEET_SECRET) return L.send(res, 200, { ok: false, why: 'no_secret' });
       const out = await L.sheetMail({ kind: 'status', id: 'MJ-000000-000000-TEST', status: 'Verified', lang: 'bn', to: L.ADMIN_EMAIL, name: 'মা জুয়েলার্স (টেস্ট)',
         grand: 0, paid: 0, due: 0, method: '', delivery: 'pickup', items: [] });
-      return L.send(res, 200, { ok: !!out.ok, mailed: !!out.mailed, why: out.ok ? (out.mailed ? '' : 'not_sent') : String(out.error || 'script') });
+      return L.send(res, 200, { ok: !!out.ok, mailed: !!out.mailed, why: out.ok ? (out.mailed ? '' : 'not_sent') : String(out.error || 'script'), detail: String(out.mailError || '').slice(0, 220) });
     }
     const id = String(orderId || '').toUpperCase();
     if (!L.ORDER_RE.test(id)) return L.send(res, 400, { error: 'bad_order' });

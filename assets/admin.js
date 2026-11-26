@@ -29,6 +29,12 @@ const A = {
   mt_ok: ['✓ পাঠানো হয়েছে {e}-এ — ইনবক্স না পেলে Spam / Promotions দেখুন। তাহলে গ্রাহকের ইমেইলও যাবে।', '✓ Sent to {e} — if it is not in the inbox, look in Spam / Promotions. Customer emails work the same way.'],
   mt_not_sent: ['✕ গুগল শিট স্ক্রিপ্ট ইমেইল পাঠাতে পারেনি। Google Sheet → Extensions → Apps Script → ▶ Run → setup চালান এবং “Review permissions → Allow” দিয়ে জিমেইল দিয়ে পাঠানোর অনুমতি দিন। (একই ঠিকানায় এক ঘণ্টায় ৪টির বেশি ইমেইল যায় না — টেস্ট বেশি হলে এক ঘণ্টা পরে আবার চেষ্টা করুন।)',
     '✕ The Google Sheet script could not send. Open Google Sheet → Extensions → Apps Script → ▶ Run → setup and choose “Review permissions → Allow” so it may send from your Gmail. (At most 4 emails per hour go to one address — after many tests, wait an hour.)'],
+  mt_reason_permission: ['✕ জিমেইল দিয়ে পাঠানোর অনুমতি নেই — Apps Script-এ testEmail বেছে ▶ Run → Review permissions → Allow দিন, তারপর New version Deploy করুন।', '✕ No permission to send from Gmail — in Apps Script choose testEmail → ▶ Run → Review permissions → Allow, then deploy a New version.'],
+  mt_reason_limit: ['✕ এক ঘণ্টায় একই ঠিকানায় ৪টি ইমেইলের সীমা পূর্ণ — এক ঘণ্টা পরে আবার চেষ্টা করুন।', '✕ The 4-emails-per-hour limit for this address is reached — try again in an hour.'],
+  mt_reason_quota: ['✕ আজকের জিমেইল সীমা (প্রায় ১০০টি) শেষ — আগামীকাল আবার চলবে।', '✕ Today\'s Gmail limit (about 100) is used up — it works again tomorrow.'],
+  mt_reason_off: ['✕ Code.gs-এ CUSTOMER_EMAILS: false করা আছে — true করে New version Deploy করুন।', '✕ CUSTOMER_EMAILS is false in Code.gs — set it to true and deploy a New version.'],
+  mt_reason_address: ['✕ ইমেইল ঠিকানা সঠিক নয়', '✕ The email address is not valid'],
+  mt_reason_google: ['✕ গুগল ইমেইল পাঠাতে দেয়নি — নিচের কারণটি দেখুন বা ডেভেলপারকে পাঠান।', '✕ Google refused to send — see the reason below or send it to the developer.'],
   mt_fail: ['✕ পাঠানো যায়নি', '✕ Could not send'], mt_forbidden: ['✕ অ্যাডমিন যাচাই হয়নি — আবার লগইন করুন', '✕ Admin check failed — sign in again'],
   mail_not_sent: ['স্ট্যাটাস সেভ হয়েছে, কিন্তু গ্রাহকের ইমেইল যায়নি — সেটিংস → টেস্ট ইমেইল দেখুন', 'Status saved, but the customer email was not sent — see Settings → test email'],
   fix_mail_old: ['গুগল শিটে পুরোনো Apps Script চলছে — Extensions → Apps Script-এ নতুন Code.gs পুরোটা পেস্ট করুন, SECRET বসান, তারপর Deploy → Manage deployments → ✏️ → New version → Deploy (ইমেইল পাঠানোর অনুমতি দিন)', 'The Google Sheet still runs the old Apps Script — paste the new Code.gs, set SECRET, then Deploy → Manage deployments → ✏️ → New version → Deploy (allow sending email)'],
@@ -605,13 +611,14 @@ function renderSetup() {
   $('#mailTest').onclick = mailTest;
 }
 let mailTestMsg = '';
+const MT_FIX = { permission: 1, limit: 1, quota: 1, off: 1, address: 1, google: 1 };
 async function mailTest() {
   const b = $('#mailTest'); b.disabled = true; mailTestMsg = a('mt_sending'); $('#mailTestRes').textContent = mailTestMsg;
   try {
     const tk = await fb.idToken();
     const r = await fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ test: true, idToken: tk }) });
     const j = await r.json().catch(() => ({}));
-    mailTestMsg = j.mailed ? a('mt_ok', { e: (user && user.email) || 'Gmail' }) : j.why === 'not_sent' ? a('mt_not_sent') : j.why === 'no_secret' ? a('fix_mail') : r.status === 403 ? a('mt_forbidden') : a('mt_fail') + ' (' + (j.why || j.error || r.status) + ')';
+    mailTestMsg = j.mailed ? a('mt_ok', { e: (user && user.email) || 'Gmail' }) : j.why === 'not_sent' ? (j.detail ? a('mt_reason_' + (j.detail.split(':')[0] in MT_FIX ? j.detail.split(':')[0] : 'google')) + '\nGoogle: ' + j.detail : a('mt_not_sent')) : j.why === 'no_secret' ? a('fix_mail') : r.status === 403 ? a('mt_forbidden') : a('mt_fail') + ' (' + (j.why || j.error || r.status) + ')';
   } catch (e) { mailTestMsg = a('ck_net'); }
   renderSetup();
 }

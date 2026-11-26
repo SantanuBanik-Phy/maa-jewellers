@@ -23,6 +23,8 @@ const SETTINGS = {
   ALERT_EMAIL: '',
   // Customer emails (order confirmation + status updates). Sent from your Gmail, max ~100/day.
   CUSTOMER_EMAILS: true,
+  // The shop's own Gmail: test emails go here and are not limited to 4 per hour
+  SHOP_EMAIL: 'santanubanik2k@gmail.com',
   SHOP_PHONE: '01819-508127', SHOP_WHATSAPP: '01817-533313',
   SITE_URL: 'https://maa-jewellers-shop.vercel.app',
   TZ: 'Asia/Dhaka',
@@ -396,11 +398,20 @@ function alert_(subject, data) {
    5. CUSTOMER EMAILS (sent from your Gmail with MailApp)
    ===================================================================== */
 function validEmail_(e) { return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(String(e || '').trim()); }
-// at most 4 emails to one address per hour, so nobody can use the form to spam someone
+let MAIL_ERR = '';   // why the last email was not sent (shown in the admin panel and in the Logs)
+// at most 4 emails to one address per hour, so nobody can use the form to spam someone (the shop's own Gmail is exempt)
 function mailAllowed_(to) {
-  const c = CacheService.getScriptCache(), k = 'm_' + Utilities.base64EncodeWebSafe(String(to).toLowerCase()).slice(0, 200);
-  const n = Number(c.get(k) || 0); if (n >= 4) return false;
-  c.put(k, String(n + 1), 3600); return MailApp.getRemainingDailyQuota() > 5;
+  const own = String(to).toLowerCase() === String(SETTINGS.SHOP_EMAIL || '').toLowerCase();
+  if (!own) {
+    const c = CacheService.getScriptCache(), k = 'm_' + Utilities.base64EncodeWebSafe(String(to).toLowerCase()).slice(0, 200);
+    const n = Number(c.get(k) || 0);
+    if (n >= 4) { MAIL_ERR = 'limit: already 4 emails to this address in the last hour'; return false; }
+    c.put(k, String(n + 1), 3600);
+  }
+  let left;
+  try { left = MailApp.getRemainingDailyQuota(); } catch (err) { MAIL_ERR = 'permission: ' + String(err && err.message || err); return false; }
+  if (left <= 5) { MAIL_ERR = 'quota: Gmail daily email limit reached (' + left + ' left) — try tomorrow'; return false; }
+  return true;
 }
 const MT = {
   bn: { hi: 'প্রিয় {n},', thanks: 'মা জুয়েলার্সে অর্ডার করার জন্য ধন্যবাদ!', got: 'আপনার অর্ডার আমরা পেয়েছি।', order: 'অর্ডার নং', total: 'সর্বমোট',
@@ -446,7 +457,10 @@ function mailHtml_(L, bn, d) {
     '<div style="height:6px;background:linear-gradient(90deg,#c9a227,#f6e27a,#b8860b)"></div></div></div>';
 }
 function sendMail_(to, kind, d) {
-  if (!SETTINGS.CUSTOMER_EMAILS || !validEmail_(to) || !mailAllowed_(to)) return false;
+  MAIL_ERR = '';
+  if (!SETTINGS.CUSTOMER_EMAILS) { MAIL_ERR = 'off: CUSTOMER_EMAILS is false in SETTINGS'; return false; }
+  if (!validEmail_(to)) { MAIL_ERR = 'address: not a valid email (' + String(to || 'empty') + ')'; return false; }
+  if (!mailAllowed_(to)) return false;
   const bn = d.lang !== 'en', L = MT[bn ? 'bn' : 'en'];
   d.next = L.next[d.status] || ''; d.heading = kind === 'order' ? L.thanks : L.sub[kind];
   d.intro = kind === 'order' ? L.got : (bn ? 'আপনার অর্ডারের অবস্থা হালনাগাদ হয়েছে।' : 'Your order has been updated.');
@@ -454,7 +468,13 @@ function sendMail_(to, kind, d) {
     MailApp.sendEmail({ to: to, subject: 'মা জুয়েলার্স · ' + L.sub[kind] + ' · ' + d.id, htmlBody: mailHtml_(L, bn, d), name: 'Maa Jewellers · মা জুয়েলার্স',
       body: L.order + ': ' + d.id + '\n' + L.status + ': ' + d.status + '\n' + L.total + ': ' + tk_(d.grand) + '\n' + d.next + '\n' + SETTINGS.SITE_URL + '/track.html?id=' + d.id });
     return true;
-  } catch (err) { return false; }
+  } catch (err) { MAIL_ERR = 'google: ' + String(err && err.message || err).slice(0, 200); return false; }
+}
+
+/* Try email from the editor: choose testEmail → ▶ Run, allow the permissions, then read the Execution log */
+function testEmail() {
+  const ok = sendMail_(SETTINGS.SHOP_EMAIL, 'status', { id: 'MJ-000000-000000-TEST', status: 'Verified', lang: 'bn', name: 'মা জুয়েলার্স (টেস্ট)', grand: 0, paid: 0, due: 0, items: [] });
+  Logger.log(ok ? '✓ Test email sent to ' + SETTINGS.SHOP_EMAIL + ' — check Inbox / Spam' : '✕ NOT sent — ' + MAIL_ERR);
 }
 function orderMail_(o, id, status, row) {
   const items = (o.items || []).slice(0, 30).map(i => ({ name: text_(i.name, 60), name_bn: '', qty: num_(i.qty) || 1, total: num_(i.total) }));
@@ -474,5 +494,5 @@ function statusMail_(b) {
   }
   const sent = sendMail_(text_(b.to, 80), b.kind === 'paid' ? 'paid' : 'status', { id: id, status: status, lang: b.lang, name: text_(b.name, 80), grand: b.grand, paid: b.paid, due: b.due, delivery: b.delivery, items: b.items || [] });
   if (b.kind === 'paid') alert_('Online payment ' + id + ' — ' + status, { order: id, paid: b.paid, due: b.due, trx: b.trx });
-  return { ok: true, mailed: sent };
+  return { ok: true, mailed: sent, mailError: sent ? '' : MAIL_ERR };
 }
