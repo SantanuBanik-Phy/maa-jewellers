@@ -17,7 +17,7 @@
   --chip:rgba(246,226,122,.28);
   --art-bg:radial-gradient(circle at 50% 55%,rgba(201,162,39,.26),rgba(0,0,0,.3) 70%);
   --dlg:rgba(22,18,13,.86); --sheen:rgba(246,226,122,.14); --edge-glow:rgba(246,226,122,.75);
-  --ok:#7ee08a; --bad:#ff9fb0; --dust:255,236,170; --gem-line:232,200,120;
+  --ok:#7ee08a; --bad:#ff9fb0; --dust:255,236,170; --gem-line:232,200,120; --thread:236,198,112;
   --nav-h:132px;
   color-scheme:dark;
 }
@@ -32,7 +32,7 @@
   --chip:rgba(201,162,39,.22);
   --art-bg:radial-gradient(circle at 50% 55%,#3a2c18 0%,#15110c 72%);
   --dlg:rgba(255,252,245,.9); --sheen:rgba(201,162,39,.16); --edge-glow:rgba(184,134,11,.65);
-  --ok:#1e7d33; --bad:#a3192f; --dust:184,134,11; --gem-line:150,108,20;
+  --ok:#1e7d33; --bad:#a3192f; --dust:184,134,11; --gem-line:150,108,20; --thread:176,126,24;
   color-scheme:light;
 }
 
@@ -65,7 +65,7 @@ main{position:relative;z-index:1;min-height:60vh}
 @keyframes d2{50%{transform:translate(-150px,-90px)}}
 @keyframes d3{50%{transform:translate(-120px,-150px)}}
 .grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:3px 3px}
-#gems{position:fixed;inset:0;z-index:0;pointer-events:none}
+#silk{position:fixed;inset:0;z-index:0;pointer-events:none;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
 .spotlight{position:fixed;z-index:0;pointer-events:none;width:560px;height:560px;border-radius:50%;left:50%;top:25%;
   transform:translate(-50%,-50%);background:radial-gradient(circle,var(--sheen),transparent 65%)}
 
@@ -1266,3 +1266,61 @@ img.ph.ok{opacity:1}
 .coin.gem{border-radius:3px;transform:rotate(45deg);background:linear-gradient(135deg,#ffe4ea,#e05a74 50%,#8e1730);box-shadow:0 0 10px rgba(255,200,210,.6)}
 html.lite svg .spin,html.lite svg .spin-rev,html.lite .twinkle{animation:none}
 html.lite .twinkle{opacity:.85}
+
+
+/* ===================== v8: golden threads, gold-sweep page changes, phone tab bar ===================== */
+/* page change: a gold seam sweeps across and reveals the next page (desktop + capable phones) */
+html:not(.lite)::view-transition{background:linear-gradient(110deg,#5c3f0c 0%,#c9a227 38%,#fff3c4 50%,#c9a227 62%,#5c3f0c 100%)}
+html:not(.lite)::view-transition-old(root),html:not(.lite)::view-transition-new(root){
+  animation-duration:.68s;animation-timing-function:cubic-bezier(.7,0,.25,1);animation-fill-mode:both;
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+html:not(.lite)::view-transition-old(root){-webkit-mask-image:linear-gradient(110deg,transparent 0 50.4%,#000 52.2%);mask-image:linear-gradient(110deg,transparent 0 50.4%,#000 52.2%);animation-name:sweepOld}
+html:not(.lite)::view-transition-new(root){-webkit-mask-image:linear-gradient(110deg,#000 0 47.8%,transparent 49.6%);mask-image:linear-gradient(110deg,#000 0 47.8%,transparent 49.6%);animation-name:sweepNew}
+@keyframes sweepNew{from{-webkit-mask-position:100% 0;mask-position:100% 0;transform:scale(1.012)}to{-webkit-mask-position:0 0;mask-position:0 0;transform:none}}
+@keyframes sweepOld{from{-webkit-mask-position:100% 0;mask-position:100% 0}to{-webkit-mask-position:0 0;mask-position:0 0;transform:scale(.988)}}
+html.lite::view-transition-old(root){animation:vtOut .16s ease both}
+html.lite::view-transition-new(root){animation:vtIn .3s cubic-bezier(.2,.7,.2,1) both}
+@media (prefers-reduced-motion:reduce){html::view-transition-old(root),html::view-transition-new(root),::view-transition-group(*){animation:none!important;-webkit-mask:none!important;mask:none!important}}
+
+/* phone tab bar: Home · Shop · Calculator · Cart · Account, with a gold marker that glides to the new page */
+.tabbar{display:none}
+@media (max-width:760px){
+  .tabbar{position:fixed;z-index:45;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));height:64px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    align-items:center;padding:0 5px;border-radius:24px;view-transition-name:tabbar;box-shadow:0 14px 34px rgba(40,26,6,.22)}
+  .tabbar a{position:relative;z-index:1;display:grid;justify-items:center;align-content:center;gap:4px;height:100%;text-decoration:none;color:var(--muted);font-size:11.5px;line-height:1.1;
+    -webkit-tap-highlight-color:transparent;transition:color .3s}
+  .tabbar a span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tabbar a svg{width:23px;height:23px;transition:transform .4s cubic-bezier(.2,1.6,.4,1)}
+  .tabbar a:active svg{transform:scale(.82)}
+  .tabbar a.on{color:#1b1406;font-weight:600}
+  .tabbar a.on svg{transform:translateY(-1px)}
+  .tb-ind{position:absolute;z-index:0;top:7px;bottom:7px;left:5px;width:calc((100% - 10px) / 5);border-radius:18px;
+    background:linear-gradient(135deg,#fff3c4,#e7c34c 52%,#c9a227);box-shadow:0 6px 16px rgba(201,162,39,.38),inset 0 1px 0 rgba(255,255,255,.6);
+    transform:translateX(calc(var(--i,0) * 100%));view-transition-name:tbind}
+  .tb-ind[hidden]{display:none}
+  .tb-cnt{position:absolute;top:6px;left:calc(50% + 5px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:none;
+    background:#b3213a;color:#fff;font:700 10.5px/18px 'Jost',sans-serif;text-align:center;box-shadow:0 0 0 2px var(--bg)}
+  .tb-cnt:not(:empty){display:block}
+  body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+  #fab{display:none!important}
+  .tools #accBtn,.tools #cartBtn{display:none}
+  .wa-fab{bottom:calc(84px + env(safe-area-inset-bottom));left:auto;right:14px}
+  .wa-fab .c{width:50px;height:50px} .wa-fab .c svg{width:26px;height:26px}
+  .toast{bottom:calc(150px + env(safe-area-inset-bottom))}
+  ::view-transition-group(tbind){animation-duration:.5s;animation-timing-function:cubic-bezier(.3,1.3,.4,1)}
+}
+@media print{.tabbar,#silk{display:none!important}}
+
+/* phones: shorter home page — the two-up cards read faster than a long single column */
+@media (max-width:640px){
+  .features,.how{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .feature{padding:16px 14px}
+  .feature .ic.lg{width:42px;height:42px}
+  .feature h3{margin:10px 0 4px;font-size:15.5px}
+  .feature p{font-size:12.5px;line-height:1.55}
+  .how .st{padding:16px 12px}
+  .how .num{width:42px;height:42px;font-size:20px}
+  .how h3{margin:10px 0 4px;font-size:15px}
+  .how p{font-size:12.5px;line-height:1.55}
+  section{padding:40px 0}
+}

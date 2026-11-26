@@ -65,6 +65,8 @@ const FEATURED = ['p01', 'p05', 'p11', 'p17'];
 const CATS = ['necklace', 'earrings', 'bangles', 'ring', 'chain', 'pendant', 'nosepin', 'bracelet'];
 const CARATS = ['k22', 'k21', 'k18', 'trad'];
 const GRAM = 11.664, OZ = 31.1035;
+const TABS = [['home', 'index.html', 'home'], ['shop', 'shop.html', 'ring'], ['calc', 'calculator.html', 'calc'], ['cart', 'cart.html', 'cart'], ['account', 'account.html', 'user']];
+const TAB_OF = { home: 'home', shop: 'shop', calc: 'calc', cart: 'cart', pay: 'cart', invoice: 'cart', account: 'account' };
 const NAV = [['home', 'index.html'], ['shop', 'shop.html'], ['calc', 'calculator.html'], ['track', 'track.html'], ['about', 'about.html'], ['contact', 'contact.html']];
 
 /* =====================================================================
@@ -72,7 +74,7 @@ const NAV = [['home', 'index.html'], ['shop', 'shop.html'], ['calc', 'calculator
    ===================================================================== */
 const I18N = {
 bn: {
-  brand: 'মা জুয়েলার্স', owner: 'বাদল চন্দ্র বণিক', proprietor: 'প্রোপ্রাইটর',
+  brand: 'মা জুয়েলার্স', owner: 'বাদল চন্দ্র বণিক', proprietor: 'প্রোপ্রাইটর', tab_acc: 'অ্যাকাউন্ট',
   address: '১ কাজী শপিং কমপ্লেক্স, পরশুরাম বাজার, পরশুরাম, ফেনী', address_l: 'ঠিকানা',
   nav_home: 'হোম', nav_shop: 'শপ', nav_calc: 'হিসাব', nav_invoice: 'চালান', nav_about: 'আমাদের কথা', nav_contact: 'যোগাযোগ',
   nav_home_en: 'Home', nav_shop_en: 'Shop', nav_calc_en: 'Calculator', nav_invoice_en: 'Invoice', nav_about_en: 'About', nav_contact_en: 'Contact',
@@ -277,7 +279,7 @@ bn: {
   wa_enq: 'এই গহনাটি সম্পর্কে জানতে চাই', wa_order: 'নতুন অর্ডার', wa_inv: 'চালান', wa_from: 'ওয়েবসাইট থেকে পাঠানো', wa_est: 'আনুমানিক মূল্য'
 },
 en: {
-  brand: 'Maa Jewellers', owner: 'Badal Chandra Bonik', proprietor: 'Proprietor',
+  brand: 'Maa Jewellers', owner: 'Badal Chandra Bonik', proprietor: 'Proprietor', tab_acc: 'Account',
   address: '1 Kazi Shopping Complex, Parashuram Bazar, Parashuram, Feni', address_l: 'Address',
   nav_home: 'Home', nav_shop: 'Shop', nav_calc: 'Calculator', nav_invoice: 'Invoice', nav_about: 'About', nav_contact: 'Contact',
   nav_home_en: 'হোম', nav_shop_en: 'শপ', nav_calc_en: 'হিসাব', nav_invoice_en: 'চালান', nav_about_en: 'আমাদের কথা', nav_contact_en: 'যোগাযোগ',
@@ -736,6 +738,9 @@ const ICON = {
   download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
   shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5L12 4l8.5 6.5"/><path d="M5.5 9.5V20h4.5v-5.5h4V20h4.5V9.5"/></svg>',
+  ring: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="14.6" r="6.4"/><path d="M9.2 6.6L12 3.4l2.8 3.2L12 8.6z"/></svg>',
+  calc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h1.5M12 11.5h1.5M8.5 15.5h1.5M12 15.5h1.5M8.5 18h1.5M15.5 11.5v6.5"/></svg>',
   gem: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9 3l3 18M15 3l-3 18"/></svg>'
 };
 function corner() {
@@ -761,7 +766,7 @@ function spriteHTML() {
 function injectChrome() {
   const sprite = spriteHTML();
   const bg = `<div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-    <div class="grain" aria-hidden="true"></div><canvas id="gems" aria-hidden="true"></canvas><div class="spotlight" id="spot" aria-hidden="true"></div>`;
+    <div class="grain" aria-hidden="true"></div><canvas id="silk" aria-hidden="true"></canvas><div class="spotlight" id="spot" aria-hidden="true"></div>`;
   const head = `<header class="masthead" id="masthead">
     <div class="progress" id="progress"></div>
     <div class="ticker" role="region" id="ticker">
@@ -808,6 +813,7 @@ function injectChrome() {
   </div></footer>
   <a class="wa-fab" href="${waLink()}" target="_blank" rel="noopener" data-wa id="waFab"><span class="c">${ICON.wa}</span><span class="tip glass" data-i18n="wa_tip"></span></a>
   <a class="fab glass ${['cart', 'invoice', 'pay', 'track'].includes(PAGE) ? 'hide' : ''}" href="cart.html" id="fab"><span class="bag">${ICON.cart}<span class="badge2" id="fabCount">0</span></span><span><small data-i18n="cart"></small><b id="fabTotal">৳ 0</b></span></a>
+  <nav class="tabbar glass" id="tabbar">${TABS.map(([k, h, ic]) => `<a href="${h}" data-tab="${k}">${ICON[ic]}${k === 'cart' ? '<b class="tb-cnt" id="tbCnt"></b>' : ''}<span data-tabl="${k}"></span></a>`).join('')}<i class="tb-ind" id="tbInd"></i></nav>
   <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
   <dialog class="dlg wide" id="qvDlg"><div class="dlg-in glass" id="qvBody"></div></dialog>
   <div class="cursor" id="cursor"></div><div class="cursor-dot" id="cursorDot"></div>`;
@@ -831,6 +837,14 @@ function renderChrome() {
   if (av) { av.hidden = !user; av.innerHTML = user ? (user.photoURL ? `<img src="${esc(user.photoURL)}" alt="" referrerpolicy="no-referrer">` : esc(initialOf(user))) : ''; }
   $('#drawerLinks').insertAdjacentHTML('beforeend', `<a class="dl ${PAGE === 'account' ? 'active' : ''}" href="account.html">${t('nav_account')}<span>${t('nav_account_en')}</span></a>`);
   $('#fab').setAttribute('aria-label', t('cart_aria'));
+  const tb = $('#tabbar');
+  if (tb) {
+    tb.setAttribute('aria-label', t('menu'));
+    const on = TAB_OF[PAGE], idx = TABS.findIndex(x => x[0] === on);
+    $$('[data-tab]', tb).forEach(a => { const k = a.dataset.tab, act = k === on; a.classList.toggle('on', act); if (act) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    $$('[data-tabl]', tb).forEach(sp => { const k = sp.dataset.tabl; sp.textContent = k === 'cart' ? t('cart') : k === 'account' ? t('tab_acc') : t('nav_' + k); });
+    const ind = $('#tbInd'); ind.hidden = idx < 0; ind.style.setProperty('--i', Math.max(idx, 0));
+  }
   $('#waFab').setAttribute('aria-label', t('wa_tip'));
   $('#ticker').setAttribute('aria-label', t('intl_title'));
   $('#lockup').setAttribute('aria-label', t('brand'));
@@ -858,6 +872,7 @@ function updateCartBadges() {
   const c = $('#cartCnt'); if (c) { c.textContent = n ? dg(n) : ''; c.dataset.n = n; }
   const f = $('#fabCount'); if (f) f.textContent = dg(n);
   const ft = $('#fabTotal'); if (ft) ft.textContent = money(g);
+  const tc = $('#tbCnt'); if (tc) { tc.textContent = n ? dg(n) : ''; tc.dataset.n = n; }
 }
 
 /* =====================================================================
@@ -2044,71 +2059,91 @@ function initProgress() {
   const upd = raf1(() => { if (!h) measure(); p.style.setProperty('--p', h > 0 ? Math.min(1, scrollY / h).toFixed(4) : 0); });
   addEventListener('scroll', upd, { passive: true }); addEventListener('resize', () => { measure(); upd(); }); setTimeout(() => { measure(); upd(); }, 800); upd();
 }
-function initGems() {
-  const cv = $('#gems'), ctx = cv && cv.getContext && cv.getContext('2d'); if (!ctx || reduce) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, LITE ? 1.5 : 2);
-  let w, h, gems = [], run = true, mx = 0, my = 0, col = '226,190,110', colAt = 0, last = 0, scrolling = 0, raf = 0;
-  const step = LITE ? 1000 / 30 : 0;
-  const mk = (any) => {
-    const s = (Math.random() * 26 + 12) * dpr;
-    return { x: Math.random() * w, y: any ? Math.random() * h : h + s * 2, s, z: s / (38 * dpr),
-      vy: -(Math.random() * .22 + .06) * dpr, sway: Math.random() * 6.28, spin: Math.random() * 6.28, vs: (Math.random() * .006 + .002) * (Math.random() < .5 ? -1 : 1),
-      tilt: (Math.random() - .5) * .5, glint: 0, gx: 0 };
+/* Golden threads (সোনার সুতো): fine gold filigree wires that flow, twist like a silk ribbon and part around
+   your cursor or finger. One canvas, a few hundred line segments a frame; 30 fps in lite mode; still in reduced motion. */
+function initThreads() {
+  const cv = $('#silk'), ctx = cv && cv.getContext && cv.getContext('2d'); if (!ctx) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, LITE ? 1 : 1.25);
+  let W = 0, H = 0, N = 0, run = true, raf = 0, last = 0, t = 7.3, col = '', colAt = 0, scrolling = 0, sp = 0, tsp = 0, idleAt = 0;
+  const P = { x: 0, y: 0, tx: 0, ty: 0, a: 0, ta: 0, seen: false };
+  // two ribbons: a wide one rising from bottom-left, a faint one across the top
+  const R = [
+    { y0: .9, y1: .4, a1: .045, f1: .8, s1: .22, w: .17, f2: .65, s2: .3, ph: 0, al: .62 },
+    { y0: .1, y1: .26, a1: .03, f1: 1.1, s1: -.18, w: .09, f2: 1.05, s2: -.24, ph: 2.1, al: .3 }
+  ];
+  const yAt = (r, f, x) => {
+    const u = x / W, c = H * (r.y0 + (r.y1 - r.y0) * u) + Math.sin(u * r.f1 * 6.283 + t * r.s1 + sp) * H * r.a1;
+    let y = c + f * H * r.w * Math.cos(u * r.f2 * 6.283 - t * r.s2 + r.ph + sp * .6);
+    if (P.a > .01) { const dx = x - P.x, dy = y - P.y, d2 = dx * dx + dy * dy; if (d2 < 52000) y += (dy >= 0 ? 1 : -1) * P.a * 34 * Math.exp(-d2 / 11000); }
+    return y;
+  };
+  // solid colour (cheap to rasterise); the soft fade at both ends is a CSS mask on the canvas, done by the GPU
+  const paint = () => {
+    const c = getComputedStyle(document.documentElement).getPropertyValue('--thread').trim() || '214,170,80';
+    if (c === col && R[0].g) return;
+    col = c; R.forEach(r => { r.g = `rgb(${col})`; });
+  };
+  const draw = () => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const seg = W < 700 ? 18 : 28, n = Math.ceil(W / seg) + 1;
+    for (const r of R) {
+      ctx.strokeStyle = r.g;
+      const M = r === R[0] ? N : Math.ceil(N * .5);
+      // threads in three brightness groups → three strokes per ribbon instead of one per thread
+      for (let band = 0; band < 3; band++) {
+        ctx.beginPath();
+        for (let i = 0; i < M; i++) {
+          const f = i / (M - 1) - .5, b = Math.abs(f) < .17 ? 0 : Math.abs(f) < .34 ? 1 : 2;
+          if (b !== band) continue;
+          for (let j = 0; j < n; j++) { const x = j * seg, y = yAt(r, f, x); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        }
+        ctx.globalAlpha = r.al * [1, .62, .3][band]; ctx.lineWidth = band ? .7 : 1.05;
+        ctx.stroke();
+      }
+    }
+    // three gold beads run along the main ribbon like light on a chain
+    const r = R[0];
+    for (let k = 0; k < 3; k++) {
+      const u = ((t * .028 + k / 3) % 1), x = u * W, y = yAt(r, (k - 1) * .18, x), fade = Math.sin(u * Math.PI);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 16);
+      g.addColorStop(0, `rgba(255,246,214,${.9 * fade})`); g.addColorStop(.25, `rgba(${col},${.45 * fade})`); g.addColorStop(1, `rgba(${col},0)`);
+      ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 16, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   };
   const size = () => {
-    w = cv.width = innerWidth * dpr; h = cv.height = innerHeight * dpr; cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
-    gems = Array.from({ length: LITE ? 7 : Math.round(Math.min(16, Math.max(8, innerWidth / 100))) }, () => mk(true));
+    W = innerWidth; H = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    const tall = W / H < 1;                     // phones in portrait: a flatter, calmer ribbon
+    Object.assign(R[0], tall ? { y0: .86, y1: .6, w: .13, f2: .45 } : { y0: .9, y1: .4, w: .17, f2: .65 });
+    N = LITE ? 10 : W < 700 ? 12 : 16; R.forEach(r => { r.g = null; }); paint(); draw();
   };
-  // brilliant-cut diamond in side view: table, crown facets, girdle, pavilion to culet
-  const drawGem = (g, a) => {
-    const s = g.s, cx = Math.cos(g.spin), sx = Math.max(.3, Math.abs(cx));
-    ctx.save(); ctx.translate(g.x + mx * g.z * 18, g.y + my * g.z * 12); ctx.rotate(g.tilt + Math.sin(g.sway) * .08); ctx.scale(sx, 1);
-    const T = s * .26, G = s * .5, C = -s * .27, P = s * .62;
-    const grad = ctx.createLinearGradient(-G, C, G, P);
-    grad.addColorStop(0, `rgba(${col},${.10 * a})`); grad.addColorStop(.5, `rgba(255,255,255,${.04 * a})`); grad.addColorStop(1, `rgba(${col},${.02 * a})`);
-    ctx.beginPath(); ctx.moveTo(-T, C); ctx.lineTo(T, C); ctx.lineTo(G, 0); ctx.lineTo(0, P); ctx.lineTo(-G, 0); ctx.closePath();
-    ctx.fillStyle = grad; ctx.fill();
-    ctx.lineWidth = 1.1 * dpr / sx * .7; ctx.strokeStyle = `rgba(${col},${.55 * a})`; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-G, 0); ctx.lineTo(G, 0);                         // girdle
-    const off = Math.sin(g.spin) * T * .5;                                        // facets slide as it turns
-    ctx.moveTo(-T, C); ctx.lineTo(-G * .5 + off, 0); ctx.lineTo(0 + off * .5, C);
-    ctx.lineTo(G * .5 + off, 0); ctx.lineTo(T, C);
-    ctx.moveTo(-G * .5 + off, 0); ctx.lineTo(0, P); ctx.lineTo(G * .5 + off, 0);
-    ctx.moveTo(-G, 0); ctx.lineTo(-G * .22 + off * .4, P * .55); ctx.moveTo(G, 0); ctx.lineTo(G * .22 + off * .4, P * .55);
-    ctx.lineWidth = .7 * dpr / sx * .7; ctx.strokeStyle = `rgba(${col},${.3 * a})`; ctx.stroke();
-    ctx.restore();
-    if (g.glint > 0) {                                                            // a star of light catches a facet
-      const k = Math.sin(g.glint * Math.PI), r = s * .55 * k, x = g.x + mx * g.z * 18 + g.gx * sx, y = g.y + my * g.z * 12 + C * .9;
-      ctx.save(); ctx.translate(x, y); ctx.rotate(g.glint * .8);
-      const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * .6); rg.addColorStop(0, `rgba(255,250,230,${.9 * k})`); rg.addColorStop(1, 'rgba(255,250,230,0)');
-      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(0, 0, r * .6, 0, 6.283); ctx.fill();
-      ctx.fillStyle = `rgba(255,248,220,${.95 * k})`; ctx.beginPath();
-      for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .09 : r, an = i * Math.PI / 4; ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); }
-      ctx.closePath(); ctx.fill(); ctx.restore();
-    }
-  };
-  if (fine) addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
-  const wake = () => { if (!raf && run && !scrolling) raf = requestAnimationFrame(tick); };
-  addEventListener('scroll', () => { clearTimeout(scrolling); scrolling = setTimeout(() => { scrolling = 0; wake(); }, 160); }, { passive: true });
+  const aim = (x, y, a) => { P.tx = x; P.ty = y; P.ta = a; if (!P.seen) { P.x = x; P.y = y; P.seen = true; } idleAt = performance.now(); wake(); };
+  if (!reduce) {
+    addEventListener('pointermove', e => { if (e.pointerType === 'mouse') aim(e.clientX, e.clientY, 1); }, { passive: true });
+    addEventListener('pointerdown', e => aim(e.clientX, e.clientY, 1.4), { passive: true });   // a tap parts the threads too
+    document.addEventListener('mouseleave', () => { P.ta = 0; });
+    addEventListener('scroll', () => {
+      tsp = scrollY * .0016;
+      if (LITE) { clearTimeout(scrolling); scrolling = setTimeout(() => { scrolling = 0; wake(); }, 160); } else wake();
+    }, { passive: true });
+  }
+  const wake = () => { if (!raf && run && !scrolling && !reduce) raf = requestAnimationFrame(tick); };
   const tick = (now) => {
     raf = 0;
     if (!run || scrolling) return;
+    const step = P.a > .05 && !LITE ? 0 : 33;            // 30 fps at rest and on phones, full rate while you play with it
     if (step && now - last < step) { raf = requestAnimationFrame(tick); return; }
     const k = last ? Math.min(3, (now - last) / 16.7) : 1; last = now;
-    if (now - colAt > 1000) { col = getComputedStyle(document.documentElement).getPropertyValue('--gem-line').trim() || col; colAt = now; }
-    ctx.clearRect(0, 0, w, h);
-    for (const g of gems) {
-      g.y += g.vy * k; g.sway += .01 * k; g.x += Math.sin(g.sway) * .12 * dpr * k; g.spin += g.vs * k;
-      if (g.y < -g.s * 2) Object.assign(g, mk(false));
-      if (g.glint > 0) { g.glint += .022 * k; if (g.glint >= 1) g.glint = 0; }
-      else if (Math.random() < .0016 * k) { g.glint = .001; g.gx = (Math.random() - .5) * g.s * .4; }
-      const edge = Math.min(1, (h - g.y) / (h * .15), (g.y + g.s) / (h * .2));
-      drawGem(g, Math.max(0, edge) * (.45 + g.z * .55));
-    }
+    t += .016 * k;
+    if (now - idleAt > 1400) P.ta = 0;
+    P.x += (P.tx - P.x) * .14 * k; P.y += (P.ty - P.y) * .14 * k; P.a += (P.ta - P.a) * .08 * k; sp += (tsp - sp) * .06 * k;
+    if (now - colAt > 800) { paint(); colAt = now; }
+    draw();
     raf = requestAnimationFrame(tick);
   };
-  let rz = 0; size(); addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(size, 200); });
+  let rz = 0; size(); addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(size, 150); });
   document.addEventListener('visibilitychange', () => { run = !document.hidden; last = 0; wake(); });
+  if (reduce) new MutationObserver(() => { paint(); draw(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   wake();
 }
 
@@ -2641,7 +2676,7 @@ bindMagnetic();
 initSheen();
 initCursor();
 initProgress();
-initGems();
+initThreads();
 loadRatesFile();
 if (['home', 'shop', 'about', 'contact', 'calc'].includes(PAGE)) (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(() => loadFirebase(), { timeout: 2200 });
 else loadFirebase();

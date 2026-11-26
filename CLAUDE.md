@@ -60,15 +60,21 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
   `smsPay/{TRXID}` (server-written payment SMS, admin read).
 - Order id format `MJ-YYMMDD-HHMMSS-XXXX` (rules + Code.gs regex depend on it).
 - Rate priority: Firestore `public/rates` (admin) > `rates.json` > `BUILTIN`. Checkout locks prices for `lockMinutes`.
-- `assets/style.css` — customer design (glass, dark/light, floating cut-diamond canvas `#gems`), print invoice (white · black · gold only)
+- `assets/style.css` — customer design (glass, dark/light, golden-threads canvas `#silk`), print invoice (white · black · gold only)
 - `google-apps-script/Code.gs` — optional Google Sheet backup. Never put the real SECRET here (repo is public).
 - `FIREBASE-SETUP.md` — owner's setup steps (BN + EN).
 
 ## Speed rules (v7)
 - `html.lite` is set in each page's <head> script for phones / low-power devices (`?fx=full` or `?fx=lite` to force):
-  no backdrop-filter, opaque glass, fewer gems at 30 fps, no blob motion. Backdrop blur over animated layers was the main lag.
+  no backdrop-filter, opaque glass, fewer threads at 30 fps, no blob motion. Backdrop blur over animated layers was the main lag.
 - Never animate SVG transforms or layout properties in infinite loops (twinkle is opacity-only); keyframe names must be unique
-  (`ring` clashed once). Pointer handlers go through `raf1`; the gems canvas pauses while scrolling.
+  (`ring` clashed once). Pointer handlers go through `raf1`.
+- v8 background = “সোনার সুতো” golden threads (`initThreads`): two twisting ribbons of gold wire, part around the cursor / a tap,
+  flow with scroll; solid strokes batched in 3 brightness groups (gradients per stroke were 2× slower), ends faded by a CSS mask,
+  DPR ≤1.25, 30 fps at rest (60 while the pointer plays), lite: 10 threads + pauses while scrolling, reduced motion: one still frame.
+- Page change (non-lite): gold seam sweep — complementary masks on `::view-transition-old/new(root)` over a gold `::view-transition`
+  background. Lite: quick fade. Phones ≤760px: bottom `.tabbar` (Home/Shop/Calc/Cart/Account, `TABS`/`TAB_OF`) replaces the cart FAB
+  and header account/cart icons; its gold marker `.tb-ind` has `view-transition-name: tbind` so it glides between pages.
 - Page changes use cross-document View Transitions + speculation-rules prefetch; fonts load non-blocking; Firebase loads on idle
   for home/shop/about/contact/calc. Admin redraws only the visible tab once per frame (`refresh()`, `shown()`), orders page in 40s.
 
