@@ -55,9 +55,14 @@ Emails are sent from your own Gmail by the Google Sheet script you already use.
 6. Vercel → Environment Variables → add `SHEET_SECRET` = the same secret as step 3 → Redeploy.
 
 What customers receive:
-- **Order confirmation** — right after ordering (when they typed an email).
-- **Payment received** — when SSLCommerz confirms an online payment.
-- **Order update** — when you press Verify / Delivered / Reject in the admin panel.
+- **Order confirmation** — right after ordering (when they typed an email), with every item, weight, rate, making and total.
+- **Invoice (চালান) + PDF attached** — when the payment is verified (by you, by SSLCommerz or by the SMS check) and again when you press Delivered.
+- **Order update** — other status changes (cash on delivery, rejected …).
+
+What the shop receives (at `ALERT_EMAIL`, default santanubanik2k@gmail.com): an email for **every new order** and **every payment** (online or SMS), with a button to the admin panel.
+
+Testing: in Apps Script choose **testEmail → ▶ Run** — the log says "✓ sent" or the exact Google reason. Admin → Settings → "টেস্ট ইমেইল পাঠান" does the same from the website.
+Remember: after replacing Code.gs, put **your own SECRET** back on the SECRET line, then **Deploy → Manage deployments → ✏️ → New version → Deploy**.
 Gmail allows about 100 emails a day; each address gets at most 4 emails an hour (stops misuse).
 
 ## F. Free automatic payment check (bKash / Nagad SMS) · ফ্রি স্বয়ংক্রিয় পেমেন্ট যাচাই (10 min)

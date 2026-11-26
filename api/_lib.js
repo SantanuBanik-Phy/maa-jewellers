@@ -152,8 +152,21 @@ function mailPayload(o, status, extra) {
     kind: 'status', id: o.id, status, lang: o.lang || 'bn', to: c.email || '', name: c.name || '', phone: c.phone || '',
     grand: Math.round(+o.grand || 0), paid: o.pay ? Math.round(+o.pay.amount || 0) : 0, due: o.pay ? Math.round(+o.pay.due || 0) : Math.round(+o.grand || 0),
     method: o.pay ? o.pay.method : '', delivery: (o.delivery || {}).method || 'pickup',
-    items: (o.items || []).map(l => ({ name: l.title_en || l.name || l.cat, name_bn: l.title_bn || l.name || '', carat: l.carat, qty: l.qty || 1, total: Math.round(+l.total || 0) }))
+    items: (o.items || []).map(l => ({ name: l.title_en || l.name || l.cat, name_bn: l.title_bn || l.name || '', carat: l.carat, qty: l.qty || 1, total: Math.round(+l.total || 0) })),
+    inv: invoiceData(o)
   }, extra || {});
+}
+/* everything the emailed invoice needs, taken from the order saved in Firestore (never from the browser) */
+function invoiceData(o) {
+  const T = o.totals || {}, P = o.pay || {}, c = o.customer || {}, r = (x) => Math.round(+x || 0);
+  return {
+    date: +o.createdAt || Date.now(), rateDate: o.rateDate || '', delivery: (o.delivery || {}).method || 'pickup', grand: r(o.grand),
+    customer: { name: c.name || '', phone: c.phone || '', addr: c.addr || '' },
+    items: (o.items || []).slice(0, 30).map(l => ({ name: l.title_en || l.name || l.cat || '', name_bn: l.title_bn || l.name || '', carat: l.carat || '', tb: +l.tb || 0,
+      qty: +l.qty || 1, rate: r(l.rate), making: r(l.making), total: r(l.total) })),
+    totals: { gold: r(T.gold), making: r(T.making), discAmt: r(T.discAmt), vatAmt: r(T.vatAmt), adv: r(T.adv), ship: r(T.ship || (o.delivery || {}).fee) },
+    pay: { method: P.method || '', trx: P.trx || '', amount: r(P.amount), due: P.due != null ? r(P.due) : r(o.grand) }
+  };
 }
 
 /* ---------- free automatic check of bKash / Nagad / Bangla QR payments ----------
@@ -280,6 +293,6 @@ async function body(req) {
   return {};
 }
 
-module.exports = { ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, sslId, sslPass, getDoc, listDocs, patchDoc, verifyOrder,
+module.exports = { invoiceData, ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, sslId, sslPass, getDoc, listDocs, patchDoc, verifyOrder,
   verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a),
   smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms, diagnose };
