@@ -249,7 +249,9 @@ function saveOrder_(o) {
       ish.getRange(start, 8, vals.length, 3).setNumberFormat('"৳"#,##0');
       ish.getRange(start, 2, vals.length, 1).setNumberFormat('yyyy-mm-dd');
     }
-    alert_('নতুন অর্ডার · New order ' + id + ' · ' + tk_(row['Grand total']), Object.assign({ 'Delivery': o.delivery && o.delivery.method === 'home' ? 'Home delivery' : 'Pick up', 'Plan': o.plan || '' }, row),
+    const acc = o.account && validEmail_(o.account.email) ? (/google/i.test(String(o.account.provider)) ? 'Google account · ' : 'Registered account (email) · ') + text_(o.account.email, 80) : 'Guest — no account';
+    alert_('নতুন অর্ডার · ' + text_(row['Customer'], 40) + (row['Email'] ? ' (' + row['Email'] + ')' : '') + ' · ' + tk_(row['Grand total']) + ' · ' + id,
+      Object.assign({ 'Account': acc, 'Delivery': o.delivery && o.delivery.method === 'home' ? 'Home delivery' : 'Pick up', 'Plan': o.plan || '' }, row),
       items.map(i => ({ name: text_(i.name, 60), qty: i.qty, carat: text_(i.carat, 20), weight: text_(i.weight, 40), total: num_(i.total) })));
     if (row['Email'] && SETTINGS.ORDER_CONFIRMATION_TO_CUSTOMER) orderMail_(o, id, status, row);
     return { ok: true, status: status };
@@ -389,7 +391,7 @@ function stamp_() { return fmt_(new Date(), 'yyyy-MM-dd HH:mm:ss'); }
 function colLetter_(n) { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
 function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
 /* Email to the shop for every new order / payment (instant; not limited per hour) */
-const ALERT_KEYS = ['Order ID', 'order', 'Status', 'Customer', 'Mobile', 'Email', 'Address', 'Delivery', 'Plan', 'Grand total', 'Paid', 'paid', 'Due', 'due',
+const ALERT_KEYS = ['Order ID', 'order', 'Status', 'Customer', 'Account', 'Mobile', 'Email', 'Address', 'Delivery', 'Plan', 'Grand total', 'Paid', 'paid', 'Due', 'due',
   'Method', 'TrxID', 'trx', 'Paid from', 'Amount', 'From', 'Order', 'SMS amount', 'Note'];
 function alert_(subject, data, items) {
   if (!SETTINGS.ALERT_EMAIL) return;

@@ -20,7 +20,6 @@ module.exports = async (req, res) => {
     if (!L.ORDER_RE.test(id)) return L.send(res, 400, { error: 'bad_order' });
     const o = await L.getDoc('orders/' + id);
     if (!o) return L.send(res, 404, { error: 'not_found' });
-    if (!o.customer || !o.customer.email) return L.send(res, 200, { ok: true, skipped: 'no_email' });
     const out = await L.customerMail(Object.assign({ id }, o), o.status);
     if (!out.attempted) return L.send(res, 200, { ok: true, skipped: 'not_invoice_time' });
     return L.send(res, 200, { ok: !!out.ok, mailed: out.mailed === undefined ? undefined : !!out.mailed, invoice: true });

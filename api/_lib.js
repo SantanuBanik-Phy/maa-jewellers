@@ -283,7 +283,10 @@ async function diagnose(base) {
  * Other status changes still update the Google Sheet but send nothing (mail:false). New orders only alert the shop. */
 const SUCCESS_ST = ['Verified', 'Advance paid', 'Delivered'];
 async function customerMail(o, status, extra) {
-  const send = SUCCESS_ST.includes(status) && !o.invoiceMailedAt && !!(o.customer && o.customer.email);
+  let email = (o.customer && o.customer.email) || '';
+  if (!email && o.uid) { try { const u = await getDoc('users/' + o.uid); email = (u && u.email) || ''; } catch (e) { /* no profile */ } }
+  if (email && !(o.customer || {}).email) o = Object.assign({}, o, { customer: Object.assign({}, o.customer, { email }) });   // account email from the profile
+  const send = SUCCESS_ST.includes(status) && !o.invoiceMailedAt && !!email;
   const out = await sheetMail(mailPayload(o, status, Object.assign({}, extra || {}, { mail: send })));
   if (send && out.mailed && o.id) { try { await patchDoc('orders/' + o.id, { invoiceMailedAt: Date.now() }); } catch (e) { /* not critical */ } }
   return Object.assign({}, out, { attempted: send });

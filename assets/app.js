@@ -239,6 +239,7 @@ bn: {
   cd_k: 'নিজের ডিজাইন', cd_t: 'আপনার স্বপ্নের গহনা, আমাদের কারিগরের হাতে', cd_d: 'পছন্দের ছবি দিন, ওজন ও ক্যারেট বেছে নিন — আজকের দরে দাম দেখে মাত্র {p} অগ্রিমে অর্ডার করুন।',
   cd_btn: 'ডিজাইন অর্ডার করুন', cd_s1: 'ছবি দিন', cd_s2: 'ওজন বাছুন', cd_s3: 'অগ্রিম দিন', cd_s4: 'হাতে পান',
   tb1: 'বাজুস দরে স্বচ্ছ দাম', tb2: 'SSLCommerz নিরাপদ পেমেন্ট', tb3: 'ক্যাশ অন ডেলিভারি', tb4: 'হোম ডেলিভারি', tb5: 'কাস্টম ডিজাইন', tb6: 'প্রতিটি কেনায় চালান', tb7: 'লাইভ অর্ডার ট্র্যাকিং',
+  email_acc_l: 'আপনার অ্যাকাউন্ট', email_acc: 'এটি আপনার অ্যাকাউন্টের ইমেইল — অর্ডার সফল হলে (দোকান যাচাই করলে) চালান PDF সহ এখানেই আসবে।',
   buyer_email: 'ইমেইল', email_hint: 'অর্ডার সফল হলে (পেমেন্ট যাচাইয়ের পর) চালান PDF সহ এই ইমেইলে পাবেন', bad_email: 'সঠিক ইমেইল দিন',
   co_s1: 'আপনার তথ্য', co_s2: 'ডেলিভারি', co_s3: 'কীভাবে পরিশোধ করবেন', co_s4: 'পেমেন্ট মাধ্যম',
   dl_pickup: 'দোকান থেকে নেবেন', dl_pickup_d: 'পরশুরাম বাজার · কোনো চার্জ নেই', dl_home: 'হোম ডেলিভারি', dl_home_d: 'নিরাপদ কুরিয়ারে বাসায় · {f}',
@@ -433,6 +434,7 @@ en: {
   cd_k: 'Your own design', cd_t: 'Your dream piece, crafted by our artisans', cd_d: 'Share a photo, choose weight and carat — see the price at today’s rate and order with just {p} advance.',
   cd_btn: 'Order a design', cd_s1: 'Share a photo', cd_s2: 'Pick the weight', cd_s3: 'Pay an advance', cd_s4: 'Receive it',
   tb1: 'Transparent BAJUS-rate pricing', tb2: 'SSLCommerz secure payment', tb3: 'Cash on delivery', tb4: 'Home delivery', tb5: 'Custom designs', tb6: 'Invoice with every purchase', tb7: 'Live order tracking',
+  email_acc_l: 'your account', email_acc: 'This is your account email — once the shop verifies your order, the invoice PDF comes here.',
   buyer_email: 'Email', email_hint: 'When your order succeeds (payment verified) the invoice PDF is emailed here', bad_email: 'Please enter a valid email',
   co_s1: 'Your details', co_s2: 'Delivery', co_s3: 'How would you like to pay?', co_s4: 'Payment method',
   dl_pickup: 'Pick up at the shop', dl_pickup_d: 'Parashuram Bazar · no charge', dl_home: 'Home delivery', dl_home_d: 'Insured courier to your door · {f}',
@@ -1316,7 +1318,7 @@ function buildInvoice(pay, status) {
   const now = new Date();
   return {
     no: invoiceNo(now), ts: now.getTime(), rateDate: official.date,
-    buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), email: String(buyer.email || '').trim(), addr: buyer.addr.trim() },
+    buyer: { name: buyer.name.trim(), phone: buyer.phone.trim(), email: accEmail() || String(buyer.email || '').trim(), addr: buyer.addr.trim() },
     delivery: PAGE === 'pay' ? { method: payState.delivery, fee: T.ship } : { method: 'pickup', fee: 0 },
     plan: PAGE === 'pay' ? payState.plan : (pay ? 'full' : 'shop'),
     lines: cart.map((l, i) => Object.assign({ pid: l.pid, cat: l.cat, gem: l.gem, name: (l.name || '').trim(), desc: (l.desc || '').trim(), custom: !!l.custom, refs: Array.isArray(l.refs) ? l.refs.slice(0, 3) : [], carat: l.carat, mcu: PAGE === 'admin' ? l.mcu : 'pct', mc: PAGE === 'admin' ? l.mc : String(CONFIG.making) }, T.lines[i])),
@@ -1668,7 +1670,7 @@ function renderCheckout() {
       <div class="co-card glass"><h3 class="co-h"><i>${dg(1)}</i>${t('co_s1')}</h3><div class="fgrid">
         <div><label class="lbl" for="cName">${t('buyer_name')} *</label><div class="in"><input id="cName" data-b="name" type="text" autocomplete="name" value="${esc(buyer.name)}"></div></div>
         <div><label class="lbl" for="cPhone">${t('buyer_phone')} *</label><div class="in"><input id="cPhone" data-b="phone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(buyer.phone)}"></div></div>
-        <div class="full"><label class="lbl" for="cEmail">${t('buyer_email')}</label><div class="in ico">${ICON.mail}<input id="cEmail" data-b="email" type="email" inputmode="email" autocomplete="email" value="${esc(buyer.email || '')}" placeholder="name@gmail.com"></div><p class="hint">${t('email_hint')}</p></div>
+        <div class="full"><label class="lbl" for="cEmail">${t('buyer_email')}${accEmail() ? ' · ' + t('email_acc_l') : ''}</label><div class="in ico">${ICON.mail}<input id="cEmail" data-b="email" type="email" inputmode="email" autocomplete="email" value="${esc(accEmail() || buyer.email || '')}" placeholder="name@gmail.com" ${accEmail() ? 'readonly' : ''}></div><p class="hint">${accEmail() ? t('email_acc') : t('email_hint')}</p></div>
         <div class="full"><label class="lbl" for="cAddr">${t('buyer_addr')}${payState.delivery === 'home' ? ' *' : ''}</label><div class="in"><input id="cAddr" data-b="addr" type="text" autocomplete="street-address" value="${esc(buyer.addr)}"></div></div>
       </div></div>
       <div class="co-card glass"><h3 class="co-h"><i>${dg(2)}</i>${t('co_s2')}</h3><div class="tiles two">
@@ -1832,7 +1834,7 @@ async function sheetPost(obj, keepalive) {
 function orderPayload(I) {
   const en = (k) => I18N.en[k] || k;
   return {
-    type: 'order', id: I.no, ts: I.ts, lang, rateDate: I.rateDate,
+    type: 'order', id: I.no, ts: I.ts, lang, rateDate: I.rateDate, account: accInfo(),
     customer: I.buyer, delivery: I.delivery, plan: I.plan, status: I.status,
     items: I.lines.map(l => ({
       name: l.name || (l.pid ? (prod(l.pid) || { name: {} }).name.en || '' : en('cat_' + (l.cat || 'custom'))),
@@ -2325,6 +2327,9 @@ function toggleWish(id, el) {
   toast(t(on ? 'wish_add' : 'wish_rm'));
   if (PAGE === 'account') renderAccount();
 }
+/* Signed-in customers (email or Google): their account email receives the invoice; the shop alert says which account ordered */
+const accEmail = () => (PAGE !== 'admin' && user && user.email) ? user.email : '';
+const accInfo = () => accEmail() ? { email: user.email, uid: user.uid, name: user.displayName || (profile && profile.name) || '', provider: (user.providerData[0] || {}).providerId || 'password' } : null;
 async function onUserChange(u) {
   user = u || null; profile = null;
   if (myOrdersUnsub) { try { myOrdersUnsub(); } catch (e) { /* */ } myOrdersUnsub = null; }
@@ -2338,7 +2343,7 @@ async function onUserChange(u) {
     wish.clear(); merged.forEach(x => wish.add(x)); LS.set('mj_wish', [...wish]);
     profile = Object.assign(base, profile || {});
     ['name', 'phone', 'addr'].forEach(k => { if (!buyer[k] && profile[k]) buyer[k] = profile[k]; });
-    if (!buyer.email && user.email) buyer.email = user.email;
+    if (user.email) buyer.email = user.email;            // signed in: the invoice always goes to the account email
     saveBuyer();
     if (PAGE === 'account') fbMod.onMyOrders(user.uid, list => { myOrders = list; renderAccount(); }).then(u2 => { myOrdersUnsub = u2; });
     const next = new URLSearchParams(location.search).get('next');

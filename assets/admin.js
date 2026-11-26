@@ -13,6 +13,8 @@ const { esc, money, dg, fdate, ftime, toNum, CARATS, CATS, GRAM } = MJ;
 
 /* ---------- admin text (Bangla / English) ---------- */
 const A = {
+  acc_guest: ['অতিথি (অ্যাকাউন্ট ছাড়া)', 'Guest (no account)'], acc_google: ['Google অ্যাকাউন্ট', 'Google account'], acc_email: ['রেজিস্টার্ড অ্যাকাউন্ট', 'Registered account'],
+  inv_mailed: ['চালান ইমেইলে পাঠানো হয়েছে', 'Invoice emailed'],
   setup_h: ['সেটআপ পরীক্ষা', 'Setup check'], setup_re: ['আবার পরীক্ষা', 'Check again'], ck_running: ['পরীক্ষা চলছে…', 'Checking…'],
   ck_net: ['সার্ভারে পৌঁছানো যায়নি — একটু পরে আবার চেষ্টা করুন', 'Could not reach the server — try again shortly'],
   ck_fb: ['Firebase সার্ভিস অ্যাকাউন্ট (Vercel)', 'Firebase service account (Vercel)'], ck_rules: ['Firestore রুলস (Firebase)', 'Firestore rules (Firebase)'],
@@ -400,7 +402,7 @@ function orderCard(o) {
     <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) + ' · ' + ftime(o.createdAt) : ''} · ${o.source === 'shop' ? a('shop') : a('web')}</small></div>${stBadge(o.status)}</header>
     <div class="ord-b">
       <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span>${c.email ? `<a class="em" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}<small>${esc(c.addr || '')}</small></div>
-      <div class="tags2"><span class="tg">${o.delivery && o.delivery.method === 'home' ? '🚚 ' + a('dl_home') + (o.delivery.fee ? ' · ' + money(o.delivery.fee) : '') : '🏬 ' + a('dl_pickup')}</span>${o.plan ? `<span class="tg">${a('plan_' + o.plan)}</span>` : ''}${P.method === 'ssl' ? `<span class="tg blue">${a('online')}</span>` : ''}${smsChip(o)}</div>
+      <div class="tags2"><span class="tg">${o.delivery && o.delivery.method === 'home' ? '🚚 ' + a('dl_home') + (o.delivery.fee ? ' · ' + money(o.delivery.fee) : '') : '🏬 ' + a('dl_pickup')}</span>${o.plan ? `<span class="tg">${a('plan_' + o.plan)}</span>` : ''}${P.method === 'ssl' ? `<span class="tg blue">${a('online')}</span>` : ''}${accChip(o)}${smsChip(o)}${o.invoiceMailedAt ? `<span class="tg green">✉ ${a('inv_mailed')}</span>` : ''}</div>
       <ul class="its">${(o.items || []).map(l => `<li><span>${l.custom ? '<em class="cust">✎</em> ' : ''}${esc(title(l))}${(+l.qty || 1) > 1 ? ' × ' + dg(l.qty) : ''} · ${MJ.t(l.carat)}</span><span>${MJ.weightText(+l.tb || 0)}</span><b>${money(l.total)}</b>${l.desc ? `<p class="idesc">${esc(l.desc)}</p>` : ''}${(l.refs || []).length ? `<div class="arefs">${l.refs.map(r => `<button type="button" class="aref" data-img><img src="${r}" alt="${a('refs')}"></button>`).join('')}</div>` : ''}</li>`).join('')}</ul>
       <div class="payx">
         <div><small>${MJ.t('grand')}</small><b>${money(o.grand)}</b></div>
@@ -448,7 +450,7 @@ $('#orderList').addEventListener('click', async e => {
     if (cashIn) { extra.pay = Object.assign({}, P, { amount: Math.round(+o.grand || 0), due: 0, collectedAt: Date.now() }); Object.assign(pub, { paid: Math.round(+o.grand || 0), due: 0 }); }
     try {
       await fb.setOrderStatus(o.id, S, extra, pub); MJ.toast(a('status_set'));
-      if (o.customer && o.customer.email && fb.idToken) fb.idToken().then(tk => fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: o.id, idToken: tk }) }))
+      if (((o.customer && o.customer.email) || o.uid) && fb.idToken) fb.idToken().then(tk => fetch('/api/notify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: o.id, idToken: tk }) }))
         .then(r => r && r.json()).then(j => { if (j && j.ok && !j.skipped) MJ.toast(j.mailed === false ? '⚠ ' + a('mail_not_sent') : '✉ ' + a('mailed'), j.mailed === false); }).catch(() => {});
     } catch (err) { fail(err); st.disabled = false; }
     return;
@@ -567,6 +569,12 @@ $('#posCreate').addEventListener('click', async e => {
 $('#posClear').addEventListener('click', () => { MJ.clearPOS(); $('#posAmt').value = ''; delete $('#posAmt').dataset.touched; });
 
 /* ---------- free automatic payment check (payment SMS from the shop phone) ---------- */
+function accChip(o) {
+  if (o.source === 'shop') return '';
+  if (!o.uid) return `<span class="tg">🙋 ${a('acc_guest')}</span>`;
+  const u = users.find(x => x.uid === o.uid) || {};
+  return `<span class="tg blue">👤 ${/google/.test(u.provider || '') ? a('acc_google') : a('acc_email')}${u.email ? ' · ' + esc(u.email) : ''}</span>`;
+}
 function smsChip(o) {
   const m = o.sms; if (!m) return '';
   const bad = m.check === 'sender' ? a('sms_sender_bad') : m.check === 'amount' ? a('sms_amt_bad') : '';

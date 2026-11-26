@@ -41,6 +41,8 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - Test server code with Node and a fake `fetch` (`L.setFetch`) — never call the real gateway or Firebase from tests.
 - Emails: new order → only the shop alert (Code.gs `ORDER_CONFIRMATION_TO_CUSTOMER: false`); the customer gets ONE email, the invoice + PDF,
   on the first success status (Verified / Advance paid / Delivered) via `L.customerMail` (sets `invoiceMailedAt`; other statuses send `mail:false`).
+  Signed-in customers: the order email is always the account email (`accEmail()`, checkout field read-only); server falls back to
+  `users/{uid}.email`. The Sheet payload carries `account {email, uid, provider}` → shop alert line “Account: Google / Registered / Guest”.
 - Emails are sent by `google-apps-script/Code.gs` (MailApp): (optional) itemised order confirmation on new order (client → Sheet `type:'order'`);
   `type:'mail'` + secret for updates. Server payloads carry `inv` (L.invoiceData from Firestore); Verified/Delivered mails attach an
   English A4 PDF invoice (`invoicePdf_`, Tk not ৳). Shop alert (`alert_`, HTML) to `ALERT_EMAIL` on every new order / payment.
