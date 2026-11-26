@@ -189,7 +189,12 @@ body.admin [hidden]{display:none!important}
 .tg{font-size:12px;padding:3px 10px;border-radius:999px;background:#fbf6ea;border:1px solid var(--a-line)}
 .tg.blue{background:#e8f0fc;border-color:#bcd2f3;color:#1f4f99}
 .tg.green{background:#e7f6ea;border-color:#b6e0bf;color:#1d6b33} .tg.warn{background:#fdf0e1;border-color:#f1cf9f;color:#8a4b06}
-.sms-card{margin-top:18px} .sms-sub{margin:16px 0 8px;font:600 15px 'Hind Siliguri','Jost',sans-serif}
+.sms-card{margin-top:18px}
+.cks{display:grid;gap:8px} .ck{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--a-line);border-radius:12px}
+.ck i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:13px;background:#eee;color:#666}
+.ck.ok i{background:#e7f6ea;color:#1d6b33} .ck.bad i{background:#fde8e8;color:#9b1c1c} .ck.wait i{background:#fdf0e1;color:#8a4b06}
+.ck b{display:block;font-weight:600;font-size:14px} .ck small{display:block;color:var(--a-mut);font-size:12.5px;margin-top:2px}
+.ck.bad{border-color:#f3c2c2} body.admin.dark .ck i{background:#241c12} .sms-sub{margin:16px 0 8px;font:600 15px 'Hind Siliguri','Jost',sans-serif}
 .sms-url{display:grid;gap:4px;margin-top:10px} .sms-url code{display:block;padding:10px 12px;border-radius:12px;background:#fbf6ea;border:1px dashed var(--a-line);font:500 13px ui-monospace,Consolas,monospace;word-break:break-all}
 .sms-url code i{color:#a2731a;font-style:normal;font-weight:700}
 .sms-log{display:grid;gap:6px} .sms-log .sl{display:grid;grid-template-columns:1.3fr .8fr 1fr 1.4fr;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--a-line);border-radius:12px;font-size:13px}

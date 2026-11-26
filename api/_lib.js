@@ -32,20 +32,23 @@ const sslLive = () => String(process.env.SSLCZ_LIVE || '').toLowerCase() === 'tr
 const sslHost = () => (sslLive() ? 'https://securepay.sslcommerz.com' : 'https://sandbox.sslcommerz.com');
 
 /* ---------- Google OAuth token from the service account (RS256 JWT) ---------- */
-let tok = null;
+const toks = {};
+const DS_SCOPE = 'https://www.googleapis.com/auth/datastore', CP_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const b64u = (x) => Buffer.from(typeof x === 'string' ? x : JSON.stringify(x)).toString('base64url');
-async function accessToken() {
+async function accessToken(scope) {
+  scope = scope || DS_SCOPE;
+  const tok = toks[scope];
   if (tok && tok.exp > Date.now() + 60000) return tok.v;
   const sa = serviceAccount(); if (!sa) throw new Error('no_service_account');
   const now = Math.floor(Date.now() / 1000);
-  const unsigned = b64u({ alg: 'RS256', typ: 'JWT' }) + '.' + b64u({ iss: sa.client_email, scope: 'https://www.googleapis.com/auth/datastore', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 });
+  const unsigned = b64u({ alg: 'RS256', typ: 'JWT' }) + '.' + b64u({ iss: sa.client_email, scope, aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 });
   const sig = crypto.createSign('RSA-SHA256').update(unsigned).sign(sa.private_key).toString('base64url');
   const r = await _fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: unsigned + '.' + sig }).toString() });
   const j = await r.json();
   if (!j.access_token) throw new Error('token_failed');
-  tok = { v: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 };
-  return tok.v;
+  toks[scope] = { v: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 };
+  return j.access_token;
 }
 
 /* ---------- Firestore REST (service account bypasses the security rules) ---------- */
@@ -211,6 +214,45 @@ async function sheetSms(from, text) {
   catch (e) { return false; }
 }
 
+/* ---------- setup check (admin Settings → "Setup check", or /api/pay/config?check=1) ----------
+ * Says which owner step is missing without showing any secret: service account, published Firestore rules,
+ * SSLCommerz store id/password (opens a throw-away gateway session that nobody is sent to), mail secret, SMS check. */
+let diag = null;
+async function diagnose(base) {
+  if (diag && diag.exp > Date.now()) return diag.v;
+  const out = { firebase: 'missing', rules: 'unknown', sslcommerz: 'not_set', mode: sslLive() ? 'live' : 'sandbox',
+    mail: process.env.SHEET_SECRET && !/^CHANGE-THIS/.test(process.env.SHEET_SECRET) ? 'set' : 'not_set', sms: smsConfigured() ? 'on' : 'off' };
+  const sa = serviceAccount();
+  if (process.env.FIREBASE_SERVICE_ACCOUNT && !sa) out.firebase = 'bad_json';
+  if (sa) {
+    try { await getDoc('public/settings'); out.firebase = 'ok'; } catch (e) { out.firebase = 'error_' + String(e.message || e).replace(/\W+/g, '_').slice(0, 40); }
+    try {
+      const h = { authorization: 'Bearer ' + await accessToken(CP_SCOPE) };
+      const rel = await _fetch(`https://firebaserules.googleapis.com/v1/projects/${sa.project_id}/releases/cloud.firestore`, { headers: h });
+      if (!rel.ok) out.rules = 'unknown_' + rel.status;
+      else {
+        const rj = await rel.json();
+        const rs = await _fetch('https://firebaserules.googleapis.com/v1/' + rj.rulesetName, { headers: h });
+        const src = rs.ok ? (((await rs.json()).source || {}).files || []).map(f => f.content || '').join('\n') : '';
+        out.rules = !src ? 'unknown' : /smsPay/.test(src) ? 'current' : /'plan'/.test(src) && /Awaiting payment/.test(src) ? 'update_sms' : 'old';
+      }
+    } catch (e) { out.rules = 'unknown'; }
+  }
+  if (process.env.SSLCZ_STORE_ID && process.env.SSLCZ_STORE_PASSWORD) {
+    try {
+      const form = { store_id: process.env.SSLCZ_STORE_ID, store_passwd: process.env.SSLCZ_STORE_PASSWORD, total_amount: '10.00', currency: 'BDT',
+        tran_id: 'CHECK-' + Date.now().toString(36).toUpperCase(), success_url: base + '/', fail_url: base + '/', cancel_url: base + '/',
+        cus_name: 'Setup check', cus_email: ADMIN_EMAIL, cus_add1: 'Parashuram Bazar', cus_city: 'Feni', cus_postcode: '3940', cus_country: 'Bangladesh',
+        cus_phone: '01819508127', shipping_method: 'NO', num_of_item: '1', product_name: 'Setup check', product_category: 'Jewellery', product_profile: 'physical-goods' };
+      const r = await _fetch(sslHost() + '/gwprocess/v4/api.php', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(form).toString() });
+      const j = await r.json().catch(() => ({}));
+      out.sslcommerz = j.status === 'SUCCESS' && j.GatewayPageURL ? 'ok' : 'error: ' + String(j.failedreason || j.status || ('HTTP ' + r.status)).slice(0, 120);
+    } catch (e) { out.sslcommerz = 'error: network'; }
+  }
+  diag = { v: out, exp: Date.now() + 30000 };
+  return out;
+}
+
 /* ---------- http helpers ---------- */
 function send(res, code, obj) { res.statusCode = code; res.setHeader('content-type', 'application/json'); res.setHeader('cache-control', 'no-store'); res.end(JSON.stringify(obj)); }
 function redirect(res, url) { res.statusCode = 303; res.setHeader('location', url); res.setHeader('cache-control', 'no-store'); res.end(); }
@@ -227,4 +269,4 @@ async function body(req) {
 
 module.exports = { ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, getDoc, listDocs, patchDoc, verifyOrder,
   verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a),
-  smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms };
+  smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms, diagnose };

@@ -34,6 +34,8 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
   (`L.matchPayment`): amount ≥ order pay.amount and same sender number → Verified / Advance paid (`verifiedBy:'sms'`, `sms{}` on the order),
   short → Amount mismatch, other sender → stays Pending with `sms.check:'sender'`. The client calls `api/pay/match` after placing a TrxID
   order and on the invoice while Pending (SMS usually arrives first). Admin Settings shows the SMS log (`fb.onSmsLog`) and order cards a chip.
+- Setup check: `/api/pay/config?check=1` (`L.diagnose`, cached 30 s) reports service account, published Firestore rules (Firebase Rules API,
+  cloud-platform token), SSLCommerz credentials (throw-away gateway session), mail secret, SMS — shown in admin Settings → “সেটআপ পরীক্ষা”.
 - bKash/Nagad Send Money is capped by `CONFIG.mfsMax` (৳50,000/day): checkout disables them above it and steers to Bangla QR / SSL.
 - Env vars on Vercel: FIREBASE_SERVICE_ACCOUNT, SSLCZ_STORE_ID, SSLCZ_STORE_PASSWORD, SSLCZ_LIVE, SHEET_SECRET (= Code.gs SECRET), optional SMS_SECRET. See PAYMENTS-EMAIL-SETUP.md.
 - Test server code with Node and a fake `fetch` (`L.setFetch`) — never call the real gateway or Firebase from tests.

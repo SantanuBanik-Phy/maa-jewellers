@@ -13,6 +13,20 @@ const { esc, money, dg, fdate, ftime, toNum, CARATS, CATS, GRAM } = MJ;
 
 /* ---------- admin text (Bangla / English) ---------- */
 const A = {
+  setup_h: ['সেটআপ পরীক্ষা', 'Setup check'], setup_re: ['আবার পরীক্ষা', 'Check again'], ck_running: ['পরীক্ষা চলছে…', 'Checking…'],
+  ck_net: ['সার্ভারে পৌঁছানো যায়নি — একটু পরে আবার চেষ্টা করুন', 'Could not reach the server — try again shortly'],
+  ck_fb: ['Firebase সার্ভিস অ্যাকাউন্ট (Vercel)', 'Firebase service account (Vercel)'], ck_rules: ['Firestore রুলস (Firebase)', 'Firestore rules (Firebase)'],
+  ck_ssl: ['SSLCommerz অনলাইন পেমেন্ট', 'SSLCommerz online payment'], ck_mail: ['গ্রাহকের ইমেইল (SHEET_SECRET)', 'Customer emails (SHEET_SECRET)'], ck_sms: ['SMS দিয়ে স্বয়ংক্রিয় যাচাই', 'SMS auto-check'],
+  ck_sandbox: ['টেস্ট মোড (sandbox) — আসল টাকা কাটবে না', 'Test mode (sandbox) — no real money'], ck_live: ['লাইভ — আসল পেমেন্ট', 'Live — real payments'],
+  fix_fb_missing: ['Vercel → Environment Variables-এ FIREBASE_SERVICE_ACCOUNT যোগ করে Redeploy করুন', 'Add FIREBASE_SERVICE_ACCOUNT in Vercel → Environment Variables, then Redeploy'],
+  fix_fb_bad: ['মান অসম্পূর্ণ — .json ফাইলের পুরো লেখা আবার Value-তে পেস্ট করে Redeploy করুন', 'The value is incomplete — paste the whole .json text into Value again, then Redeploy'],
+  fix_fb_err: ['Firebase-এ সংযোগ হয়নি — সঠিক প্রজেক্টের কী কিনা দেখুন', 'Could not connect to Firebase — check the key is from this project'],
+  fix_rules: ['পুরোনো রুলস চালু আছে — Firebase → Firestore → Rules-এ নতুন firestore.rules পুরোটা পেস্ট করে Publish করুন। এটা না করলে নতুন অর্ডার সেভ হয় না।', 'Old rules are published — paste the new firestore.rules in Firebase → Firestore → Rules and Publish. New orders cannot save until you do.'],
+  fix_rules_unknown: ['যাচাই করা যায়নি — নিশ্চিত হতে নতুন firestore.rules আবার Publish করুন', 'Could not check — publish the new firestore.rules again to be sure'],
+  fix_ssl_not: ['SSLCZ_STORE_ID ও SSLCZ_STORE_PASSWORD যোগ করলে চালু হবে', 'Turns on after you add SSLCZ_STORE_ID and SSLCZ_STORE_PASSWORD'],
+  fix_ssl_err: ['SSLCommerz Store ID / Password গ্রহণ করেনি — ইমেইল থেকে আবার কপি করুন; টেস্ট স্টোর হলে SSLCZ_LIVE = false', 'SSLCommerz refused the Store ID / Password — copy them again from the email; for a test store SSLCZ_LIVE = false'],
+  fix_mail: ['ইমেইল পাঠাতে SHEET_SECRET যোগ করুন (PAYMENTS-EMAIL-SETUP.md → D)', 'Add SHEET_SECRET to send emails (PAYMENTS-EMAIL-SETUP.md → D)'],
+  fix_sms: ['ঐচ্ছিক — PAYMENTS-EMAIL-SETUP.md → সেকশন F', 'Optional — PAYMENTS-EMAIL-SETUP.md → section F'],
   sms_h: ['স্বয়ংক্রিয় পেমেন্ট যাচাই (SMS) — ফ্রি', 'Automatic payment check (SMS) — free'],
   sms_on: ['চালু', 'On'], sms_off: ['বন্ধ — সেটআপ বাকি', 'Off — setup needed'],
   sms_p: ['দোকানের ফোনে বিকাশ / নগদ / ব্যাংকের “টাকা পেয়েছেন” SMS এলে TrxID ও টাকার পরিমাণ মিলিয়ে অর্ডার নিজে থেকে যাচাই হয়, ক্রেতার চালান খুলে যায় ও ইমেইল যায়। প্রেরকের নম্বর না মিললে বা টাকা কম হলে আপনাকে হাতে দেখতে বলা হবে।',
@@ -85,7 +99,7 @@ let seenIds = null, users = [], custFilter = 'all', custQ = '';
 /* smooth rendering: only the visible tab is redrawn, at most once per frame; hidden tabs catch up when opened */
 let ordersLoaded = false, orderLimit = 40, dashSettled = false;
 const freshIds = new Map();
-let smsLog = null, autoOn = null;
+let smsLog = null, autoOn = null, setup = null, setupBusy = false;
 const dirty = new Set();
 const shown = (name) => { if (view === name) return true; dirty.add(name); return false; };
 let rq = 0;
@@ -180,7 +194,7 @@ function renderShell() {
   $('#posMethod').innerHTML = ['cash', 'bkash', 'nagad', 'qr', 'none'].map(m => `<option value="${m}">${m === 'none' ? a('none') : MJ.t('m_' + m)}</option>`).join('');
   $('#posStatus').innerHTML = ['Delivered', 'Verified', 'Not paid'].map(s => `<option value="${s}">${MJ.t(MJ.ST_KEY[s])}</option>`).join('');
   $$('.view').forEach(v => { v.hidden = v.dataset.view !== view; });
-  updBadge(); renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderSms(); renderPosPick(); MJ.renderPOS(); posMethodUI();
+  updBadge(); renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderSms(); renderSetup(); renderPosPick(); MJ.renderPOS(); posMethodUI();
 }
 function renderVerifyBanner() {
   const b = $('#verifyBanner');
@@ -196,6 +210,7 @@ function setView(v) {
   $$('#sideNav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === v));
   $('#viewTitle').textContent = a(v); $('#side').classList.remove('open');
   if (v === 'pos') MJ.renderPOS();
+  if (v === 'settings') runSetup();
   scrollTo({ top: 0 });
 }
 document.addEventListener('click', e => {
@@ -552,6 +567,30 @@ function renderSms() {
     <p class="muted small">${a('sms_p')}</p>
     <div class="sms-url"><small>${a('sms_url')}</small><code>${esc(location.origin)}/api/sms?key=<i>${a('sms_secret')}</i></code></div>
     <h4 class="sms-sub">${a('sms_recent')}</h4>${rows}`;
+}
+
+/* ---------- setup check: which owner step is still missing (server: /api/pay/config?check=1) ---------- */
+function runSetup() {
+  if (setupBusy) return; setupBusy = true; setup = null; renderSetup();
+  fetch('/api/pay/config?check=1', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(j => { setup = j && j.check ? j.check : { error: 'net' }; setupBusy = false; renderSetup(); });
+}
+function renderSetup() {
+  const host = $('#setupCard'); if (!host) return;
+  const c = setup;
+  const row = (label, ok, fix) => `<div class="ck ${ok === true ? 'ok' : ok === false ? 'bad' : 'wait'}"><i>${ok === true ? '✓' : ok === false ? '✕' : '…'}</i><div><b>${label}</b>${ok === true ? (fix ? `<small>${fix}</small>` : '') : fix ? `<small>${fix}</small>` : ''}</div></div>`;
+  let body;
+  if (!c) body = `<p class="muted small">${a('ck_running')}</p>`;
+  else if (c.error) body = `<p class="muted small">${a('ck_net')}</p>`;
+  else body = [
+    row(a('ck_fb'), c.firebase === 'ok', c.firebase === 'ok' ? '' : c.firebase === 'missing' ? a('fix_fb_missing') : c.firebase === 'bad_json' ? a('fix_fb_bad') : a('fix_fb_err') + ' (' + esc(c.firebase) + ')'),
+    row(a('ck_rules'), c.rules === 'current' ? true : /^unknown/.test(c.rules) ? null : false, c.rules === 'current' ? '' : /^unknown/.test(c.rules) ? a('fix_rules_unknown') : a('fix_rules')),
+    row(a('ck_ssl'), c.sslcommerz === 'ok' ? true : c.sslcommerz === 'not_set' ? null : false, c.sslcommerz === 'ok' ? a(c.mode === 'live' ? 'ck_live' : 'ck_sandbox') : c.sslcommerz === 'not_set' ? a('fix_ssl_not') : a('fix_ssl_err') + ' — ' + esc(c.sslcommerz.replace(/^error:\s*/, ''))),
+    row(a('ck_mail'), c.mail === 'set' ? true : null, c.mail === 'set' ? '' : a('fix_mail')),
+    row(a('ck_sms'), c.sms === 'on' ? true : null, c.sms === 'on' ? '' : a('fix_sms'))
+  ].join('');
+  host.innerHTML = `<div class="card-h"><h3>${a('setup_h')}</h3><button class="a-btn small" type="button" id="setupRe" ${setupBusy ? 'disabled' : ''}>${a('setup_re')}</button></div><div class="cks">${body}</div>`;
+  $('#setupRe').onclick = runSetup;
 }
 
 /* ---------- settings ---------- */

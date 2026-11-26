@@ -269,7 +269,7 @@ bn: {
   tr_h: 'অর্ডার ট্র্যাকিং', tr_s1: 'অর্ডার গৃহীত', tr_s2: 'পেমেন্ট যাচাই', tr_s3: 'পেমেন্ট নিশ্চিত', tr_s4: 'হস্তান্তর', tr_live: 'লাইভ — দোকান যাচাই করলেই সাথে সাথে এখানে দেখাবে', tr_problem: 'সমস্যা হয়েছে — দোকানে যোগাযোগ করুন',
   track_title: 'আমার অর্ডার', track_sub: 'এই ডিভাইস থেকে দেওয়া সব অর্ডার ও পেমেন্টের অবস্থা লাইভ দেখুন, অথবা চালান নম্বর দিয়ে খুঁজুন।', track_ph: 'যেমন: MJ-261121-104512-K7Q4', track_btn: 'ট্র্যাক করুন',
   my_orders: 'এই ডিভাইসের অর্ডার', no_orders: 'এই ডিভাইসে এখনো কোনো অর্ডার নেই', not_found: 'এই নম্বরে কোনো অর্ডার পাওয়া যায়নি', track_off: 'অনলাইন ট্র্যাকিং এখনো চালু হয়নি — হোয়াটসঅ্যাপে যোগাযোগ করুন।', searching: 'খোঁজা হচ্ছে…',
-  order_placed: '✦ অর্ডার সম্পন্ন — চালান তৈরি হয়েছে', order_saved_local: 'ইন্টারনেট সমস্যা — অর্ডার ডিভাইসে সংরক্ষিত, সংযোগ পেলে পাঠানো হবে', placing: 'অর্ডার পাঠানো হচ্ছে…',
+  order_placed: '✦ অর্ডার সম্পন্ন — চালান তৈরি হয়েছে', order_saved_local: 'ইন্টারনেট সমস্যা — অর্ডার ডিভাইসে সংরক্ষিত, সংযোগ পেলে পাঠানো হবে', order_denied: 'অর্ডারটি এখন দোকানের সার্ভারে সেভ করা গেল না — চালান পাতা থেকে হোয়াটসঅ্যাপে অর্ডারটি পাঠান, দোকান নিশ্চিত করবে।', placing: 'অর্ডার পাঠানো হচ্ছে…',
   sold_out: 'স্টক শেষ', photo_note: 'ছবি প্রতীকী — আসল গহনা দোকানে বা হোয়াটসঅ্যাপে দেখে নিন।', photo_by: 'ছবি',
   rate_meta_live: 'বাজুস দর · দোকান থেকে লাইভ হালনাগাদ · কার্যকর: {d}', order_id: 'অর্ডার নং', view: 'দেখুন', cloud_ok: 'দোকানের সিস্টেমে জমা হয়েছে ✓',
   wa_hi: 'আসসালামু আলাইকুম / নমস্কার, মা জুয়েলার্স। আমি গহনা সম্পর্কে জানতে চাই।',
@@ -463,7 +463,7 @@ en: {
   tr_h: 'Order tracking', tr_s1: 'Order placed', tr_s2: 'Payment check', tr_s3: 'Payment confirmed', tr_s4: 'Handed over', tr_live: 'Live — updates here the moment the shop verifies', tr_problem: 'There is a problem — please contact the shop',
   track_title: 'My orders', track_sub: 'See every order placed from this device with its live payment status, or search by invoice number.', track_ph: 'e.g. MJ-261121-104512-K7Q4', track_btn: 'Track',
   my_orders: 'Orders on this device', no_orders: 'No orders on this device yet', not_found: 'No order found with this number', track_off: 'Online tracking is not switched on yet — please contact us on WhatsApp.', searching: 'Searching…',
-  order_placed: '✦ Order placed — invoice created', order_saved_local: 'Connection problem — order saved on this device and will be sent when online', placing: 'Placing order…',
+  order_placed: '✦ Order placed — invoice created', order_saved_local: 'Connection problem — order saved on this device and will be sent when online', order_denied: 'The order could not be saved on the shop server right now — send it on WhatsApp from the invoice page and the shop will confirm.', placing: 'Placing order…',
   sold_out: 'Sold out', photo_note: 'Photos are for illustration — see the actual piece in store or on WhatsApp.', photo_by: 'Photo',
   rate_meta_live: 'BAJUS rate · updated live by the shop · effective {d}', order_id: 'Order no.', view: 'View', cloud_ok: 'Received by the shop system ✓',
   wa_hi: 'Hello Maa Jewellers, I would like to know about your jewellery.',
@@ -1722,12 +1722,14 @@ function payMsg() {
 }
 /* SSLCommerz: the server (api/pay/init) re-checks the price and opens a payment session */
 async function startSsl(orderId) {
+  let why = 'offline';
   try {
     const r = await fetch('/api/pay/init', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId }) });
     const j = await r.json().catch(() => ({}));
     if (r.ok && j.url && (/^https:\/\//.test(j.url) || location.hostname === 'localhost')) { toast(t('redirecting')); location.href = j.url; return true; }
+    why = String(j.reason || j.error || r.status).slice(0, 80);
   } catch (e) { /* offline */ }
-  toast(t('ssl_fail'), true);
+  toast(t('ssl_fail') + ' · ' + why, true);
   return false;
 }
 function loadSslConfig() {
@@ -1759,7 +1761,7 @@ function bindCheckout() {
         fbMod.placeOrder(orderDoc(inv)).then(async r => {
           if (r && r.dup) { cb.disabled = false; lbl.textContent = old; toast(t('t_dup'), true); focusField('#payTrx'); return; }
           if (r && r.ok) { inv.cloud = true; if (pay.trx) askMatch(inv.no); }
-          else { const q = LS.get('mj_fb_outbox', []); q.push(orderDoc(inv)); LS.set('mj_fb_outbox', q); toast(t('order_saved_local'), true); }
+          else { const q = LS.get('mj_fb_outbox', []); q.push(orderDoc(inv)); LS.set('mj_fb_outbox', q); toast(/permission/.test((r && r.error) || '') ? t('order_denied') : t('order_saved_local'), true); }
           if (ssl && inv.cloud) {
             commitInvoice(inv, { currentTarget: cb }, { noNav: true }); lbl.textContent = t('redirecting');
             if (!(await startSsl(inv.no))) setTimeout(() => go('invoice.html'), 1200);
