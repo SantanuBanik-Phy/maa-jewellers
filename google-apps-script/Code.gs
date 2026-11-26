@@ -23,6 +23,8 @@ const SETTINGS = {
   ALERT_EMAIL: 'santanubanik2k@gmail.com',
   // Customer emails (order confirmation + status updates). Sent from your Gmail, max ~100/day.
   CUSTOMER_EMAILS: true,
+  // false = a new order emails only the shop (ALERT_EMAIL); the customer gets one email, the invoice, once the order succeeds
+  ORDER_CONFIRMATION_TO_CUSTOMER: false,
   // The shop's own Gmail: test emails go here and are not limited to 4 per hour
   SHOP_EMAIL: 'santanubanik2k@gmail.com',
   SHOP_PHONE: '01819-508127', SHOP_WHATSAPP: '01817-533313',
@@ -249,7 +251,7 @@ function saveOrder_(o) {
     }
     alert_('নতুন অর্ডার · New order ' + id + ' · ' + tk_(row['Grand total']), Object.assign({ 'Delivery': o.delivery && o.delivery.method === 'home' ? 'Home delivery' : 'Pick up', 'Plan': o.plan || '' }, row),
       items.map(i => ({ name: text_(i.name, 60), qty: i.qty, carat: text_(i.carat, 20), weight: text_(i.weight, 40), total: num_(i.total) })));
-    if (row['Email']) orderMail_(o, id, status, row);
+    if (row['Email'] && SETTINGS.ORDER_CONFIRMATION_TO_CUSTOMER) orderMail_(o, id, status, row);
     return { ok: true, status: status };
   } finally {
     lock.releaseLock();
@@ -435,9 +437,9 @@ const MT = {
           'Verified': 'আপনার পেমেন্ট যাচাই হয়েছে ✓ চালান এখন প্রিন্ট করতে পারবেন।', 'Advance paid': 'অগ্রিম পেয়েছি ✓ কারিগর আপনার ডিজাইন বানানো শুরু করবেন।',
           'Delivered': 'গহনা হস্তান্তর সম্পন্ন। মা জুয়েলার্সের সাথে থাকার জন্য ধন্যবাদ!', 'Rejected': 'পেমেন্ট মেলেনি — অনুগ্রহ করে দোকানে যোগাযোগ করুন।',
           'Amount mismatch': 'পরিশোধিত টাকা মেলেনি — অনুগ্রহ করে দোকানে যোগাযোগ করুন।' },
-        sub: { order: 'অর্ডার নিশ্চিতকরণ', paid: 'পেমেন্ট পেয়েছি', status: 'অর্ডার আপডেট', invoice: 'আপনার চালান' }, call: 'প্রশ্ন থাকলে কল করুন', foot: 'পরশুরাম বাজার, ফেনী',
+        sub: { order: 'অর্ডার নিশ্চিতকরণ', paid: 'পেমেন্ট পেয়েছি', status: 'অর্ডার আপডেট', invoice: 'অর্ডার সফল হয়েছে — আপনার চালান' }, call: 'প্রশ্ন থাকলে কল করুন', foot: 'পরশুরাম বাজার, ফেনী',
         item: 'বিবরণ', mk: 'মজুরি', amt: 'মূল্য', gold: 'স্বর্ণের দাম', disc: 'ছাড়', vat: 'ভ্যাট', adv: 'অগ্রিম / পুরোনো স্বর্ণ', ship: 'ডেলিভারি চার্জ', rate: 'দর', per: 'ভরি',
-        attached: 'আপনার পেমেন্ট নিশ্চিত হয়েছে — পূর্ণ চালান নিচে দেওয়া হলো এবং PDF হিসেবে সংযুক্ত আছে।', method: 'পরিশোধ মাধ্যম' },
+        attached: 'অভিনন্দন! আপনার অর্ডার সফলভাবে সম্পন্ন হয়েছে ✓ পূর্ণ চালান নিচে দেওয়া হলো এবং PDF হিসেবে সংযুক্ত আছে।', method: 'পরিশোধ মাধ্যম' },
   en: { hi: 'Dear {n},', thanks: 'Thank you for ordering from Maa Jewellers!', got: 'We have received your order.', order: 'Order no.', total: 'Grand total',
         paid: 'Paid', due: 'Due', status: 'Status', track: 'View your order', del: { home: 'Home delivery', pickup: 'Pick up at the shop' }, dl: 'Delivery',
         next: { 'Pending': 'We are checking your payment — your invoice unlocks as soon as it is verified.', 'Awaiting payment': 'Your order is confirmed as soon as the online payment completes.',
@@ -445,9 +447,9 @@ const MT = {
           'Verified': 'Your payment is verified ✓ You can now print your invoice.', 'Advance paid': 'Advance received ✓ Our craftsmen will start on your design.',
           'Delivered': 'Your jewellery has been handed over. Thank you for choosing Maa Jewellers!', 'Rejected': 'The payment could not be matched — please contact the shop.',
           'Amount mismatch': 'The amount paid does not match — please contact the shop.' },
-        sub: { order: 'Order confirmation', paid: 'Payment received', status: 'Order update', invoice: 'Your invoice' }, call: 'Questions? Call us', foot: 'Parashuram Bazar, Feni',
+        sub: { order: 'Order confirmation', paid: 'Payment received', status: 'Order update', invoice: 'Order successful — your invoice' }, call: 'Questions? Call us', foot: 'Parashuram Bazar, Feni',
         item: 'Item', mk: 'Making', amt: 'Amount', gold: 'Gold value', disc: 'Discount', vat: 'VAT', adv: 'Advance / old gold', ship: 'Delivery charge', rate: 'Rate', per: 'bhori',
-        attached: 'Your payment is confirmed — the full invoice is below and attached as a PDF.', method: 'Paid by' }
+        attached: 'Congratulations! Your order is complete ✓ The full invoice is below and attached as a PDF.', method: 'Paid by' }
 };
 const ST_BN = { 'Pending': 'যাচাইয়ের অপেক্ষায়', 'Awaiting payment': 'অনলাইন পেমেন্টের অপেক্ষায়', 'Verified': 'যাচাইকৃত ✓', 'Advance paid': 'অগ্রিম পরিশোধিত ✓',
   'Cash on delivery': 'ক্যাশ অন ডেলিভারি', 'Cash at shop': 'দোকানে পরিশোধ', 'Not paid': 'পরিশোধ হয়নি', 'Delivered': 'হস্তান্তরিত ✓', 'Rejected': 'বাতিল', 'Amount mismatch': 'টাকা মেলেনি' };
@@ -577,8 +579,9 @@ function statusMail_(b) {
     if (status === 'Verified' || status === 'Advance paid') sh.getRange(f.row, C('Verified at')).setValue(stamp_());
   }
   const inv = b.inv && typeof b.inv === 'object' ? b.inv : null;
+  if (b.mail === false) return { ok: true, mailed: false, skipped: true };   // the website decided no customer email for this status
   const sent = sendMail_(text_(b.to, 80), b.kind === 'paid' ? 'paid' : 'status', { id: id, status: status, lang: b.lang, name: text_(b.name, 80), grand: b.grand, paid: b.paid, due: b.due,
-    delivery: b.delivery, items: b.items || [], inv: inv, attachInvoice: !!inv && (status === 'Verified' || status === 'Delivered') });
+    delivery: b.delivery, items: b.items || [], inv: inv, attachInvoice: !!inv && ['Verified', 'Advance paid', 'Delivered'].indexOf(status) >= 0 });
   if (b.kind === 'paid') alert_('পেমেন্ট এসেছে · Payment ' + id + ' · ' + tk_(b.paid), { 'Order ID': id, Status: status, Paid: b.paid, Due: b.due, TrxID: b.trx, Method: (MNAME[b.method] || ['', b.method || ''])[1], Customer: text_(b.name, 80) });
   return { ok: true, mailed: sent, mailError: sent ? '' : MAIL_ERR };
 }

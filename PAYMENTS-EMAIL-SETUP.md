@@ -54,10 +54,9 @@ Emails are sent from your own Gmail by the Google Sheet script you already use.
 5. Run **setup** once (▶ Run → setup) so the sheet gets the new statuses and the Email column.
 6. Vercel → Environment Variables → add `SHEET_SECRET` = the same secret as step 3 → Redeploy.
 
-What customers receive:
-- **Order confirmation** — right after ordering (when they typed an email), with every item, weight, rate, making and total.
-- **Invoice (চালান) + PDF attached** — when the payment is verified (by you, by SSLCommerz or by the SMS check) and again when you press Delivered.
-- **Order update** — other status changes (cash on delivery, rejected …).
+What customers receive — **one email**: when the order succeeds (payment verified by you, by SSLCommerz or by the SMS check,
+advance paid, or delivered for cash orders) → **“অর্ডার সফল হয়েছে — আপনার চালান”** with the full invoice and the **PDF attached**. Nothing at order time.
+(To also send a confirmation at order time, set `ORDER_CONFIRMATION_TO_CUSTOMER: true` in Code.gs.)
 
 What the shop receives (at `ALERT_EMAIL`, default santanubanik2k@gmail.com): an email for **every new order** and **every payment** (online or SMS), with a button to the admin panel.
 

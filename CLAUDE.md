@@ -39,7 +39,9 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - bKash/Nagad Send Money is capped by `CONFIG.mfsMax` (৳50,000/day): checkout disables them above it and steers to Bangla QR / SSL.
 - Env vars on Vercel: FIREBASE_SERVICE_ACCOUNT, SSLCZ_STORE_ID, SSLCZ_STORE_PASSWORD, SSLCZ_LIVE, SHEET_SECRET (= Code.gs SECRET), optional SMS_SECRET. See PAYMENTS-EMAIL-SETUP.md.
 - Test server code with Node and a fake `fetch` (`L.setFetch`) — never call the real gateway or Firebase from tests.
-- Emails are sent by `google-apps-script/Code.gs` (MailApp): itemised order confirmation on new order (client → Sheet `type:'order'`);
+- Emails: new order → only the shop alert (Code.gs `ORDER_CONFIRMATION_TO_CUSTOMER: false`); the customer gets ONE email, the invoice + PDF,
+  on the first success status (Verified / Advance paid / Delivered) via `L.customerMail` (sets `invoiceMailedAt`; other statuses send `mail:false`).
+- Emails are sent by `google-apps-script/Code.gs` (MailApp): (optional) itemised order confirmation on new order (client → Sheet `type:'order'`);
   `type:'mail'` + secret for updates. Server payloads carry `inv` (L.invoiceData from Firestore); Verified/Delivered mails attach an
   English A4 PDF invoice (`invoicePdf_`, Tk not ৳). Shop alert (`alert_`, HTML) to `ALERT_EMAIL` on every new order / payment.
   `MAIL_ERR` gives the exact reason a mail was not sent (→ `mailError` → admin test button); `testEmail()` runs from the editor.

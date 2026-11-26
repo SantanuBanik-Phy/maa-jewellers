@@ -219,7 +219,7 @@ async function matchPayment(id, smsDoc) {
   await patchDoc('smsPay/' + trx, { order: id, result: status, matchedAt: now });
   await patchDoc('orders/' + id, upd);
   if (status !== o.status) await patchDoc('orderStatus/' + id, { status, updatedAt: now });
-  if (PAID_ST.includes(status)) await sheetMail(mailPayload(Object.assign({ id }, o), status, { kind: 'paid', trx }));
+  if (PAID_ST.includes(status)) await customerMail(Object.assign({ id }, o), status, { kind: 'paid', trx });
   return { ok: true, status, check };
 }
 /* keep the Google Sheet's "Payments (SMS)" tab filled too (optional) */
@@ -279,6 +279,16 @@ async function diagnose(base) {
   return out;
 }
 
+/* Customer emails: only ONE email, the invoice, when the order succeeds (payment verified, advance paid or delivered).
+ * Other status changes still update the Google Sheet but send nothing (mail:false). New orders only alert the shop. */
+const SUCCESS_ST = ['Verified', 'Advance paid', 'Delivered'];
+async function customerMail(o, status, extra) {
+  const send = SUCCESS_ST.includes(status) && !o.invoiceMailedAt && !!(o.customer && o.customer.email);
+  const out = await sheetMail(mailPayload(o, status, Object.assign({}, extra || {}, { mail: send })));
+  if (send && out.mailed && o.id) { try { await patchDoc('orders/' + o.id, { invoiceMailedAt: Date.now() }); } catch (e) { /* not critical */ } }
+  return Object.assign({}, out, { attempted: send });
+}
+
 /* ---------- http helpers ---------- */
 function send(res, code, obj) { res.statusCode = code; res.setHeader('content-type', 'application/json'); res.setHeader('cache-control', 'no-store'); res.end(JSON.stringify(obj)); }
 function redirect(res, url) { res.statusCode = 303; res.setHeader('location', url); res.setHeader('cache-control', 'no-store'); res.end(); }
@@ -293,6 +303,6 @@ async function body(req) {
   return {};
 }
 
-module.exports = { invoiceData, ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, sslId, sslPass, getDoc, listDocs, patchDoc, verifyOrder,
+module.exports = { invoiceData, customerMail, ADMIN_EMAIL, ORDER_RE, setFetch, serviceAccount, sslConfigured, sslLive, sslHost, sslId, sslPass, getDoc, listDocs, patchDoc, verifyOrder,
   verifyAdminToken, sheetMail, mailPayload, send, redirect, origin, body, enc, dec, sameRates, http: (...a) => _fetch(...a),
   smsSecret, smsConfigured, safeEq, trustedSender, parseSms, matchPayment, sheetSms, diagnose };

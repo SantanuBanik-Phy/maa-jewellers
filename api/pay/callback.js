@@ -24,7 +24,7 @@ async function confirm(id, tran, valId) {
   await L.patchDoc('orders/' + id, { status, statusAt: now, verifiedAt: risky ? null : now, pay,
     ssl: Object.assign({}, o.ssl, { paid: true, val_id: valId, card: v.card_type || '', bank_tran_id: v.bank_tran_id || '', risk: String(v.risk_level || '0'), at_paid: now }) });
   await L.patchDoc('orderStatus/' + id, { status, updatedAt: now, method: 'ssl', paid, due, grand });
-  await L.sheetMail(L.mailPayload(Object.assign({}, o, { pay }), status, { kind: 'paid', trx: pay.trx, card: pay.sender }));
+  await L.customerMail(Object.assign({ id }, o, { pay }), status, { kind: 'paid', trx: pay.trx, card: pay.sender });
   return { ok: true, status };
 }
 
