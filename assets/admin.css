@@ -259,3 +259,45 @@ body.admin.dark .st{background:#241c12}
 body.admin.dark .verify-banner{background:#2e2312;border-color:#6b5520;color:#f3d77a}
 body.admin.dark .who2 .em,body.admin.dark .tbl.cust .em{color:#8fb6f0}
 body.admin.dark .admin .line.glass,body.admin.dark .line.glass{background:var(--a-card)}
+
+/* ===================== v7: smoother, livelier admin ===================== */
+.a-btn{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s,background .25s}
+.a-btn:active{transform:scale(.95)}
+.a-btn.gold{background-size:200% 200%;background-image:linear-gradient(135deg,#fff1b8,#e7c34c 30%,#c9a227 55%,#f3d77a 80%,#b8860b);transition:background-position .6s,transform .2s,box-shadow .25s}
+.a-btn.gold:hover{background-position:100% 0;box-shadow:0 14px 30px -14px rgba(201,162,39,.9)}
+.card{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.card:hover{transform:translateY(-2px);box-shadow:0 26px 44px -34px rgba(80,55,10,.6)}
+.side-nav button{position:relative;transition:background .25s,color .25s,transform .25s}
+.side-nav button:hover{transform:translateX(3px)}
+.side-nav button i{transition:transform .35s cubic-bezier(.2,1.6,.4,1)}
+.side-nav button:hover i,.side-nav button.on i{transform:scale(1.2)}
+.side-nav em.bump{animation:badge 2s ease-in-out infinite}
+@keyframes badge{0%,100%{box-shadow:0 0 0 0 rgba(179,38,60,.6)}50%{box-shadow:0 0 0 6px rgba(179,38,60,0)}}
+.topbar::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.7),transparent)}
+.topbar{position:sticky}
+/* settled dashboard: live updates no longer replay entrance animations */
+.settled .kpi,.settled .chart .bar rect,.settled .tbar i{animation:none!important}
+/* skeletons while the first data arrives */
+.sk{border-radius:16px;background:linear-gradient(100deg,var(--a-line) 30%,rgba(255,255,255,.55) 50%,var(--a-line) 70%);background-size:300% 100%;animation:skel 1.3s linear infinite}
+body.admin.dark .sk{background-image:linear-gradient(100deg,#241c12 30%,#3a2d1b 50%,#241c12 70%)}
+.kpi-sk{height:98px}.line-sk{height:18px;margin:10px 0}.line-sk:nth-child(2){width:80%}.line-sk:nth-child(3){width:60%}
+.ord-sk{height:230px}
+@keyframes skel{to{background-position:-300% 0}}
+/* a new order flashes gold */
+.ord.fresh{animation:freshIn .7s cubic-bezier(.2,.8,.2,1) both,freshGlow 2.4s .7s ease-in-out 2}
+@keyframes freshIn{from{opacity:0;transform:translateY(-12px) scale(.98)}}
+@keyframes freshGlow{50%{box-shadow:0 0 0 4px rgba(231,195,76,.55),0 20px 40px -20px rgba(201,162,39,.8)}}
+.ord{transition:box-shadow .3s,transform .3s}
+.ord:hover{transform:translateY(-2px);box-shadow:0 22px 40px -30px rgba(80,55,10,.6)}
+.more-btn{grid-column:1/-1;justify-self:center;min-width:220px}
+/* sign-in gate: glowing gold ring and drifting sparkles */
+.gate{overflow:hidden}
+.gate::before,.gate::after{content:"";position:absolute;width:520px;height:520px;border-radius:50%;filter:none;opacity:.5;pointer-events:none;background:radial-gradient(circle,rgba(201,162,39,.35),transparent 65%);animation:gFloat 14s ease-in-out infinite}
+.gate::before{left:-160px;top:-160px}.gate::after{right:-180px;bottom:-200px;background:radial-gradient(circle,rgba(179,38,60,.35),transparent 65%);animation-duration:18s;animation-direction:reverse}
+@keyframes gFloat{50%{transform:translate(60px,40px)}}
+.gate-card{position:relative;z-index:1;animation:gateIn .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gateIn{from{opacity:0;transform:translateY(22px) scale(.97)}}
+.gate-logo{position:relative}
+.gate-logo::before{content:"";position:absolute;inset:-8px;border-radius:50%;background:conic-gradient(from 0deg,transparent,#f3d77a,transparent 40%,#c9a227,transparent 75%);-webkit-mask:radial-gradient(circle,transparent 62%,#000 64%);mask:radial-gradient(circle,transparent 62%,#000 64%);animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gate::before,.gate::after,.gate-logo::before,.sk,.side-nav em.bump,.ord.fresh{animation:none}}

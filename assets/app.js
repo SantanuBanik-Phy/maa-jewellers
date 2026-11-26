@@ -521,7 +521,7 @@ const ktLabel = (k) => k === 'trad' ? t('kt_short_trad') : ({ k22: '22K', k21: '
 const prod = (id) => catalog.find(p => p.id === id) || PRODUCTS.find(p => p.id === id);
 const pName = (p) => (p ? ((p.name && (p.name[lang] || p.name.en)) || '') : '');
 const imgSrc = (p, w = 600) => !p || !p.img ? '' : /^(https?:|data:)/.test(p.img) ? p.img : `https://images.unsplash.com/photo-${p.img}?w=${w}&h=${w}&fit=crop&q=72&auto=format`;
-const photo = (p, w, cls = 'ph') => p && p.img ? `<img class="${cls}" src="${imgSrc(p, w)}" alt="${esc(pName(p))}" loading="lazy" decoding="async" onerror="this.remove()">` : '';
+const photo = (p, w, cls = 'ph') => p && p.img ? `<img class="${cls}" src="${imgSrc(p, w)}" alt="${esc(pName(p))}" loading="lazy" decoding="async" onload="this.classList.add('ok')" onerror="this.remove()">` : '';
 const lineThumb = (l) => { const p = l.pid ? prod(l.pid) : null; return `<div class="thumb">${art(l.cat || 'custom', l.gem)}${photo(p, 160)}</div>`; };
 const waLink = (text) => 'https://wa.me/' + CONFIG.whatsapp + (text ? '?text=' + encodeURIComponent(text) : '');
 const openWA = (text) => { window.open(waLink(text), '_blank', 'noopener'); };
@@ -882,8 +882,10 @@ function updateAgo() {
   if (live.state === 'off') { el.textContent = t('tk_off'); return; }
   const s = Math.max(0, Math.round((Date.now() - live.at) / 1000));
   const span = s < 5 ? t('just') : s < 90 ? dg(s) + ' ' + t('sec') : dg(Math.round(s / 60)) + ' ' + t('min');
-  el.textContent = s < 5 ? span : t('tk_upd', { s: span });
-  $$('.ago-inline').forEach(x => { x.textContent = el.textContent; });
+  const txt = s < 5 ? span : t('tk_upd', { s: span });
+  if (el.textContent === txt) return;
+  el.textContent = txt;
+  $$('.ago-inline').forEach(x => { x.textContent = txt; });
 }
 
 async function getJSON(url, ms = 9000) {
@@ -1406,6 +1408,7 @@ function renderInvoice() {
       <div><h3>${t('placed_h')}</h3><p><span class="mono">${esc(I.no)}</span> · ${money(T.grand)}</p>
       <p class="hint">${I.buyer.email ? ICON.mail.replace('<svg', '<svg style="width:15px;height:15px;vertical-align:-3px;margin-right:5px"') + t('placed_mail', { m: esc(I.buyer.email) }) : t('placed_nomail')}</p></div>
       <button class="placed-x" type="button" data-unplace aria-label="×">${ICON.x}</button></div>` : '';
+  if (I.justPlaced && !I.celebrated) { I.celebrated = true; LS.set('mj_invoice', I); setTimeout(celebrate, 350); }
   host.innerHTML = placed + lockCard + `<article class="paper" id="paper" ${locked ? 'aria-hidden="true" inert' : ''}>
     <div class="goldbar top"></div><div class="goldbar bottom"></div>
     <div class="wm">${emblem({ mono: true })}</div>
@@ -1905,36 +1908,40 @@ function renderContactOptions() {
    EFFECTS
    ===================================================================== */
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LITE = document.documentElement.classList.contains('lite');
+const raf1 = (fn) => { let q = 0, a; return (...args) => { a = args; if (!q) { q = 1; requestAnimationFrame(() => { q = 0; fn(...a); }); } }; };
+const canVT = 'CSSViewTransitionRule' in window || (window.CSS && CSS.supports && CSS.supports('view-transition-name: a'));
 const fine = window.matchMedia('(pointer: fine)').matches;
 
 let tTimer;
 function toast(msg, err) {
   const el = $('#toast'); if (!el) return;
-  el.textContent = msg; el.classList.toggle('err', !!err); el.classList.add('show');
+  el.innerHTML = `<span class="ti">${err ? '!' : '✓'}</span><span>${esc(msg)}</span>`; el.classList.toggle('err', !!err);
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   clearTimeout(tTimer); tTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 function bindTilt(root) {
   if (!fine || reduce) return;
   $$('.tilt', root || document).forEach(el => {
     if (el._tilt) return; el._tilt = true;
-    el.addEventListener('pointermove', e => {
-      const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-      el.style.transform = `perspective(900px) rotateX(${(-y * 7).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg) translateY(-6px)`;
-    });
-    el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+    let r = null;
+    const apply = raf1((cx, cy) => { if (!r) return; const x = (cx - r.left) / r.width - .5, y = (cy - r.top) / r.height - .5;
+      el.style.transform = `perspective(900px) rotateX(${(-y * 7).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg) translateY(-6px)`; });
+    el.addEventListener('pointerenter', () => { r = el.getBoundingClientRect(); });
+    el.addEventListener('pointermove', e => { if (!r) r = el.getBoundingClientRect(); apply(e.clientX, e.clientY); }, { passive: true });
+    el.addEventListener('pointerleave', () => { r = null; requestAnimationFrame(() => { el.style.transform = ''; }); });
   });
 }
 function bindMagnetic() {
   if (!fine || reduce) return;
   $$('.mag').forEach(el => {
-    el.addEventListener('pointermove', e => {
-      const r = el.getBoundingClientRect();
-      el.style.transform = `translate(${((e.clientX - r.left) / r.width - .5) * 14}px, ${((e.clientY - r.top) / r.height - .5) * 12}px)`;
-    });
+    const apply = raf1((cx, cy) => { const r = el.getBoundingClientRect(); el.style.transform = `translate(${((cx - r.left) / r.width - .5) * 14}px, ${((cy - r.top) / r.height - .5) * 12}px)`; });
+    el.addEventListener('pointermove', e => apply(e.clientX, e.clientY), { passive: true });
     el.addEventListener('pointerleave', () => { el.style.transform = ''; });
   });
 }
 function fly(from) {
+  try { if (navigator.vibrate && !fine) navigator.vibrate(12); } catch (e) { /* */ }
   if (!$('#fab')) { burst(from, 10); return; }
   const target = (!$('#fab').classList.contains('hide') && $('#fab .bag')) || $('#cartBtn');
   const bump = () => { const f = $('#fab'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop'); };
@@ -1946,6 +1953,19 @@ function fly(from) {
   d.animate([{ transform: 'translate(0,0) scale(.6)', opacity: 1 }, { transform: `translate(${dx * .45}px, ${dy * .45 - 140}px) scale(1.25)`, opacity: 1, offset: .5 },
     { transform: `translate(${dx}px, ${dy}px) scale(.35)`, opacity: .3 }], { duration: 850, easing: 'cubic-bezier(.45,0,.25,1)' }).onfinish = () => { d.remove(); bump(); };
   burst(from, 10);
+}
+function celebrate() {
+  if (reduce || !document.body.animate) return;
+  const n = LITE ? 26 : 44;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div'), gem = i % 5 === 0;
+    c.className = 'coin' + (gem ? ' gem' : ''); if (!gem) c.textContent = '৳';
+    c.style.left = (Math.random() * 100) + 'vw'; document.body.appendChild(c);
+    const drift = (Math.random() - .5) * 160, rot = (Math.random() - .5) * 900, dur = 1800 + Math.random() * 1600;
+    c.animate([{ transform: `translate3d(0,0,0) rotate(${gem ? 45 : 0}deg) rotateY(0)`, opacity: 1 },
+      { transform: `translate3d(${drift}px, ${innerHeight + 60}px, 0) rotate(${rot}deg) rotateY(${720 + Math.random() * 720}deg)`, opacity: .9 }],
+      { duration: dur, delay: Math.random() * 700, easing: 'cubic-bezier(.25,.6,.4,1)', fill: 'both' }).onfinish = () => c.remove();
+  }
 }
 function burst(from, n = 22) {
   if (reduce || !document.body.animate) return;
@@ -1961,8 +1981,8 @@ function burst(from, n = 22) {
   }
 }
 function go(href) {
-  if (reduce) { location.href = href; return; }
-  document.body.classList.add('leaving'); setTimeout(() => { location.href = href; }, 260);
+  if (reduce || canVT) { location.href = href; return; }
+  document.body.classList.add('leaving'); setTimeout(() => { location.href = href; }, 180);
 }
 function initReveal() {
   const els = $$('.reveal:not(.in)');
@@ -1974,30 +1994,40 @@ function initCursor() {
   if (!fine || reduce) return;
   const c = $('#cursor'), d = $('#cursorDot'), spot = $('#spot');
   let x = innerWidth / 2, y = innerHeight / 2, cx = x, cy = y;
+  let running = false, tgt = null;
+  const loop = () => {
+    cx += (x - cx) * .2; cy += (y - cy) * .2;
+    c.style.transform = `translate3d(${cx}px,${cy}px,0)`; d.style.transform = `translate3d(${x}px,${y}px,0)`;
+    if (!spot.dataset.on) { spot.dataset.on = 1; spot.style.left = '0'; spot.style.top = '0'; }
+    spot.style.transform = `translate3d(${x - 280}px,${y - 280}px,0)`;
+    if (Math.abs(x - cx) + Math.abs(y - cy) > .4) requestAnimationFrame(loop); else running = false;
+  };
   document.addEventListener('pointermove', e => {
-    x = e.clientX; y = e.clientY; c.classList.add('on'); d.classList.add('on');
-    d.style.transform = `translate(${x}px,${y}px)`;
-    spot.style.left = x + 'px'; spot.style.top = y + 'px';
-    c.classList.toggle('big', !!(e.target.closest && e.target.closest('a,button,[data-qv],select,label')));
+    x = e.clientX; y = e.clientY;
+    if (tgt !== e.target) { tgt = e.target; c.classList.toggle('big', !!(tgt.closest && tgt.closest('a,button,[data-qv],select,label'))); }
+    if (!running) { running = true; c.classList.add('on'); d.classList.add('on'); requestAnimationFrame(loop); }
   }, { passive: true });
   document.addEventListener('pointerleave', () => { c.classList.remove('on'); d.classList.remove('on'); });
-  (function loop() { cx += (x - cx) * .18; cy += (y - cy) * .18; c.style.transform = `translate(${cx}px,${cy}px)`; requestAnimationFrame(loop); })();
 }
 function initSheen() {
+  if (LITE || !fine) return;
+  const apply = raf1((g, cx, cy) => { const r = g.getBoundingClientRect(); g.style.setProperty('--mx', (cx - r.left) + 'px'); g.style.setProperty('--my', (cy - r.top) + 'px'); });
   document.addEventListener('pointermove', e => {
-    const g = e.target.closest && e.target.closest('.glass'); if (!g) return;
-    const r = g.getBoundingClientRect(); g.style.setProperty('--mx', (e.clientX - r.left) + 'px'); g.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    const g = e.target.closest && e.target.closest('.glass'); if (g) apply(g, e.clientX, e.clientY);
   }, { passive: true });
 }
 function initProgress() {
   const p = $('#progress');
-  const upd = () => { const h = document.documentElement.scrollHeight - innerHeight; p.style.setProperty('--p', h > 0 ? (scrollY / h).toFixed(4) : 0); };
-  addEventListener('scroll', upd, { passive: true }); upd();
+  let h = 0;
+  const measure = () => { h = document.documentElement.scrollHeight - innerHeight; };
+  const upd = raf1(() => { if (!h) measure(); p.style.setProperty('--p', h > 0 ? Math.min(1, scrollY / h).toFixed(4) : 0); });
+  addEventListener('scroll', upd, { passive: true }); addEventListener('resize', () => { measure(); upd(); }); setTimeout(() => { measure(); upd(); }, 800); upd();
 }
 function initGems() {
   const cv = $('#gems'), ctx = cv && cv.getContext && cv.getContext('2d'); if (!ctx || reduce) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  let w, h, gems = [], run = true, mx = 0, my = 0, col = '226,190,110', colAt = 0;
+  const dpr = Math.min(window.devicePixelRatio || 1, LITE ? 1.5 : 2);
+  let w, h, gems = [], run = true, mx = 0, my = 0, col = '226,190,110', colAt = 0, last = 0, scrolling = 0, raf = 0;
+  const step = LITE ? 1000 / 30 : 0;
   const mk = (any) => {
     const s = (Math.random() * 26 + 12) * dpr;
     return { x: Math.random() * w, y: any ? Math.random() * h : h + s * 2, s, z: s / (38 * dpr),
@@ -2006,7 +2036,7 @@ function initGems() {
   };
   const size = () => {
     w = cv.width = innerWidth * dpr; h = cv.height = innerHeight * dpr; cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
-    gems = Array.from({ length: Math.round(Math.min(18, Math.max(8, innerWidth / 90))) }, () => mk(true));
+    gems = Array.from({ length: LITE ? 7 : Math.round(Math.min(16, Math.max(8, innerWidth / 100))) }, () => mk(true));
   };
   // brilliant-cut diamond in side view: table, crown facets, girdle, pavilion to culet
   const drawGem = (g, a) => {
@@ -2036,24 +2066,29 @@ function initGems() {
       ctx.closePath(); ctx.fill(); ctx.restore();
     }
   };
-  addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
+  if (fine) addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; }, { passive: true });
+  const wake = () => { if (!raf && run && !scrolling) raf = requestAnimationFrame(tick); };
+  addEventListener('scroll', () => { clearTimeout(scrolling); scrolling = setTimeout(() => { scrolling = 0; wake(); }, 160); }, { passive: true });
   const tick = (now) => {
-    if (!run) return;
+    raf = 0;
+    if (!run || scrolling) return;
+    if (step && now - last < step) { raf = requestAnimationFrame(tick); return; }
+    const k = last ? Math.min(3, (now - last) / 16.7) : 1; last = now;
     if (now - colAt > 1000) { col = getComputedStyle(document.documentElement).getPropertyValue('--gem-line').trim() || col; colAt = now; }
     ctx.clearRect(0, 0, w, h);
     for (const g of gems) {
-      g.y += g.vy; g.sway += .01; g.x += Math.sin(g.sway) * .12 * dpr; g.spin += g.vs;
+      g.y += g.vy * k; g.sway += .01 * k; g.x += Math.sin(g.sway) * .12 * dpr * k; g.spin += g.vs * k;
       if (g.y < -g.s * 2) Object.assign(g, mk(false));
-      if (g.glint > 0) { g.glint += .022; if (g.glint >= 1) g.glint = 0; }
-      else if (Math.random() < .0016) { g.glint = .001; g.gx = (Math.random() - .5) * g.s * .4; }
+      if (g.glint > 0) { g.glint += .022 * k; if (g.glint >= 1) g.glint = 0; }
+      else if (Math.random() < .0016 * k) { g.glint = .001; g.gx = (Math.random() - .5) * g.s * .4; }
       const edge = Math.min(1, (h - g.y) / (h * .15), (g.y + g.s) / (h * .2));
       drawGem(g, Math.max(0, edge) * (.45 + g.z * .55));
     }
-    requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
   };
-  size(); addEventListener('resize', size);
-  document.addEventListener('visibilitychange', () => { run = !document.hidden; if (run) requestAnimationFrame(tick); });
-  requestAnimationFrame(tick);
+  let rz = 0; size(); addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(size, 200); });
+  document.addEventListener('visibilitychange', () => { run = !document.hidden; last = 0; wake(); });
+  wake();
 }
 
 /* =====================================================================
@@ -2316,7 +2351,7 @@ function accOrderCard(o) {
 }
 function renderAccount() {
   const host = $('#accountBox'); if (!host) return;
-  if (!fbReadyDone) { host.innerHTML = `<div class="acc-wait glass"><span class="spin"></span>${t('acc_loading')}</div>`; return; }
+  if (!fbReadyDone) { host.innerHTML = `<div class="acc-wait glass"><span class="ldr"></span>${t('acc_loading')}</div>`; return; }
   if (!fbMod) { host.innerHTML = `<div class="trk-off glass"><p>${t('acc_off')}</p><a class="btn btn-gold btn-sm" href="track.html">${t('nav_track')}</a></div>`; return; }
   if (!user) {
     const reg = accState.mode === 'register';
@@ -2336,7 +2371,7 @@ function renderAccount() {
           <label class="lbl" for="aPass">${t('acc_pass')}</label><div class="in ico pw">${ICON.lock}<input id="aPass" type="${accState.show ? 'text' : 'password'}" autocomplete="${reg ? 'new-password' : 'current-password'}" required minlength="6"><button type="button" class="eye" data-showpw aria-label="${t('acc_show')}">${accState.show ? ICON.eyeoff : ICON.eye}</button></div>
           ${reg ? `<p class="hint">${t('acc_pass_hint')}</p>` : `<button type="button" class="linkish" data-forgot>${t('acc_forgot')}</button>`}
           ${accState.err ? `<p class="aerr" role="alert">${esc(accState.err)}</p>` : ''}
-          <button class="btn btn-gold btn-lg" type="submit" ${accState.busy ? 'disabled' : ''}>${accState.busy ? '<span class="spin"></span>' : ICON.check}<span>${t(reg ? 'acc_do_register' : 'acc_do_login')}</span></button>
+          <button class="btn btn-gold btn-lg" type="submit" ${accState.busy ? 'disabled' : ''}>${accState.busy ? '<span class="ldr"></span>' : ICON.check}<span>${t(reg ? 'acc_do_register' : 'acc_do_login')}</span></button>
         </form>
       </div></div>`;
     return;
@@ -2358,7 +2393,7 @@ function renderAccount() {
       .map(([k, v, ic], i) => `<div class="astat glass" style="animation-delay:${i * .07}s"><span class="ic">${ic}</span><small>${t(k)}</small><b>${v}</b></div>`).join('')}</div>
     <div class="acc-tabs glass" role="tablist">${['orders', 'wish', 'profile'].map(k => `<button type="button" role="tab" data-atab="${k}" aria-selected="${tab === k}">${t('acc_t_' + k)}${k === 'orders' && list.length ? ` <em>${dg(list.length)}</em>` : k === 'wish' && wish.size ? ` <em>${dg(wish.size)}</em>` : ''}</button>`).join('')}</div>
     <div class="acc-pane">${tab === 'orders'
-      ? (myOrders === null ? `<div class="acc-wait"><span class="spin"></span>${t('acc_loading')}</div>`
+      ? (myOrders === null ? `<div class="acc-wait"><span class="ldr"></span>${t('acc_loading')}</div>`
         : (list.length ? `<div class="aords">${list.map(accOrderCard).join('')}</div>` : `<div class="empty glass"><h3>${t('acc_no_orders')}</h3><a class="btn btn-gold btn-sm" href="shop.html">${t('go_shop')}</a></div>`)
           + (device.length ? `<a class="btn btn-glass btn-sm dev-link" href="track.html">${t('acc_device', { n: dg(device.length) })}</a>` : ''))
       : tab === 'wish'
@@ -2583,12 +2618,23 @@ initCursor();
 initProgress();
 initGems();
 loadRatesFile();
-loadFirebase();
+if (['home', 'shop', 'about', 'contact', 'calc'].includes(PAGE)) (window.requestIdleCallback || ((f) => setTimeout(f, 600)))(() => loadFirebase(), { timeout: 2200 });
+else loadFirebase();
 if (PAGE === 'pay' || PAGE === 'invoice') loadSslConfig();
 liveTick();
 setInterval(liveTick, CONFIG.liveEverySec * 1000);
 setInterval(updateAgo, 1000);
 setInterval(loadRatesFile, 30 * 60 * 1000);
 if (PAGE !== 'invoice') flushOutbox();
+if (document.prerendering) document.addEventListener('prerenderingchange', () => {
+  cart = LS.get(CART_KEY, []); if (!Array.isArray(cart)) cart = [];
+  Object.assign(buyer, LS.get(BUYER_KEY, {}));
+  invoice = LS.get('mj_invoice', null);
+  const lw = LS.get('mj_wish', []); wish.clear(); lw.forEach(x => wish.add(x));
+  const ln = LS.get('mj_lang', 'bn') === 'en' ? 'en' : 'bn';
+  if (ln !== lang) lang = ln;
+  document.documentElement.setAttribute('data-theme', LS.get('mj_theme', document.documentElement.getAttribute('data-theme')) || 'dark');
+  renderAll(); updateCartBadges(); initReveal();
+}, { once: true });
 addEventListener('online', () => flushOutbox());
 })();

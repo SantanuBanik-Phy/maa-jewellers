@@ -56,7 +56,7 @@ const A = {
   plan_cod: ['ক্যাশ অন ডেলিভারি', 'Cash on delivery'], plan_shop: ['দোকানে পরিশোধ', 'Pay at shop'], refs: ['রেফারেন্স ছবি', 'Reference photos'],
   collected: ['টাকা পেয়েছি · হস্তান্তর', 'Cash collected · delivered'], mailed: ['গ্রাহককে ইমেইল পাঠানো হয়েছে', 'Customer emailed'],
   set_fee: ['হোম ডেলিভারি চার্জ (৳)', 'Home delivery charge (৳)'], set_adv: ['কাস্টম অর্ডারে অগ্রিম (%)', 'Advance for custom orders (%)'], set_cod: ['ক্যাশ অন ডেলিভারি চালু', 'Allow cash on delivery'],
-  online: ['অনলাইন (SSLCommerz)', 'Online (SSLCommerz)'],
+  online: ['অনলাইন (SSLCommerz)', 'Online (SSLCommerz)'], show_more: ['আরও দেখুন ({n})', 'Show more ({n})'],
   customers: ['গ্রাহক', 'Customers'], ch_sales: ['গত ১৪ দিনের বিক্রি', 'Sales — last 14 days'], ch_status: ['অর্ডারের অবস্থা', 'Order status'],
   ch_top: ['সবচেয়ে বেশি বিক্রি', 'Best sellers'], ch_pay: ['পেমেন্ট মাধ্যম', 'Payment methods'], ch_cust: ['নতুন গ্রাহক', 'Newest customers'],
   morning: ['শুভ সকাল', 'Good morning'], noon: ['শুভ দুপুর', 'Good afternoon'], evening: ['শুভ সন্ধ্যা', 'Good evening'], night: ['শুভ রাত্রি', 'Good night'],
@@ -74,6 +74,19 @@ const fail = (e) => { console.error(e); MJ.toast(/permission/i.test(String(e && 
 
 let user = null, orders = [], rateHist = [], fsProducts = null, settings = {}, view = 'dash', orderFilter = 'all', orderQ = '';
 let seenIds = null, users = [], custFilter = 'all', custQ = '';
+/* smooth rendering: only the visible tab is redrawn, at most once per frame; hidden tabs catch up when opened */
+let ordersLoaded = false, orderLimit = 40, dashSettled = false;
+const freshIds = new Map();
+const dirty = new Set();
+const shown = (name) => { if (view === name) return true; dirty.add(name); return false; };
+let rq = 0;
+function refresh() { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; updBadge(); renderOrders(); renderDash(); renderCustomers(); }); }
+function updBadge() {
+  const pend = orders.filter(o => o.status === 'Pending' || o.status === 'Amount mismatch').length;
+  const pb = $('#pendBadge'); if (pb) { pb.textContent = pend ? dg(pend) : ''; pb.classList.toggle('bump', !!pend); }
+  document.title = (pend ? `(${pend}) ` : '') + 'Admin · মা জুয়েলার্স';
+}
+const skel = (n, cls) => Array.from({ length: n }, () => `<div class="sk ${cls || ''}"></div>`).join('');
 
 /* ---------- gate ---------- */
 $('#gateLogo').innerHTML = MJ.emblem({ sparkle: true });
@@ -125,16 +138,17 @@ function startApp() {
   fb.onRateHistory(h => { rateHist = h || []; renderRatesView(); renderOrders(); });
   fb.onSettings(st => { settings = st || {}; MJ.setSettings(settings); renderSettings(); });
   fb.onProducts(list => { fsProducts = list || []; if (fsProducts.length) MJ.setCatalog(fsProducts); renderProducts(); renderPosPick(); });
-  if (fb.onUsers) fb.onUsers(list => { users = list || []; renderCustomers(); renderDash(); });
+  if (fb.onUsers) fb.onUsers(list => { users = list || []; refresh(); });
   fb.onOrders((list, err) => {
     if (!list) { if (err) fail(err); return; }
     const fresh = seenIds ? list.filter(o => !seenIds.has(o.id) && o.source !== 'shop') : [];
     seenIds = new Set(list.map(o => o.id));
-    orders = list;
-    if (fresh.length) { MJ.toast('🔔 ' + a('new_order') + ' · ' + fresh[0].id); chime(); }
-    const pend = orders.filter(o => o.status === 'Pending').length;
-    document.title = (pend ? `(${pend}) ` : '') + 'Admin · মা জুয়েলার্স';
-    renderOrders(); renderDash(); renderCustomers();
+    orders = list; ordersLoaded = true;
+    if (fresh.length) {
+      MJ.toast('🔔 ' + a('new_order') + ' · ' + fresh[0].id); chime();
+      fresh.forEach(o => freshIds.set(o.id, Date.now())); setTimeout(() => { freshIds.clear(); }, 8000);
+    }
+    refresh();
   });
   MJ.renderPOS();
 }
@@ -155,7 +169,7 @@ function renderShell() {
   $('#posMethod').innerHTML = ['cash', 'bkash', 'nagad', 'qr', 'none'].map(m => `<option value="${m}">${m === 'none' ? a('none') : MJ.t('m_' + m)}</option>`).join('');
   $('#posStatus').innerHTML = ['Delivered', 'Verified', 'Not paid'].map(s => `<option value="${s}">${MJ.t(MJ.ST_KEY[s])}</option>`).join('');
   $$('.view').forEach(v => { v.hidden = v.dataset.view !== view; });
-  renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderPosPick(); MJ.renderPOS(); posMethodUI();
+  updBadge(); renderDash(); renderRatesView(); renderOrders(); renderCustomers(); renderProducts(); renderSettings(); renderPosPick(); MJ.renderPOS(); posMethodUI();
 }
 function renderVerifyBanner() {
   const b = $('#verifyBanner');
@@ -167,6 +181,7 @@ function renderVerifyBanner() {
 }
 function setView(v) {
   view = v; $$('.view').forEach(x => { x.hidden = x.dataset.view !== v; });
+  if (dirty.has(v)) { dirty.delete(v); ({ dash: renderDash, orders: renderOrders, customers: renderCustomers, products: renderProducts })[v](); }
   $$('#sideNav [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === v));
   $('#viewTitle').textContent = a(v); $('#side').classList.remove('open');
   if (v === 'pos') MJ.renderPOS();
@@ -234,11 +249,11 @@ function payMix() {
     <ul class="legend">${ent.map(([k, n]) => `<li><i style="background:${col[k] || '#999'}"></i><span>${k === 'none' ? a('none') : MJ.t('m_' + k)}</span><b>${dg(Math.round(n / tot * 100))}%</b></li>`).join('')}</ul>`;
 }
 function renderDash() {
-  if (!$('#kpis')) return;
+  if (!$('#kpis') || !shown('dash')) return;
+  if (!ordersLoaded) { $('#kpis').innerHTML = skel(5, 'kpi-sk'); ['#chSales', '#chStatus', '#chTop', '#chPay', '#chCust', '#dashRecent'].forEach(id => { $(id).innerHTML = skel(3, 'line-sk'); }); return; }
   const today = dayKey(Date.now()), td = orders.filter(o => dayKey(o.createdAt) === today);
   const pend = orders.filter(o => o.status === 'Pending' || o.status === 'Amount mismatch').length;
   const rev = td.reduce((s, o) => s + paidOf(o), 0);
-  const pb = $('#pendBadge'); if (pb) pb.textContent = pend ? dg(pend) : '';
   const name = (user && (user.displayName || user.email || '').split(/[@\s]/)[0]) || '';
   $('#hello').innerHTML = `<div class="hello-in"><div><small>${new Date().toLocaleDateString(MJ.lang === 'en' ? 'en-GB' : 'bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</small>
       <h2>${greet()}${name ? ', ' + esc(name) : ''} ✦</h2><p>${a('hello_p', { n: dg(td.length), p: dg(pend) })}</p></div>
@@ -252,6 +267,7 @@ function renderDash() {
   $('#chCust').innerHTML = newest.length ? newest.map(u => `<div class="cu-mini"><span class="cav">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc(String(u.name || u.email || '?').charAt(0).toUpperCase())}</span><div><b>${esc(u.name || '—')}</b><small>${esc(u.email || '')}</small></div></div>`).join('') : `<p class="muted">${a('no_cust')}</p>`;
   const O = MJ.official;
   $('#dashRates').innerHTML = `<div class="rate-mini">${CARATS.map(k => `<div><small>${MJ.t(k)}</small><b>${money(O[k])}</b></div>`).join('')}</div><p class="muted small">${MJ.t(O.from === 'firebase' ? 'rate_meta_live' : 'rate_meta', { d: fdate(O.date) })}</p>`;
+  if (!dashSettled) { dashSettled = true; setTimeout(() => { const d = $('.view[data-view="dash"]'); if (d) d.classList.add('settled'); }, 1400); }
   $('#dashRecent').innerHTML = orders.slice(0, 6).map(o => `<button class="mini-order" type="button" data-go="orders"><span class="mono">${esc(o.id)}</span><span>${esc((o.customer && o.customer.name) || '—')}</span><b>${money(o.grand)}</b>${stBadge(o.status)}</button>`).join('') || `<p class="muted">${a('no_orders')}</p>`;
 }
 
@@ -271,7 +287,7 @@ function customerRows() {
   return [...rows.values()];
 }
 function renderCustomers() {
-  if (!$('#custTable')) return;
+  if (!$('#custTable') || !shown('customers')) return;
   const all = customerRows(), reg = all.filter(r => r.reg).length;
   $('#custChips').innerHTML = [['all', a('all'), all.length], ['reg', a('registered'), reg], ['guest', a('guests'), all.length - reg]]
     .map(([k, l, n]) => `<button type="button" class="chip ${custFilter === k ? 'on' : ''}" data-cf="${k}">${l} <em>${dg(n)}</em></button>`).join('');
@@ -339,7 +355,7 @@ function orderCard(o) {
   const phone = String(c.phone || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g, '');
   const wa = phone ? 'https://wa.me/88' + phone.replace(/^88/, '') : '';
   const title = (l) => (MJ.lang === 'en' ? l.title_en : l.title_bn) || l.name || l.cat;
-  return `<article class="ord ${o.status === 'Pending' ? 'pending' : ''}" data-id="${esc(o.id)}">
+  return `<article class="ord ${o.status === 'Pending' ? 'pending' : ''} ${freshIds.has(o.id) ? 'fresh' : ''}" data-id="${esc(o.id)}">
     <header><div><span class="mono">${esc(o.id)}</span><small>${o.createdAt ? fdate(o.createdAt) + ' · ' + ftime(o.createdAt) : ''} · ${o.source === 'shop' ? a('shop') : a('web')}</small></div>${stBadge(o.status)}</header>
     <div class="ord-b">
       <div class="who2"><b>${esc(c.name || '—')}</b><span>${esc(c.phone ? dg(c.phone) : '')}</span>${c.email ? `<a class="em" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}<small>${esc(c.addr || '')}</small></div>
@@ -365,16 +381,21 @@ function orderCard(o) {
   </article>`;
 }
 function renderOrders() {
-  if (!$('#orderList')) return;
+  if (!$('#orderList') || !shown('orders')) return;
+  if (!ordersLoaded) { $('#orderList').innerHTML = skel(4, 'ord-sk'); return; }
   const counts = { all: orders.length }; STATUSES.forEach(s => { counts[s] = orders.filter(o => o.status === s).length; });
   $('#orderChips').innerHTML = ['all', ...STATUSES].filter(s => s === 'all' || counts[s]).map(s => `<button type="button" class="chip ${orderFilter === s ? 'on' : ''}" data-of="${s}">${s === 'all' ? a('all') : MJ.t(MJ.ST_KEY[s])} <em>${dg(counts[s])}</em></button>`).join('');
   const q = orderQ.trim().toLowerCase();
   const list = orders.filter(o => (orderFilter === 'all' || o.status === orderFilter) && (!q || [o.id, o.customer && o.customer.name, o.customer && o.customer.phone, o.pay && o.pay.trx].some(x => String(x || '').toLowerCase().includes(q))));
-  $('#orderList').innerHTML = list.map(orderCard).join('') || `<p class="muted empty-a">${a('no_orders')}</p>`;
+  const more = list.length - orderLimit;
+  $('#orderList').innerHTML = (list.slice(0, orderLimit).map(orderCard).join('') || `<p class="muted empty-a">${a('no_orders')}</p>`)
+    + (more > 0 ? `<button class="a-btn more-btn" type="button" data-more>${a('show_more', { n: dg(more) })}</button>` : '');
 }
-$('#orderChips').addEventListener('click', e => { const b = e.target.closest('[data-of]'); if (b) { orderFilter = b.dataset.of; renderOrders(); } });
-$('#orderSearch').addEventListener('input', e => { orderQ = e.target.value; renderOrders(); });
+$('#orderChips').addEventListener('click', e => { const b = e.target.closest('[data-of]'); if (b) { orderFilter = b.dataset.of; orderLimit = 40; renderOrders(); } });
+let qT = 0;
+$('#orderSearch').addEventListener('input', e => { orderQ = e.target.value; orderLimit = 40; clearTimeout(qT); qT = setTimeout(renderOrders, 120); });
 $('#orderList').addEventListener('click', async e => {
+  if (e.target.closest('[data-more]')) { orderLimit += 40; renderOrders(); return; }
   const card = e.target.closest('.ord'); if (!card) return;
   const o = orders.find(x => x.id === card.dataset.id); if (!o) return;
   const st = e.target.closest('[data-st]');
@@ -401,7 +422,7 @@ $('#orderList').addEventListener('click', async e => {
 /* ---------- products ---------- */
 const usingFs = () => fsProducts && fsProducts.length;
 function renderProducts() {
-  if (!$('#prodGrid')) return;
+  if (!$('#prodGrid') || !shown('products')) return;
   const list = MJ.catalog;
   $('#prodCount').textContent = a('prod_count', { n: dg(list.length) }) + (usingFs() ? '' : ' · ' + a('local_cat'));
   $('#seedProd').hidden = !!usingFs();

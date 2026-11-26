@@ -9,11 +9,19 @@
 <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 <script>
 (function(){try{var t=localStorage.getItem('mj_theme');t=t?JSON.parse(t):(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+(function(){try{var n=navigator,c=n.connection||{},q=location.search,f=localStorage.getItem('mj_fx');
+var lite=/fx=lite/.test(q)||f==='"lite"'||(!/fx=full/.test(q)&&f!=='"full"'&&(matchMedia('(pointer: coarse)').matches||(n.hardwareConcurrency||8)<=4||(n.deviceMemory||8)<=4||c.saveData||/2g/.test(c.effectiveType||'')));
+if(lite)document.documentElement.classList.add('lite');}catch(e){}})();
+(function(){function q(v){if(v){[v.ready,v.finished,v.updateCallbackDone].forEach(function(p){p&&p.catch(function(){})})}}addEventListener('pagereveal',function(e){q(e.viewTransition)});addEventListener('unhandledrejection',function(e){var r=e.reason;if(r&&/Transition was (aborted|skipped)/.test(r.message||''))e.preventDefault()});addEventListener('pageswap',function(e){q(e.viewTransition)});})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hind+Siliguri:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hind+Siliguri:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hind+Siliguri:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600&display=swap"></noscript>
 <link rel="stylesheet" href="assets/style.css">
+<script type="speculationrules">
+{"prefetch":[{"where":{"href_matches":["/","/index.html","/shop.html","/calculator.html","/about.html","/contact.html","/cart.html","/track.html","/checkout.html","/account.html"]},"eagerness":"moderate"}]}
+</script>
 </head>
 <body data-page="about" data-title="nav_about">
 <main id="main">

@@ -57,7 +57,7 @@ main{position:relative;z-index:1;min-height:60vh}
 
 /* ---------- Background ---------- */
 .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:var(--blob-op);will-change:transform}
+.blob{position:absolute;border-radius:50%;opacity:var(--blob-op);will-change:transform}
 .b1{width:640px;height:640px;left:-180px;top:-160px;background:radial-gradient(circle,var(--blob1),transparent 70%);animation:d1 26s ease-in-out infinite}
 .b2{width:560px;height:560px;right:-200px;top:28%;background:radial-gradient(circle,var(--blob2),transparent 70%);animation:d2 32s ease-in-out infinite}
 .b3{width:540px;height:540px;left:28%;bottom:-240px;background:radial-gradient(circle,var(--blob3),transparent 70%);animation:d3 28s ease-in-out infinite}
@@ -72,7 +72,7 @@ main{position:relative;z-index:1;min-height:60vh}
 /* ---------- Glass ---------- */
 .glass{position:relative;isolation:isolate;border-radius:24px;
   background:linear-gradient(140deg,var(--glass-a),var(--glass-b));
-  backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+  backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
   border:1px solid var(--glass-edge);box-shadow:var(--shadow),inset 0 1px 0 var(--glass-inset);
   transition:box-shadow .5s,transform .5s cubic-bezier(.2,.7,.2,1),background .6s,border-color .6s}
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;
@@ -222,9 +222,9 @@ main{position:relative;z-index:1;min-height:60vh}
 .spin,.spin-rev,.twinkle{transform-box:fill-box;transform-origin:center}
 .spin{animation:spin 60s linear infinite}
 .spin-rev{animation:spin 90s linear infinite reverse}
-@keyframes spin{to{transform:rotate(360deg)}}
+
 .twinkle{animation:twinkle 3.2s ease-in-out infinite}
-@keyframes twinkle{0%,100%{opacity:.1;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+@keyframes twinkle{0%,100%{opacity:.12}50%{opacity:1}}
 .divider{display:flex;align-items:center;gap:14px;color:var(--hi);margin:6px 0}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,currentColor,transparent)}
 
@@ -921,15 +921,15 @@ main{overflow-x:clip}
 .trk-steps li.done{color:var(--ink)}
 .trk-steps li.done i{background:linear-gradient(135deg,#fff1b8,#c9a227);color:#1b1406;border-color:transparent}
 .trk-steps li.active{color:var(--hi)}
-.trk-steps li.active i{border-color:var(--hi);color:var(--hi);box-shadow:0 0 0 0 rgba(231,195,76,.6);animation:ring 1.8s infinite}
+.trk-steps li.active i{border-color:var(--hi);color:var(--hi);box-shadow:0 0 0 0 rgba(231,195,76,.6);animation:ringGlow 1.8s infinite}
 .trk-steps li.bad i{border-color:var(--bad);color:var(--bad)}
-@keyframes ring{0%{box-shadow:0 0 0 0 rgba(231,195,76,.55)}100%{box-shadow:0 0 0 14px rgba(231,195,76,0)}}
+@keyframes ringGlow{0%{box-shadow:0 0 0 0 rgba(231,195,76,.55)}100%{box-shadow:0 0 0 14px rgba(231,195,76,0)}}
 .trk-amt{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .trk-amt > div{flex:1;min-width:120px;padding:10px 14px;border-radius:14px;background:var(--field);border:1px solid var(--field-line)}
 .trk-amt small{display:block;font-size:12px;color:var(--muted)}.trk-amt b{font-variant-numeric:tabular-nums}
 .trk-live{display:flex;align-items:center;gap:8px;margin:14px 0 0;font-size:13px;color:var(--muted)}
 .trk.bad .trk-live{color:var(--bad)}
-.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:ring 1.6s infinite;flex:none}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:ringGlow 1.6s infinite;flex:none}
 .trk-form{display:flex;gap:10px;padding:10px;border-radius:22px;max-width:760px;margin:0 auto 20px}
 .trk-form .in{flex:1}.trk-form input{text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace}
 .trk-wait{text-align:center;color:var(--muted)}
@@ -1067,7 +1067,7 @@ main{overflow-x:clip}
 .acc-chip span{flex:1;min-width:180px}
 .acc-chip a:not(.btn){color:var(--hi);font-weight:600;text-decoration:none}
 /* spinner */
-.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;display:inline-block;animation:spin .8s linear infinite;flex:none}
+.ldr{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;display:inline-block;animation:spin .8s linear infinite;flex:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .acc-wait{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;border-radius:24px;color:var(--muted)}
 /* sign in / register */
@@ -1195,3 +1195,71 @@ main{overflow-x:clip}
 @media (max-width:480px){.tools > [data-theme-toggle]{display:none}}
 
 @keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+
+/* ===================== v7: speed + smoothness + delight ===================== */
+/* Lite mode (phones / low-power devices): same look, no live background blur — the #1 cause of scroll lag */
+html.lite .glass,html.lite .btn-glass,html.lite .ticker,html.lite .ktag,html.lite .qv,html.lite .wish,html.lite .drawer .scrim,html.lite dialog.dlg::backdrop{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.lite[data-theme="dark"]{--glass-a:rgba(38,30,19,.92);--glass-b:rgba(22,17,11,.9)}
+html.lite[data-theme="light"]{--glass-a:rgba(255,253,247,.95);--glass-b:rgba(255,248,236,.9)}
+html.lite .ticker{background:linear-gradient(90deg,#0d0a06,#20180c,#0d0a06)}
+html.lite .blob{animation:none!important}
+html.lite .glass::before,html.lite .glass::after,html.lite .spotlight,html.lite .grain{display:none}
+html.lite .tilt{will-change:auto}
+/* render off-screen sections lazily */
+main > section:not(:first-child),footer{content-visibility:auto;contain-intrinsic-size:auto 720px}
+/* buttery buttons */
+.btn{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .35s,background-position .6s,filter .3s}
+.btn:active{transform:scale(.965)}
+.tbtn,.chip,.est-kt,.tile,.method label{-webkit-tap-highlight-color:transparent}
+.tbtn:active,.wish:active,.qty button:active{transform:scale(.9)}
+/* photos fade in softly over the drawn artwork instead of popping */
+img.ph{opacity:0;transition:opacity .7s ease,transform 1.1s cubic-bezier(.2,.7,.2,1),filter .6s}
+img.ph.ok{opacity:1}
+/* section titles get a gold underline that draws in */
+.sec-title{position:relative;width:fit-content}
+.sec-title::after{content:"";position:absolute;left:0;bottom:-8px;height:3px;width:64px;border-radius:3px;background:linear-gradient(90deg,#b8860b,#f6e27a,transparent);transform:scaleX(0);transform-origin:left;transition:transform 1s .25s cubic-bezier(.2,.7,.2,1)}
+.reveal.in .sec-title::after,.sec-head.in .sec-title::after{transform:scaleX(1)}
+/* nicer toast */
+.toast{display:flex;align-items:center;gap:10px;transition:opacity .35s ease,transform .5s cubic-bezier(.2,1.5,.4,1)!important}
+.toast .ti{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px;font-weight:700;background:linear-gradient(135deg,#fff1b8,#c9a227);color:#1b1406}
+.toast.err .ti{background:var(--bad);color:#fff}
+/* page-to-page transitions (Chrome / Edge / Samsung Internet) */
+@view-transition{navigation:auto}
+.masthead{view-transition-name:mast}
+#fab{view-transition-name:fab}
+.wa-fab{view-transition-name:wa}
+::view-transition-old(root){animation:vtOut .2s ease both}
+::view-transition-new(root){animation:vtIn .45s cubic-bezier(.2,.7,.2,1) both}
+::view-transition-group(mast),::view-transition-group(fab),::view-transition-group(wa){animation-duration:.3s}
+@keyframes vtOut{to{opacity:0;transform:translateY(-8px)}}
+@keyframes vtIn{from{opacity:0;transform:translateY(14px)}}
+/* first-visit intro */
+#intro{position:fixed;inset:0;z-index:999;display:grid;place-items:center;pointer-events:auto;cursor:pointer}
+#intro .in-curtain{position:absolute;top:0;bottom:0;width:50.5%;background:radial-gradient(circle at 100% 50%,#2a1d0b,#0b0805 70%);animation:curtain .9s 1.35s cubic-bezier(.7,0,.2,1) forwards}
+#intro .in-curtain.l{left:0}
+#intro .in-curtain.r{right:0;background:radial-gradient(circle at 0% 50%,#2a1d0b,#0b0805 70%);animation-name:curtainR}
+#intro .in-core{position:relative;text-align:center;animation:coreOut .5s 1.25s ease forwards}
+#intro .in-mark{width:132px;height:132px;margin:0 auto 14px;overflow:visible;filter:drop-shadow(0 0 24px rgba(246,226,122,.45))}
+#intro .in-ring{stroke-dasharray:340;stroke-dashoffset:340;animation:inDraw 1s .05s cubic-bezier(.6,0,.2,1) forwards}
+#intro .in-crown{stroke-dasharray:260;stroke-dashoffset:260;animation:inDraw .9s .25s cubic-bezier(.6,0,.2,1) forwards}
+#intro .in-base{stroke-dasharray:60;stroke-dashoffset:60;animation:inDraw .4s .8s ease forwards}
+#intro .in-gem{opacity:0;transform-origin:60px 66px;animation:inGem .5s .95s cubic-bezier(.2,1.6,.4,1) forwards}
+#intro .in-name{font:700 clamp(34px,7vw,52px)/1.1 'Hind Siliguri',sans-serif;background:linear-gradient(110deg,#b8860b 20%,#fff1b8 45%,#e7c34c 55%,#b8860b 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;animation:inText .7s .45s ease forwards,inShine 1.4s .5s ease forwards}
+#intro .in-sub{margin-top:8px;font:500 11.5px 'Jost',sans-serif;letter-spacing:.45em;color:#cdb77a;opacity:0;animation:inText .6s .7s ease forwards}
+#intro.skip .in-curtain,#intro.skip .in-core{animation-delay:0s!important;animation-duration:.35s!important}
+#intro.skip{pointer-events:none}
+@keyframes inDraw{to{stroke-dashoffset:0}}
+@keyframes inGem{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+@keyframes inText{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes inShine{from{background-position:100% 0}to{background-position:0 0}}
+@keyframes coreOut{to{opacity:0;transform:scale(1.06)}}
+@keyframes curtain{to{transform:translateX(-101%)}}
+@keyframes curtainR{to{transform:translateX(101%)}}
+@media (prefers-reduced-motion:reduce){#intro{display:none}::view-transition-old(root),::view-transition-new(root){animation:none}}
+/* celebration after an order */
+.coin{position:fixed;top:-30px;z-index:200;pointer-events:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 12px 'Jost',sans-serif;color:#5c430b;
+  background:radial-gradient(circle at 35% 30%,#fff7d1,#f3d77a 40%,#c9a227 75%,#8a6a14);box-shadow:inset 0 -2px 0 rgba(0,0,0,.18),0 4px 10px rgba(120,80,10,.35)}
+.coin.gem{border-radius:3px;transform:rotate(45deg);background:linear-gradient(135deg,#ffe4ea,#e05a74 50%,#8e1730);box-shadow:0 0 10px rgba(255,200,210,.6)}
+html.lite svg .spin,html.lite svg .spin-rev,html.lite .twinkle{animation:none}
+html.lite .twinkle{opacity:.85}

@@ -48,6 +48,14 @@ Hosted on Vercel from this repo: every push to `main` redeploys automatically.
 - `google-apps-script/Code.gs` — optional Google Sheet backup. Never put the real SECRET here (repo is public).
 - `FIREBASE-SETUP.md` — owner's setup steps (BN + EN).
 
+## Speed rules (v7)
+- `html.lite` is set in each page's <head> script for phones / low-power devices (`?fx=full` or `?fx=lite` to force):
+  no backdrop-filter, opaque glass, fewer gems at 30 fps, no blob motion. Backdrop blur over animated layers was the main lag.
+- Never animate SVG transforms or layout properties in infinite loops (twinkle is opacity-only); keyframe names must be unique
+  (`ring` clashed once). Pointer handlers go through `raf1`; the gems canvas pauses while scrolling.
+- Page changes use cross-document View Transitions + speculation-rules prefetch; fonts load non-blocking; Firebase loads on idle
+  for home/shop/about/contact/calc. Admin redraws only the visible tab once per frame (`refresh()`, `shown()`), orders page in 40s.
+
 ## Common updates
 - New BAJUS rate: owner publishes it in admin.html (no push). Fallback: edit `rates.json` and `BUILTIN`.
 - Every new UI string needs both `bn` and `en` keys (I18N in app.js; admin strings in `A` in admin.js).
