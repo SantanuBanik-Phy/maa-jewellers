@@ -252,6 +252,16 @@ async function diagnose(base) {
       out.sslcommerz = j.status === 'SUCCESS' && j.GatewayPageURL ? 'ok' : 'error: ' + String(j.failedreason || j.status || ('HTTP ' + r.status)).slice(0, 120);
     } catch (e) { out.sslcommerz = 'error: network'; }
   }
+  // Is the Google Sheet script the new version (with emails) and does its SECRET match? A request with an unknown
+  // status is refused before anything is written or mailed, and the refusal says which case it is.
+  if (out.mail === 'set') {
+    try {
+      const r = await _fetch(process.env.SHEET_URL || DEFAULT_SHEET, { method: 'POST', headers: { 'content-type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ type: 'mail', secret: process.env.SHEET_SECRET, id: 'MJ-000000-000000-TEST', status: 'Setup check' }) });
+      const j = await r.json().catch(() => null);
+      out.mail = !j ? 'unreachable' : j.error === 'bad request' ? 'ok' : j.error === 'wrong secret' ? 'secret_mismatch' : j.error === 'unknown request' ? 'old_script' : 'unknown';
+    } catch (e) { out.mail = 'unreachable'; }
+  }
   diag = { v: out, exp: Date.now() + 30000 };
   return out;
 }

@@ -25,6 +25,9 @@ const A = {
   fix_rules_unknown: ['যাচাই করা যায়নি — নিশ্চিত হতে নতুন firestore.rules আবার Publish করুন', 'Could not check — publish the new firestore.rules again to be sure'],
   fix_ssl_not: ['SSLCZ_STORE_ID ও SSLCZ_STORE_PASSWORD যোগ করলে চালু হবে', 'Turns on after you add SSLCZ_STORE_ID and SSLCZ_STORE_PASSWORD'],
   fix_ssl_err: ['SSLCommerz Store ID / Password গ্রহণ করেনি — ইমেইল থেকে আবার কপি করুন; টেস্ট স্টোর হলে SSLCZ_LIVE = false', 'SSLCommerz refused the Store ID / Password — copy them again from the email; for a test store SSLCZ_LIVE = false'],
+  fix_mail_old: ['গুগল শিটে পুরোনো Apps Script চলছে — Extensions → Apps Script-এ নতুন Code.gs পুরোটা পেস্ট করুন, SECRET বসান, তারপর Deploy → Manage deployments → ✏️ → New version → Deploy (ইমেইল পাঠানোর অনুমতি দিন)', 'The Google Sheet still runs the old Apps Script — paste the new Code.gs, set SECRET, then Deploy → Manage deployments → ✏️ → New version → Deploy (allow sending email)'],
+  fix_mail_secret: ['Apps Script-এর SECRET আর Vercel-এর SHEET_SECRET মেলেনি — দুটো হুবহু এক করুন (Apps Script-এ বদলালে New version Deploy করুন; Vercel-এ বদলালে Redeploy)', 'The Apps Script SECRET and Vercel SHEET_SECRET differ — make them identical (new Apps Script version / Vercel redeploy after changing)'],
+  fix_mail_net: ['গুগল শিট স্ক্রিপ্টে পৌঁছানো যায়নি — Deploy-এর সময় “Who has access: Anyone” দেওয়া আছে কিনা দেখুন', 'Could not reach the Google Sheet script — check the deployment has “Who has access: Anyone”'],
   fix_mail: ['ইমেইল পাঠাতে SHEET_SECRET যোগ করুন (PAYMENTS-EMAIL-SETUP.md → D)', 'Add SHEET_SECRET to send emails (PAYMENTS-EMAIL-SETUP.md → D)'],
   fix_sms: ['ঐচ্ছিক — PAYMENTS-EMAIL-SETUP.md → সেকশন F', 'Optional — PAYMENTS-EMAIL-SETUP.md → section F'],
   sms_h: ['স্বয়ংক্রিয় পেমেন্ট যাচাই (SMS) — ফ্রি', 'Automatic payment check (SMS) — free'],
@@ -586,7 +589,8 @@ function renderSetup() {
     row(a('ck_fb'), c.firebase === 'ok', c.firebase === 'ok' ? '' : c.firebase === 'missing' ? a('fix_fb_missing') : c.firebase === 'bad_json' ? a('fix_fb_bad') : a('fix_fb_err') + ' (' + esc(c.firebase) + ')'),
     row(a('ck_rules'), c.rules === 'current' ? true : /^unknown/.test(c.rules) ? null : false, c.rules === 'current' ? '' : /^unknown/.test(c.rules) ? a('fix_rules_unknown') : a('fix_rules')),
     row(a('ck_ssl'), c.sslcommerz === 'ok' ? true : c.sslcommerz === 'not_set' ? null : false, c.sslcommerz === 'ok' ? a(c.mode === 'live' ? 'ck_live' : 'ck_sandbox') : c.sslcommerz === 'not_set' ? a('fix_ssl_not') : a('fix_ssl_err') + ' — ' + esc(c.sslcommerz.replace(/^error:\s*/, ''))),
-    row(a('ck_mail'), c.mail === 'set' ? true : null, c.mail === 'set' ? '' : a('fix_mail')),
+    row(a('ck_mail'), c.mail === 'ok' || c.mail === 'set' ? true : c.mail === 'not_set' ? null : false,
+      c.mail === 'ok' || c.mail === 'set' ? '' : a({ not_set: 'fix_mail', old_script: 'fix_mail_old', secret_mismatch: 'fix_mail_secret' }[c.mail] || 'fix_mail_net')),
     row(a('ck_sms'), c.sms === 'on' ? true : null, c.sms === 'on' ? '' : a('fix_sms'))
   ].join('');
   host.innerHTML = `<div class="card-h"><h3>${a('setup_h')}</h3><button class="a-btn small" type="button" id="setupRe" ${setupBusy ? 'disabled' : ''}>${a('setup_re')}</button></div><div class="cks">${body}</div>`;
